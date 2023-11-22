@@ -2,12 +2,12 @@
 title: "HARVARD EXTENSION SCHOOL"
 subtitle: "EXT CSCI E-106 Model Data Class Group Project Template"
 author:
-- Author One
-- Author Two
-- Author Three
-- Author Four
-- Author Five
-- Author Six
+- Author Kaleo Pudim
+- Author Luciano Carvalho
+- Author Ibrahim Hashim
+- Author Bethun Bhowmik
+- Author Mohanish Kashiwar
+- Author Seymur Hasanov
 
 tags: [logistic, neuronal networks, etc..]
 abstract: |
