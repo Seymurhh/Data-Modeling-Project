@@ -1,7 +1,7 @@
 ---
 title: "HARVARD EXTENSION SCHOOL"
 subtitle: "EXT CSCI E-106 Model Data Class Group Project Template"
-author:
+author: 
 - Author Kaleo Pudim
 - Author Luciano Carvalho
 - Author Ibrahim Hashim
@@ -10,7 +10,7 @@ author:
 - Author Seymur Hasanov
 
 tags: [logistic, neuronal networks, etc..]
-abstract: |
+abstract: 
   This is the location for your abstract.
 
   It must consist of two paragraphs.
@@ -93,13 +93,70 @@ This section will describe the model usage, your conclusions and any regulatory 
 
 *This section needs to introduce the reader to the problem to be resolved, the purpose, and the scope of the statistical testing applied. What you are doing with your prediction? What is the purpose of the model? What methods were trained on the data, how large is the test sample, and how did you build the model?*
 
+--- in-progress ---
 
+This project aims to develop a predictive model for house prices in King County, USA. The model's purpose is to provide an analytical tool for understanding the key factors influencing property values in this area, which is significant for various stakeholders in the real estate sector.
+
+Our primary data source is the 'KC_House_Sales' dataset, which includes detailed information on various house attributes. **(Add here the hypothesize of initial exploration on house prices)**.
+
+The methodology adopted for this project combines conventional statistical techniques with modern data analytics methods. Initial models will be based on linear regression, with further exploration into more complex approaches like neural networks and decision trees, depending on their performance in preliminary analyses.
+
+To ensure robust model training and validation, the dataset has been divided into a training set (70%) and a test set (30%). This division is crucial for evaluating the model's effectiveness in making predictions on new, unseen data.
 
 \newpage
 ## I. Description of the data and quality (15 points)
 
 *Here you need to review your data, the statistical test applied to understand the predictors and the response and how are they correlated. Extensive graph analysis is recommended. Is the data continuous, or categorical, do any transformation needed? Do you need dummies? *
 
+### Data Overview
+
+```{r Data Overview}
+
+df_house = read.csv("KC_House_Sales.csv")
+
+head(df_house)
+
+```
+
+### Data Types, Categories and Cleaning
+
+```{r Data types, Categories and Cleaning}
+
+#removing `id` column
+df_house = subset(df_house, select = -id)
+
+#converting `price` to numeric
+df_house$price <- as.numeric(gsub("[\\$,]", "", df_house$price))
+
+##cleaning `date` and adding `year`,`month`,`day` columns
+df_house$date <- as.POSIXct(df_house$date, format = "%Y%m%d")
+df_house$year <- as.numeric(format(df_house$date, "%Y"))
+df_house$month <- as.numeric(format(df_house$date, "%m"))
+df_house$day <- as.numeric(format(df_house$date, "%d"))
+
+head(df_house)
+```
+
+```{r Convert variables to numeric data}
+
+#converting all to numeric...ignores date column
+ndf_house = df_house[sapply(df_house, is.numeric)]
+
+head(ndf_house)
+
+```
+
+### Stat Summary
+
+### Graphical Analysis
+
+### Correlation Analysis
+
+### Data Transformation
+
+### Dummy Variables
+
+### Summary of the intro section
 
 \newpage
 ## III. Model Development Process (15 points)
