@@ -146,11 +146,90 @@ head(ndf_house)
 
 ```
 
-### Stat Summary
+### Stat Summary - in progress
 
-### Graphical Analysis
+[Add here the initial analysis of the summary, if applicable]
 
-### Correlation Analysis
+```{r Stat Summary}
+
+str(ndf_house)
+summary(ndf_house)
+
+```
+
+```{r Stat summary of the price}
+summary(ndf_house$price)
+```
+
+
+### Graphical Analysis - in progress - Seymur
+
+***[Add here the initial analysis]***
+
+```{r}
+library(GGally)
+
+# Pairwise scatter plot with correlation coefficients
+ggpairs(ndf_house, columns = c("price", "sqft_living", "bedrooms", "bathrooms", "grade"), 
+        title = "Pairwise Scatter Plots with House Price")
+
+```
+
+***[Add here the initial analysis]***
+
+```{r Histogram of proces}
+
+hist(ndf_house$price, main = "Histogram of House Prices", xlab = "Price")
+
+```
+
+***[Add here the initial analysis]***
+
+```{r Geo dist of house prices in King County}
+
+library(ggplot2)
+
+# Scatter plot of properties
+ggplot(data = ndf_house, aes(x = long, y = lat, color = price)) +
+  geom_point(alpha = 0.5) +
+  scale_color_gradient(low = "blue", high = "red") +
+  labs(title = "Geographical Distribution of House Prices in King County",
+       x = "Longitude", y = "Latitude", color = "Price") +
+  theme_minimal()
+
+```
+
+### Correlation Analysis - in progress
+
+***[Add here the initial analysis of the correlation matrix]***
+
+```{r Correlation Matrix}
+
+library(pheatmap)
+
+#correlation matrix
+cor_matrix = cor(ndf_house)
+correlation_df = as.data.frame(cor_matrix)
+
+#new dataframe with variables 'highly' (>0.2) correlated with price
+x_high = subset(ndf_house, select = c(price,view,waterfront,sqft_basement,sqft_living,
+                                      sqft_living15,sqft_above,grade,bathrooms,bedrooms,floors,lat))
+
+pheatmap(cor_matrix,
+         color = colorRampPalette(c("blue", "white", "red"))(20),
+         main = "correlation matrix heatmap",
+         fontsize = 8,
+         cellwidth = 15,
+         cellheight = 11,
+         display_numbers = TRUE
+)
+```
+
+**Creating a new dataframe with variables 'highly' (>0.2) correlated with price**
+
+```{r}
+head(x_high)
+```
 
 ### Data Transformation
 
