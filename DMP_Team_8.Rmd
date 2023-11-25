@@ -97,7 +97,7 @@ This section will describe the model usage, your conclusions and any regulatory 
 
 This project aims to develop a predictive model for house prices in King County, USA. The model's purpose is to provide an analytical tool for understanding the key factors influencing property values in this area, which is significant for various stakeholders in the real estate sector.
 
-Our primary data source is the 'KC_House_Sales' dataset, which includes detailed information on various house attributes. **(Add here the hypothesize of initial exploration on house prices)**.
+Our primary data source is the 'KC_House_Sales' dataset, which includes detailed information on various house attributes. **(Add here the hypothesis of initial exploration on house prices)**.
 
 The methodology adopted for this project combines conventional statistical techniques with modern data analytics methods. Initial models will be based on linear regression, with further exploration into more complex approaches like neural networks and decision trees, depending on their performance in preliminary analyses.
 
@@ -110,6 +110,8 @@ To ensure robust model training and validation, the dataset has been divided int
 
 ### Data Overview
 
+[Add here initial observation analysis]
+
 ```{r Data Overview}
 
 df_house = read.csv("KC_House_Sales.csv")
@@ -119,6 +121,8 @@ head(df_house)
 ```
 
 ### Data Types, Categories and Cleaning
+
+[Add here info about the data and what was performed]
 
 ```{r Data types, Categories and Cleaning}
 
