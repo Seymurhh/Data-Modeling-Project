@@ -237,7 +237,52 @@ head(x_high)
 
 ### Data Transformation
 
-### Dummy Variables
+### Categorical Variables and Age Analysis
+
+#### Renovation Indicator Variable
+
+A binary variable named 'renovated' was introduced to indicate whether a property has undergone renovation. This variable is set to 1 if the 'yr_renovated' field is not zero, signifying that the property has been renovated at least once. Otherwise, it is set to 0, indicating no renovation. This distinction provides a straightforward way to assess the impact of renovations on property values.
+
+```{r}
+
+# Creating a new variable 'renovated' 
+# 1 if the property has been renovated (yr_renovated != 0), 0 otherwise
+df_house$renovated = ifelse(df_house$yr_renovated != 0, 1, 0)
+
+```
+
+#### Dummy Variables for yr_built
+
+To capture the historical aspect of the properties, the 'yr_built' variable was categorized into six distinct periods: pre-1901, 1901-1925, 1926-1950, 1951-1975, 1976-2000, and post-2000. Dummy variables were then created for each of these categories, allowing for a nuanced analysis of how the construction era affects house prices, while facilitating easier interpretation in regression models.
+
+```{r}
+# Defining breaks for year built
+breaks = c(-Inf, 1900, 1925, 1950, 1975, 2000, Inf)
+labels = c("<=1900", "1901-1925", "1926-1950", "1951-1975", "1976-2000", "2001+")
+
+# Creating factor variable for year built categories
+df_house$yr_built_cat = cut(df_house$yr_built, breaks = breaks, labels = labels, right = FALSE)
+
+
+# Creating dummy variables
+yr_built_dummies = model.matrix(~yr_built_cat-1, data = df_house)
+colnames(yr_built_dummies) = labels
+df_house = cbind(df_house, yr_built_dummies)
+```
+
+#### Property Age Calculation
+
+This is a tentative way to consider "age since las renovation" and see if there's a correlation between the time a house was last built/renovated on its selling price. A new variable called 'age' was calculated to represent the current age of each property. If a property was renovated, its age is the difference between 2023 and the renovation year ('yr_renovated'). If not renovated, the age is the difference between 2023 and the year the house was built ('yr_built'). This variable helps in understanding the effect of property age and recent renovations on house prices.
+
+```{r}
+
+# Creating 'age' column
+df_house$age = ifelse(df_house$renovated == 1, 2023 - df_house$yr_renovated, 2023 - df_house$yr_built)
+
+head(df_house)
+
+```
+
 
 ### Summary of the intro section
 
