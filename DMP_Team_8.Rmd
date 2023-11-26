@@ -216,7 +216,7 @@ cor_matrix = cor(ndf_house)
 correlation_df = as.data.frame(cor_matrix)
 
 #new dataframe with variables 'highly' (>0.2) correlated with price
-x_high = subset(ndf_house, select = c(view,waterfront,sqft_basement,sqft_living,
+x_high = subset(ndf_house, select = c(price,view,waterfront,sqft_basement,sqft_living,
                                       sqft_living15,sqft_above,grade,bathrooms,bedrooms,floors,lat))
 
 pheatmap(cor_matrix,
