@@ -282,7 +282,21 @@ df_house$age = ifelse(df_house$renovated == 1, 2023 - df_house$yr_renovated, 202
 head(df_house)
 
 ```
+### Zipcode Dummy Variables
 
+```{r}
+#store zip codes
+zipcodes = data.frame(df_house$zipcode,df_house$price) 
+colnames(zipcodes) = c("zip","price")
+
+#create dummies
+dummy_zipcodes = model.matrix(~ 0 + as.factor(zipcode), data = df_house)
+colnames(dummy_zipcodes) = paste0("zipcode_", levels(as.factor(df_house$zipcode)))
+df_house = cbind(df_house, dummy_zipcodes)
+#df_house = subset(df_house, select = -c(zipcode))
+
+head(df_house)
+```
 
 ### Summary of the intro section
 
