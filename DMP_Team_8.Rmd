@@ -203,6 +203,46 @@ ggplot(data = ndf_house, aes(x = long, y = lat, color = price)) +
 
 ```
 
+### Zipcode visualizations (can discard)
+***Zipcode is a valid predictor***
+
+```{r}
+library(dplyr)
+library(scales)
+
+ggplot(df_house, aes(x = as.factor(zipcode), y = price)) +
+  geom_boxplot()+theme(axis.text.x = element_text(angle = 90,vjust=0.5))
+```
+
+```{r}
+heatmap_data <- df_house %>%
+  group_by(zipcode) %>%
+  summarize(med_price = median(price),
+            min_price = min(price),
+            max_price = max(price))
+heatmap_data <- heatmap_data %>% 
+  arrange(desc(med_price))
+
+ggplot(heatmap_data, aes(x = factor(zipcode, levels = zipcode), y = 1, fill = med_price)) +
+  geom_tile() +
+  geom_text(aes(label = paste(scales::comma(min_price),"/",
+                              scales::comma(med_price),"/",
+                              scales::comma(max_price)),
+                vjust = 0.5,angle=90),
+            color = "black", size = 3)+
+  scale_fill_gradient(low = "lightyellow", high = "red", name = "Median Price",
+                      labels = scales::comma_format()) +
+  labs(title = "Heatmap of median prices by zipcode (min/med/max)",
+       x = "zip",
+       y = "") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 0,vjust=0.5),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        legend.position = "bottom",
+        legend.key.width = unit(2, "cm"))
+```
+
 ### Correlation Analysis - in progress
 
 ***[Add here the initial analysis of the correlation matrix]***
@@ -282,6 +322,8 @@ df_house$age = ifelse(df_house$renovated == 1, 2023 - df_house$yr_renovated, 202
 head(df_house)
 
 ```
+
+
 ### Zipcode Dummy Variables
 
 ```{r}
