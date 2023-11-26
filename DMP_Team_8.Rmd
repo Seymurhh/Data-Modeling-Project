@@ -115,7 +115,7 @@ To ensure robust model training and validation, the dataset has been divided int
 ```{r Data Overview}
 
 df_house = read.csv("KC_House_Sales.csv")
-
+cat("Number of NA values in dataframe:",sum(is.na(df_house))) #no NA values
 head(df_house)
 
 ```
