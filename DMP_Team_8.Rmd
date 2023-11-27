@@ -104,7 +104,7 @@ The methodology adopted for this project combines conventional statistical techn
 To ensure robust model training and validation, the dataset has been divided into a training set (70%) and a test set (30%). This division is crucial for evaluating the model's effectiveness in making predictions on new, unseen data.
 
 \newpage
-## I. Description of the data and quality (15 points)
+## II. Description of the data and quality (15 points)
 
 *Here you need to review your data, the statistical test applied to understand the predictors and the response and how are they correlated. Extensive graph analysis is recommended. Is the data continuous, or categorical, do any transformation needed? Do you need dummies? *
 
@@ -170,6 +170,12 @@ summary(ndf_house$price)
 
 ***[Add here the initial analysis]***
 
+The pairwise scatter plot shows the correlation between highly correlated variables extracted from heatmap correlation matrix.
+
+- there is a strong correlation between sqft_living and price, indicated that as the living area increases, so does the house price increase.
+- A strong positive correlation with grade, implying that higher-quality houses tend to be more expensive.
+- Each variable's distribution is shown on the diagonal, with price notably skewed towards lower values, indicating most homes are on the more affordable end of the spectrum with fewer high-priced outliers.
+
 ```{r}
 library(GGally)
 
@@ -179,11 +185,85 @@ ggpairs(ndf_house, columns = c("price", "sqft_living", "bedrooms", "bathrooms", 
 
 ```
 
-***[Add here the initial analysis]***
+**Analysis**: The histogram below shows the distribution of house prices, revealing that most houses are in the lower price range with a significant decrease in the number of houses as the price increases, indicating a right-skewed distribution with relatively few high-priced houses.
 
-```{r Histogram of proces}
+```{r Histogram of prices}
 
-hist(ndf_house$price, main = "Histogram of House Prices", xlab = "Price")
+# Histogram of house prices
+ggplot(df_house, aes(x = price)) +
+  geom_histogram(bins = 30, fill = "blue", color = "black") +
+  labs(title = "Histogram of House Prices", x = "Price", y = "Count")
+
+```
+**Analysis**: The first boxplot shows that house prices generally increase with the number of bedrooms, but vary widely, especially for homes with more bedrooms. The second boxplot indicates that house prices rise with better house grades, with greater price variability at higher grades.Both plots demonstrate that while there is a general trend of increasing price with more bedrooms and higher grades, there is also a considerable variation within these categories. The presence of outliers suggests that factors other than the number of bedrooms and house grade can significantly influence house prices.
+
+```{r}
+library(ggplot2)
+
+# Boxplot for price by number of bedrooms
+ggplot(df_house, aes(x = factor(bedrooms), y = price)) + 
+  geom_boxplot() +
+  labs(title = "Boxplot of Prices by Number of Bedrooms", x = "Number of Bedrooms", y = "Price")
+
+# Boxplot for price by house grade
+ggplot(df_house, aes(x = factor(grade), y = price)) + 
+  geom_boxplot() +
+  labs(title = "Boxplot of Prices by House Grade", x = "Grade", y = "Price")
+
+```
+
+```{r}
+
+ggplot(df_house, aes(x = sqft_living, y = price)) + 
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", color = "red") +
+  labs(title = "Scatter Plot of Price vs Sqft Living with Regression Line", x = "Sqft Living", y = "Price")
+
+```
+**Analysis**: the average price tends to increase with the number of bedrooms up to a certain point, but then the trend is less consistent. For instance, homes with 6 bedrooms have a higher average price than those with 7 or 8 bedrooms, and the average price for homes with 11 bedrooms is lower than for those with fewer bedrooms. There is a notable outlier at 33 bedrooms with a relatively low average price, which could indicate an atypical property or data error.
+
+```{r}
+
+library(ggplot2)
+
+average_prices <- aggregate(price ~ bedrooms, data = ndf_house, FUN = mean)
+ggplot(average_prices, aes(x = factor(bedrooms), y = price)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(title = "Average Price by Number of Bedrooms",
+       x = "Number of Bedrooms",
+       y = "Average Price") +
+  theme_minimal()
+
+```
+
+```{r}
+
+library(ggplot2)
+
+ggplot(df_house, aes(x = sqft_living, y = price)) +
+  geom_point(aes(color = factor(bedrooms)), alpha = 0.6) +
+  scale_color_brewer(type = 'seq', palette = 'Blues') +
+  labs(title = "House Price vs. Square Footage of Living Space", x = "Square Footage of Living Space", y = "Price")
+
+```
+
+```{r}
+ggplot(df_house, aes(x = factor(waterfront), y = price)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of House Prices by Waterfront", x = "Waterfront", y = "Price")
+```
+```{r}
+ggplot(df_house, aes(x = yr_built, y = price)) +
+  geom_point(aes(color = factor(bedrooms)), alpha = 0.6) +
+  scale_color_brewer(type = 'seq', palette = 'Purples') +
+  labs(title = "House Price vs. Year Built", x = "Year Built", y = "Price")
+```
+
+```{r}
+ggplot(df_house, aes(x = sqft_lot, y = price)) +
+  geom_point(aes(color = factor(bedrooms)), alpha = 0.6) +
+  scale_color_brewer(type = 'seq', palette = 'Greens') +
+  labs(title = "House Price vs. Lot Size", x = "Lot Size (sqft)", y = "Price")
 
 ```
 
@@ -203,6 +283,38 @@ ggplot(data = ndf_house, aes(x = long, y = lat, color = price)) +
 
 ```
 
+## [Analysis section] 
+
+From geographical map, it is evident that properties situated around the latitude line of 47.6 and longitude between -122.25 and -122.00, which corresponds to the central and northern parts of Seattle, command higher prices per square foot. The relatively lower-priced properties per square foot, shown in orange, are more dispersed and located primarily south of central Seattle, extending towards Tacoma, as well as in the outlying suburban areas.It is also noticeable that along the latitudinal line around 47.4, there are pockets of high-priced properties per square foot, potentially indicating affluent neighborhoods or areas with high-value real estate.
+
+The map clearly shows a correlation between location and property value per square foot, with central urban areas exhibiting the highest values. This pattern is typical for urban centers where proximity to amenities, employment opportunities, and other socioeconomic factors drive up real estate prices.
+
+```{r Map visualizatoin of average prices by squre foot distribution over long and lat}
+library(ggmap)
+library(ggplot2)
+library(dplyr)
+
+register_stadiamaps(key = '765cbcd1-2ec2-40e3-8a81-98624e616208')
+df_summary <- ndf_house %>%
+  mutate(price_per_sqft = price / sqft_living) %>%
+  group_by(long, lat) %>%
+  summarize(avg_price_per_sqft = mean(price_per_sqft, na.rm = TRUE), .groups = 'drop')
+
+king_county_map <- get_stadiamap(bbox = c(left = min(df_house$long), 
+                                         bottom = min(df_house$lat), 
+                                         right = max(df_house$long), 
+                                         top = max(df_house$lat)),
+                                 maptype = "stamen_terrain",
+                                 zoom = 10)
+ggmap(king_county_map) +
+  geom_point(data = df_summary, aes(x = long, y = lat, color = avg_price_per_sqft), 
+             alpha = 0.5, size = 1) +
+  scale_color_gradient(low = "orange", high = "darkblue", name = "Avg Price per Sqft") +
+  labs(title = "Average Price per Sqft of Properties in King County",
+       x = "Longitude", y = "Latitude") +
+  theme_minimal()
+
+```
 ### Zipcode visualizations (can discard)
 ***Zipcode is a valid predictor***
 
@@ -210,7 +322,7 @@ ggplot(data = ndf_house, aes(x = long, y = lat, color = price)) +
 library(dplyr)
 library(scales)
 
-ggplot(df_house, aes(x = as.factor(zipcode), y = price)) +
+ggplot( df_house, aes(x = as.factor(zipcode), y = price)) +
   geom_boxplot()+theme(axis.text.x = element_text(angle = 90,vjust=0.5))
 ```
 
@@ -340,7 +452,7 @@ df_house = cbind(df_house, dummy_zipcodes)
 head(df_house)
 ```
 
-### Summary of the intro section
+### Summary of the section II
 
 \newpage
 ## III. Model Development Process (15 points)
