@@ -125,7 +125,7 @@ head(df_house)
 [Add here info about the data and what was performed]
 
 ```{r Data types, Categories and Cleaning}
-
+# [Kaleo]
 #removing `id` column
 df_house = subset(df_house, select = -id)
 
@@ -142,10 +142,10 @@ head(df_house)
 ```
 
 ```{r Convert variables to numeric data}
-
+# [Kaleo]
 #converting all to numeric...ignores date column
 ndf_house = df_house[sapply(df_house, is.numeric)]
-
+# use df_house instead, unless you have a specific reason!
 head(ndf_house)
 
 ```
@@ -363,7 +363,7 @@ ggplot(heatmap_data, aes(x = factor(zipcode, levels = zipcode), y = 1, fill = me
 ```{r Correlation Matrix}
 
 library(pheatmap)
-
+# [Kaleo]
 #correlation matrix
 cor_matrix = cor(ndf_house)
 correlation_df = as.data.frame(cor_matrix)
@@ -385,6 +385,7 @@ pheatmap(cor_matrix,
 **Creating a new dataframe with variables 'highly' (>0.2) correlated with price**
 
 ```{r}
+# [Kaleo]
 head(x_high)
 ```
 
@@ -441,6 +442,7 @@ head(df_house)
 ### Zipcode Dummy Variables
 
 ```{r}
+# [Kaleo]
 #store zip codes
 zipcodes = data.frame(df_house$zipcode,df_house$price) 
 colnames(zipcodes) = c("zip","price")
