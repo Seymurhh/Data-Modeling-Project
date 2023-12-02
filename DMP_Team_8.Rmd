@@ -487,7 +487,7 @@ predictors_to_drop <- c("<=1900", "1901-1925", "1926-1950", "1951-1975", "1976-2
 
 # Update the model by excluding the specified predictors
 updated <- as.formula(paste("price ~ .", paste0("- `", predictors_to_drop, "`", collapse = "")))
-house_lm <- update(house_lm, formula = updated_formula)
+house_lm <- update(house_lm, formula = updated)
 summary(house_lm)
 
 ```
@@ -506,6 +506,7 @@ or if p-value < alpha (0.01) reject the hull
 P value is < 2.2e-16. So we reject $H_o$, Error variances are not constant.
 
 ```{r}
+library(lmtest)
 bptest(house_lm, studentize = FALSE)
 ```
 
@@ -526,7 +527,6 @@ plot(house_lm1)
 
 ```
 
-
 ```{r}
 pred<- predict(house_lm1,test.dat)^(1/lambda)
 act<-test.dat$price
@@ -544,10 +544,26 @@ knitr::kable(cbind(R.Square.Train,R.Square.Test), align = "c",
 
 
 
+
 \newpage
 ## IV. Model Performance Testing (15 points)
 
 *Use the test data set to assess the model performances. Here, build the best multiple linear models by using the stepwise both ways selection method. Compare the performance of the best two linear models. Make sure that model assumption(s) are checked for the final linear model. Apply remedy measures (transformation, etc.) that helps satisfy the assumptions. In particular you must deeply investigate unequal variances and multicollinearity. If necessary, apply remedial methods (WLS, Ridge, Elastic Net, Lasso, etc.). *
+
+
+
+##Best Subset Regression
+
+```{r}
+library(olsrr)
+house_lm2<-lm(price^lambda~.,data=test.dat)
+# k1<-ols_step_best_subset(house_lm2)
+# k1
+# plot(k1,guide="none")
+```
+
+
+
 
 
 \newpage
