@@ -322,12 +322,14 @@ ggmap(king_county_map) +
 ```{r}
 library(dplyr)
 library(scales)
-
+# [Kaleo]
 ggplot( df_house, aes(x = as.factor(zipcode), y = price)) +
   geom_boxplot()+theme(axis.text.x = element_text(angle = 90,vjust=0.5))
 ```
 
 ```{r}
+# [Kaleo]
+# Prices by Zipcode heatmap
 heatmap_data <- df_house %>%
   group_by(zipcode) %>%
   summarize(med_price = median(price),
