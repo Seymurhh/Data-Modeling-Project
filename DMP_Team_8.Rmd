@@ -9,7 +9,7 @@ author:
 - Author Mohanish Kashiwar
 - Author Seymur Hasanov
 
-tags: [logistic, neuronal networks, etc..]
+tags: [logistic, neuronal networks, SVM, etc..]
 abstract: 
   This is the location for your abstract.
 
@@ -292,7 +292,8 @@ The map clearly shows a correlation between location and property value per squa
 ```{r Map visualizatoin of average prices by squre foot distribution over long and lat}
 library(ggmap)
 library(ggplot2)
-library(dplyr)
+library(dplyr)      
+library(car)
 
 register_stadiamaps(key = '765cbcd1-2ec2-40e3-8a81-98624e616208')
 df_summary <- ndf_house %>%
@@ -433,6 +434,7 @@ df_house$age = ifelse(df_house$renovated == 1, 2023 - df_house$yr_renovated, 202
 
 head(df_house)
 
+
 ```
 
 
@@ -455,9 +457,92 @@ head(df_house)
 ### Summary of the section II
 
 \newpage
-## III. Model Development Process (15 points)
+## III. Model Development Process (15 points) - Bethun Bhowmik (in progress)
 
 *Build a regression model to predict price.  And of course,  create the train data set which contains 70% of the data and use set.seed (1023). The remaining 30% will be your test data set. Investigate the data and combine the level of categorical variables if needed and drop variables. For example, you can drop id, Latitude, Longitude, etc. *
+
+```{r}
+set.seed(1023)
+n<-dim(df_house)[1]
+IND<-sample(c(1:n),round(n*0.7))
+train.dat<-df_house[IND,]
+test.dat<-df_house[-c(IND),]
+
+dim(train.dat)
+dim(test.dat)
+```
+
+
+```{r}
+house_lm<-lm(price ~.,data=train.dat)
+summary(house_lm)
+par(mfrow=c(2,2))
+plot(house_lm)
+
+```
+
+
+```{r}
+predictors_to_drop <- c("<=1900", "1901-1925", "1926-1950", "1951-1975", "1976-2000", "2001+", "zipcode_98198", "zipcode_98199", "sqft_basement")
+
+# Update the model by excluding the specified predictors
+updated <- as.formula(paste("price ~ .", paste0("- `", predictors_to_drop, "`", collapse = "")))
+house_lm <- update(house_lm, formula = updated_formula)
+summary(house_lm)
+
+```
+
+```{r}
+ei<-house_lm$residuals
+boxplot(ei,horizontal=TRUE,staplewex=0.5,col=2,xlab="House Price Regression Residuals")
+plot(house_lm$fitted.values,ei,xlab="Fitted Values House Linear Model",ylab="Residuals House Linear Model")
+```
+
+$H_o$: Error variances are constant
+$H_a$: Error variances are not constant
+Decision Rule is if statistic> critical reject the null
+or if p-value < alpha (0.01) reject the hull
+
+P value is < 2.2e-16. So we reject $H_o$, Error variances are not constant.
+
+```{r}
+bptest(house_lm, studentize = FALSE)
+```
+
+```{r}
+library(MASS)
+par(mfrow=c(1,1))
+bc<-boxcox(house_lm,lambda=seq(-4,4,by=0.1))
+lambda <- bc$x[which.max(bc$y)] 
+lambda  #This is the optimal lambda
+```
+
+
+```{r}
+house_lm1<-lm(price^lambda~.,data=train.dat)
+summary(house_lm1)
+par(mfrow=c(2,2))
+plot(house_lm1)
+
+```
+
+
+```{r}
+pred<- predict(house_lm1,test.dat)^(1/lambda)
+act<-test.dat$price
+
+SST<-var(act)*(length(act)-1)
+SSE<-sum((act-pred)^2)
+R.Square.Test <- 1- SSE/SST
+R.Square.Test
+R.Square.Train=0.887
+
+knitr::kable(cbind(R.Square.Train,R.Square.Test), align = "c",
+      caption = "Pseudo $R^2$ values for Train and Test")
+```
+
+
+
 
 \newpage
 ## IV. Model Performance Testing (15 points)
