@@ -578,11 +578,13 @@ house_lm2<-lm(price^lambda~.,data=test.dat)
 ##Random Forest
 
 ```{r}
-# [Kaleo]
-# importing library
+## [Kaleo]
+## importing libraries
+
 #install.packages("randomForest")
 library(randomForest)
 ```
+
 ```{r}
 # [Kaleo]
 # changing column names to fit randomforest
@@ -596,6 +598,7 @@ for (i in 26:31){
 ```
 
 ```{r}
+#[Kaleo]
 
 ntree_values <- c(55, 112, 150, 200, 250)
 
@@ -617,7 +620,9 @@ train_rsq_values = numeric(length(ntree_values))
 #   train_rsq_values[i] = cor(predictions_train,train.dat$price)^2
 # }
 ```
+
 ```{r}
+#[Kaleo]
 mse_hard.coded = c(18959180557,19044061189,19147650224,18975362291,18893426330)
 test_rsq_values_hard.coded = c(0.8734077,0.8730189,0.8719060,0.8740622,0.8747472)
 
@@ -632,17 +637,30 @@ text(ntree_values,test_rsq_values_hard.coded,labels=round(test_rsq_values_hard.c
 
 #commented out for computation time..
 
-#using best model (250 trees...for now)
-# house_rf = randomForest(price ~ ., data = train.dat, ntree = 250)
-# rf_test_pred = predict(house_rf,newdata=test.dat)
-# rf_train_pred = predict(house_rf,newdata=train.dat)
-# 
-# rf_test_mse = mean((rf_test_pred - test.dat$price)^2)
-# rf_test_rsq = cor(rf_test_pred,test.dat$price)^2
-# rf_train_rsq = cor(rf_train_pred,train.dat$price)^2
-# 
-# cat("test mse:",rf_test_mse,"train rsq:", rf_train_rsq, "test rsq:",rf_test_rsq)
+#using efficient model (50 trees...for now)
+house_rf = randomForest(price ~ ., data = train.dat, ntree = 50)
+rf_test_pred = predict(house_rf,newdata=test.dat)
+rf_train_pred = predict(house_rf,newdata=train.dat)
+
+rf_test_mse = mean((rf_test_pred - test.dat$price)^2)
+rf_test_rsq = cor(rf_test_pred,test.dat$price)^2
+rf_train_rsq = cor(rf_train_pred,train.dat$price)^2
+
+cat("test mse:",rf_test_mse,"train rsq:", rf_train_rsq, "test rsq:",rf_test_rsq)
 ```
+
+```{r}
+#[Kaleo]
+
+# relative variable importance
+par(mar = c(7, 5, 4, 2))
+
+var_importance = importance(house_rf)
+top_features = var_importance[order(var_importance[,1], decreasing = TRUE), ][1:12]
+
+barplot(top_features,names.arg = rownames(top_features),las=2)
+```
+
 ```{r}
 # [Kaleo] 
 # change column names back
