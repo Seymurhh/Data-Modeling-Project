@@ -375,25 +375,6 @@ df_house$renovated = ifelse(df_house$yr_renovated != 0, 1, 0)
 
 ```
 
-#### Dummy Variables for yr_built
-
-To capture the historical aspect of the properties, the 'yr_built' variable was categorized into six distinct periods: pre-1901, 1901-1925, 1926-1950, 1951-1975, 1976-2000, and post-2000. Dummy variables were then created for each of these categories, allowing for a nuanced analysis of how the construction era affects house prices, while facilitating easier interpretation in regression models.
-
-```{r}
-# Defining breaks for year built
-breaks = c(-Inf, 1900, 1925, 1950, 1975, 2000, Inf)
-labels = c("<=1900", "1901-1925", "1926-1950", "1951-1975", "1976-2000", "2001+")
-
-# Creating factor variable for year built categories
-df_house$yr_built_cat = cut(df_house$yr_built, breaks = breaks, labels = labels, right = FALSE)
-
-
-# Creating dummy variables
-yr_built_dummies = model.matrix(~yr_built_cat-1, data = df_house)
-colnames(yr_built_dummies) = labels
-df_house = cbind(df_house, yr_built_dummies)
-```
-
 #### Property Age Calculation
 
 This is a tentative way to consider "age since las renovation" and see if there's a correlation between the time a house was last built/renovated on its selling price. A new variable called 'age' was calculated to represent the current age of each property. If a property was renovated, its age is the difference between 2023 and the renovation year ('yr_renovated'). If not renovated, the age is the difference between 2023 and the year the house was built ('yr_built'). This variable helps in understanding the effect of property age and recent renovations on house prices.
@@ -405,25 +386,20 @@ df_house$age = ifelse(df_house$renovated == 1, 2023 - df_house$yr_renovated, 202
 
 head(df_house)
 
-
 ```
 
-### Zipcode Dummy Variables
 
 ```{r}
-# [Kaleo]
-#store zip codes
-zipcodes = data.frame(df_house$zipcode,df_house$price) 
-colnames(zipcodes) = c("zip","price")
+set.seed(1023)
+n<-dim(df_house)[1]
+IND<-sample(c(1:n),round(n*0.7))
+train.dat<-df_house[IND,]
+test.dat<-df_house[-c(IND),]
 
-#create dummies
-dummy_zipcodes = model.matrix(~ 0 + as.factor(zipcode), data = df_house)
-colnames(dummy_zipcodes) = paste0("zipcode_", levels(as.factor(df_house$zipcode)))
-df_house = cbind(df_house, dummy_zipcodes)
-#df_house = subset(df_house, select = -c(zipcode))
-
-head(df_house)
+dim(train.dat)
+dim(test.dat)
 ```
+
 
 ### Summary of the section II
 
