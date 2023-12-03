@@ -1,19 +1,13 @@
 ---
 title: "HARVARD EXTENSION SCHOOL"
-subtitle: "EXT CSCI E-106 Model Data Class Group Project Template"
+subtitle: "CSCI E-106 - Data Modeling - Final Project"
 author: 
-- Author Kaleo Pudim
-- Author Luciano Carvalho
-- Author Ibrahim Hashim
-- Author Bethun Bhowmik
-- Author Mohanish Kashiwar
-- Author Seymur Hasanov
-
-tags: [logistic, neuronal networks, SVM, etc..]
+    Kaleo Pudim, Luciano Carvalho, Ibrahim Hashim, 
+    Bethun Bhowmik, Mohanish Kashiwar, Seymur Hasanov
+tags: [House Price Prediction, Linear Regression, Neural Networks, Decision Trees, Support Vector Machines (SVM), Data Analysis, Model Selection, Statistical Testing, King County Real Estate, Predictive Analytics]
 abstract: 
-  This is the location for your abstract.
-
-  It must consist of two paragraphs.
+    This project, undertaken by a team of students at Harvard Extension School, focuses on developing a comprehensive predictive model for house prices in King County, USA, using the 'KC_House_Sales' dataset. The dataset provides a rich variety of house attributes, allowing for an in-depth analysis of factors influencing property values. The initial phase of the project involves data cleaning and transformation, including the removal of irrelevant variables and conversion of data types. The primary analytical approach combines traditional linear regression models with more complex methods such as neural networks, decision trees, and support vector machines (SVM). The models are trained on a 70% split of the dataset and validated on the remaining 30%, ensuring robustness and accuracy in predictions.
+    In the subsequent stages, the project delves into graphical analysis, revealing key correlations and trends in the data. Techniques such as box plots, scatter plots, and heatmaps provide insights into the relationships between house prices and attributes like square footage, number of bedrooms, and location. The project also explores the impact of categorical variables and property age on pricing. Model performance is thoroughly tested using various metrics, including MSE and R-squared values. The final selection of the primary model, referred to as the "champion" model, is based on its performance on both the training and testing datasets. The project concludes with a discussion on model limitations, assumptions, and an ongoing monitoring plan, ensuring the model's relevance and accuracy over time.
 date: "`r format(Sys.time(), '%d %B %Y')`"
 geometry: margin=1.3cm
 output:
@@ -176,7 +170,7 @@ The pairwise scatter plot shows the correlation between highly correlated variab
 - A strong positive correlation with grade, implying that higher-quality houses tend to be more expensive.
 - Each variable's distribution is shown on the diagonal, with price notably skewed towards lower values, indicating most homes are on the more affordable end of the spectrum with fewer high-priced outliers.
 
-```{r}
+```{r Pairwise scatter plot}
 
 # Pairwise scatter plot with correlation coefficients
 ggpairs(ndf_house, columns = c("price", "sqft_living", "bedrooms", "bathrooms", "grade"), 
@@ -196,7 +190,7 @@ ggplot(df_house, aes(x = price)) +
 ```
 **Analysis**: The first boxplot shows that house prices generally increase with the number of bedrooms, but vary widely, especially for homes with more bedrooms. The second boxplot indicates that house prices rise with better house grades, with greater price variability at higher grades.Both plots demonstrate that while there is a general trend of increasing price with more bedrooms and higher grades, there is also a considerable variation within these categories. The presence of outliers suggests that factors other than the number of bedrooms and house grade can significantly influence house prices.
 
-```{r}
+```{r Outlier analysis using Boxplots}
 
 # Boxplot for price by number of bedrooms
 ggplot(df_house, aes(x = factor(bedrooms), y = price)) + 
@@ -211,7 +205,7 @@ ggplot(df_house, aes(x = factor(grade), y = price)) +
 ```
 **Analysis**: the average price tends to increase with the number of bedrooms up to a certain point, but then the trend is less consistent. For instance, homes with 6 bedrooms have a higher average price than those with 7 or 8 bedrooms, and the average price for homes with 11 bedrooms is lower than for those with fewer bedrooms. There is a notable outlier at 33 bedrooms with a relatively low average price, which could indicate an atypical property or data error.
 
-```{r}
+```{r Average Price analysis}
 
 average_prices <- aggregate(price ~ bedrooms, data = ndf_house, FUN = mean)
 ggplot(average_prices, aes(x = factor(bedrooms), y = price)) +
@@ -223,7 +217,7 @@ ggplot(average_prices, aes(x = factor(bedrooms), y = price)) +
 
 ```
 
-```{r}
+```{r }
 
 ggplot(df_house, aes(x = sqft_living, y = price)) +
   geom_point(aes(color = factor(bedrooms)), alpha = 0.6) +
@@ -232,10 +226,12 @@ ggplot(df_house, aes(x = sqft_living, y = price)) +
 
 ```
 
-```{r}
+```{r Outlier analysis for Waterfront vs Mountain view}
+
 ggplot(df_house, aes(x = factor(waterfront), y = price)) +
   geom_boxplot() +
   labs(title = "Boxplot of House Prices by Waterfront", x = "Waterfront", y = "Price")
+
 ```
 
 **Analysis**: From geographical map, it is evident that properties situated around the latitude line of 47.6 and longitude between -122.25 and -122.00, which corresponds to the central and northern parts of Seattle, command higher prices per square foot. The relatively lower-priced properties per square foot, shown in orange, are more dispersed and located primarily south of central Seattle, extending towards Tacoma, as well as in the outlying suburban areas.It is also noticeable that along the latitudinal line around 47.4, there are pockets of high-priced properties per square foot, potentially indicating affluent neighborhoods or areas with high-value real estate.
@@ -557,18 +553,6 @@ house_lm2<-lm(price^lambda~.,data=test.dat)
 ### Random Forest
 
 ```{r}
-# [Kaleo]
-# changing column names to fit randomforest
-og.names = colnames(train.dat)
-col_names_rf = c("until_1900","from.1901_1925","from.1926_1950","from.1951_1975",
-                 "from.1976_2000","from.2001_after")
-for (i in 26:31){
-  colnames(train.dat)[i] = col_names_rf[i-25]
-  colnames(test.dat)[i] = col_names_rf[i-25]
-}
-```
-
-```{r}
 #[Kaleo]
 
 ntree_values <- c(55, 112, 150, 200, 250)
@@ -632,14 +616,6 @@ top_features = var_importance[order(var_importance[,1], decreasing = TRUE), ][1:
 barplot(top_features,names.arg = rownames(top_features),las=2)
 ```
 
-```{r}
-# [Kaleo] 
-# change column names back
-colnames(train.dat) = og.names
-colnames(test.dat) = og.names
-```
-
-
 
 ### Regression Tree Model
 
@@ -696,7 +672,7 @@ print(paste("SVM RMSE:", svm_rmse))
 
 ### Logistic Regression Model
 
-```{r}
+```{r Price binary calculation }
 # [Luciano]
 
 # Calculate the median price
@@ -708,7 +684,7 @@ test.dat$price_binary <- ifelse(test.dat$price > median_price, 1, 0)
 
 ```
 
-```{r}
+```{r Logistic Regression Model and Confusion Matrix}
 # [Luciano]
 
 log_model <- glm(price_binary ~ ., data = train.dat, family = binomial())
@@ -730,8 +706,41 @@ print(log_conf_mat)
 
 ```
 
+``` {r Model Diagnostics for Logistic Model}
+
+# Diagnostic Plots for the Logistic Regression
+par(mfrow = c(2, 2))
+plot(log_model)
+
+```
+4 UPs
+
+#### \color{blue} *Analysis*: The diagnostic plots suggest that while the regression model captures the overall trend, there are indications of non-normality in residuals, potential heteroscedasticity, and the presence of influential outliers, warranting further investigation into data transformation or alternative modeling approaches.
 
 
+```{r ROC Curve for Logistic Regression}
+
+# Assuming binary classification
+roc_curve <- pROC::roc(test.dat$price_binary, log_predictions)
+plot(roc_curve, main = "ROC Curve")
+
+```
+ROC Curve
+
+
+#### \color{blue} *Analysis*: The ROC curve demonstrates perfect classification performance with maximal sensitivity and specificity
+
+
+```{r Variable Importance for Tree Model}
+
+# randomForest model for variable importance
+rf_model <- randomForest(price ~ ., data = train.dat)
+randomForest::varImpPlot(rf_model)
+
+```
+Random Forest plot
+
+#### \color{blue} *Analysis*: The Variable Importance plot from a Random Forest model highlights 'price.binary' as the most influential predictor, with 'sqft_living', 'grade', and 'sqft_living15' also contributing significantly to model accuracy, suggesting their strong predictive power in the Random Forest model.
 
 
 
