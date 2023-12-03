@@ -36,6 +36,7 @@ library(e1071)
 library(nnet)
 library(kernlab)
 library(rpart.plot)
+library(rsq)
 
 
 # Functions 

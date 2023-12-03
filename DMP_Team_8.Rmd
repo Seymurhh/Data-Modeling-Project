@@ -426,6 +426,31 @@ plot(house_lm)
 
 ```
 
+```{r}
+# [Kaleo]
+# Results dataframe to append model scores
+
+# Calculate scores (mse,rmse,r-squared)
+
+# Test data Predictions
+house_lm__test_pred = predict(house_lm, newdata = test.dat)
+# Test MSE
+house_lm_test_mse = mean((house_lm_pred-test.dat$price)^2)
+# Test RMSE
+house_lm__test_Rmse = sqrt(house_lm_mse)
+# Test Residuals
+house_lm__test_residuals = test.dat$price-house_lm_pred
+# Test R-squared
+house_lm_test_rsq = 1- var(house_lm_residuals)/var(test.dat$price)
+# SSE
+house_lm_test_sse_test <- sum((test.dat$price - house_lm__test_pred)^2)
+  
+results.df = data.frame(model= "Linear Regression All (Baseline)",
+                 R.Squared.Train= summary(house_lm)$r.square,
+                 R.Squared.Test= house_lm_test_rsq,
+                 RMSE.test = house_lm__test_Rmse,
+                 SSE.test = house_lm_test_sse_test)
+```
 
 ```{r}
 predictors_to_drop <- c("<=1900", "1901-1925", "1926-1950", "1951-1975", "1976-2000", "2001+", "zipcode_98198", "zipcode_98199", "sqft_basement")
@@ -742,7 +767,13 @@ print(log_conf_mat)
 
 *Based on the performances on both train and test data sets, determine your primary (champion) model and the other model which would be your benchmark model. Validate your models using the test sample. Do the residuals look normal? Does it matter given your technique? How is the prediction performance using Pseudo R^2, SSE, RMSE?  Benchmark the model against alternatives. How good is the relative fit? Are there any serious violations of the model assumptions? Has the model had issues or limitations that the user must know? (Which assumptions are needed to support the Champion model?)* 
 
+```{r}
+# [Kaleo]
+# Results dataframe...We're supposed to use Pseudo R-squared, SSE, RMSE, as seen above. 
+# We'll have to look into 'Pseudo R-squared' most likely
 
+results.df
+```
 \newpage
 ## VII. Ongoing Model Monitoring Plan (5 points)
 
