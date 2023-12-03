@@ -255,6 +255,39 @@ ggplot(data = ndf_house, aes(x = long, y = lat, color = price)) +
 
 ```
 
+## [Analysis section] 
+
+From geographical map, it is evident that properties situated around the latitude line of 47.6 and longitude between -122.25 and -122.00, which corresponds to the central and northern parts of Seattle, command higher prices per square foot. The relatively lower-priced properties per square foot, shown in orange, are more dispersed and located primarily south of central Seattle, extending towards Tacoma, as well as in the outlying suburban areas.It is also noticeable that along the latitudinal line around 47.4, there are pockets of high-priced properties per square foot, potentially indicating affluent neighborhoods or areas with high-value real estate.
+
+The map clearly shows a correlation between location and property value per square foot, with central urban areas exhibiting the highest values. This pattern is typical for urban centers where proximity to amenities, employment opportunities, and other socioeconomic factors drive up real estate prices.
+
+```{r Map visualizatoin of average prices by squre foot distribution over long and lat}
+library(ggmap)
+library(ggplot2)
+library(dplyr)      
+library(car)
+
+register_stadiamaps(key = '765cbcd1-2ec2-40e3-8a81-98624e616208')
+df_summary <- ndf_house %>%
+  mutate(price_per_sqft = price / sqft_living) %>%
+  group_by(long, lat) %>%
+  summarize(avg_price_per_sqft = mean(price_per_sqft, na.rm = TRUE), .groups = 'drop')
+
+king_county_map <- get_stadiamap(bbox = c(left = min(df_house$long), 
+                                         bottom = min(df_house$lat), 
+                                         right = max(df_house$long), 
+                                         top = max(df_house$lat)),
+                                 maptype = "stamen_terrain",
+                                 zoom = 10)
+ggmap(king_county_map) +
+  geom_point(data = df_summary, aes(x = long, y = lat, color = avg_price_per_sqft), 
+             alpha = 0.5, size = 1) +
+  scale_color_gradient(low = "orange", high = "darkblue", name = "Avg Price per Sqft") +
+  labs(title = "Average Price per Sqft of Properties in King County",
+       x = "Longitude", y = "Latitude") +
+  theme_minimal()
+
+```
 ### Zipcode visualizations (can discard)
 ***Zipcode is a valid predictor***
 
