@@ -128,7 +128,7 @@ head(df_house)
 [Add here info about the data and what was performed]
 
 ```{r Data types, Categories and Cleaning}
-
+# [Kaleo]
 #removing `id` column
 df_house = subset(df_house, select = -id)
 
@@ -145,10 +145,10 @@ head(df_house)
 ```
 
 ```{r Convert variables to numeric data}
-
+# [Kaleo]
 #converting all to numeric...ignores date column
 ndf_house = df_house[sapply(df_house, is.numeric)]
-
+# use df_house instead, unless you have a specific reason!
 head(ndf_house)
 
 ```
@@ -259,12 +259,14 @@ ggplot(data = ndf_house, aes(x = long, y = lat, color = price)) +
 ***Zipcode is a valid predictor***
 
 ```{r}
-
+# [Kaleo]
 ggplot( df_house, aes(x = as.factor(zipcode), y = price)) +
   geom_boxplot()+theme(axis.text.x = element_text(angle = 90,vjust=0.5))
 ```
 
 ```{r}
+# [Kaleo]
+# Prices by Zipcode heatmap
 heatmap_data <- df_house %>%
   group_by(zipcode) %>%
   summarize(med_price = median(price),
@@ -298,7 +300,7 @@ ggplot(heatmap_data, aes(x = factor(zipcode, levels = zipcode), y = 1, fill = me
 ***[Add here the initial analysis of the correlation matrix]***
 
 ```{r Correlation Matrix}
-
+# [Kaleo]
 #correlation matrix
 cor_matrix = cor(ndf_house)
 correlation_df = as.data.frame(cor_matrix)
@@ -320,6 +322,7 @@ pheatmap(cor_matrix,
 **Creating a new dataframe with variables 'highly' (>0.2) correlated with price**
 
 ```{r}
+# [Kaleo]
 head(x_high)
 ```
 
@@ -375,6 +378,7 @@ head(df_house)
 ### Zipcode Dummy Variables
 
 ```{r}
+# [Kaleo]
 #store zip codes
 zipcodes = data.frame(df_house$zipcode,df_house$price) 
 colnames(zipcodes) = c("zip","price")
@@ -502,6 +506,98 @@ house_lm2<-lm(price^lambda~.,data=test.dat)
 
 *Build an alternative model based on one of the following approaches to predict price: regression tree, NN, or SVM. Explore using a logistic regression. Check the applicable model assumptions. Apply in-sample and out-of-sample testing, backtesting and review the comparative goodness of fit of the candidate models. Describe step by step your procedure to get to the best model and why you believe it is fit for purpose.*
 
+##Random Forest
+
+```{r}
+## [Kaleo]
+## importing libraries
+
+#install.packages("randomForest")
+#library(randomForest)
+```
+
+```{r}
+# [Kaleo]
+# changing column names to fit randomforest
+og.names = colnames(train.dat)
+col_names_rf = c("until_1900","from.1901_1925","from.1926_1950","from.1951_1975",
+                 "from.1976_2000","from.2001_after")
+for (i in 26:31){
+  colnames(train.dat)[i] = col_names_rf[i-25]
+  colnames(test.dat)[i] = col_names_rf[i-25]
+}
+```
+
+```{r}
+#[Kaleo]
+
+ntree_values <- c(55, 112, 150, 200, 250)
+
+mse_values = numeric(length(ntree_values))
+test_rsq_values = numeric(length(ntree_values))
+train_rsq_values = numeric(length(ntree_values))
+
+# commented out cross validation to save computation time!!
+
+# for (i in seq_along(ntree_values)) {
+#   ntree = ntree_values[i]
+#   
+#   model = randomForest(price ~ ., data = train.dat, ntree = ntree)
+#   predictions_test <- predict(model, newdata = test.dat)
+#   predictions_train <- predict(model, newdata = train.dat)
+#   
+#   mse_values[i] <- mean((predictions_test - test.dat$price)^2)
+#   test_rsq_values[i] = cor(predictions_test,test.dat$price)^2
+#   train_rsq_values[i] = cor(predictions_train,train.dat$price)^2
+# }
+```
+
+```{r}
+#[Kaleo]
+mse_hard.coded = c(18959180557,19044061189,19147650224,18975362291,18893426330)
+test_rsq_values_hard.coded = c(0.8734077,0.8730189,0.8719060,0.8740622,0.8747472)
+
+# Plot the results
+plot(ntree_values, mse_hard.coded, type = "b", xlab = "Number of Trees", ylab = "Mean Squared Error", main = "Random Forest Cross Validation Test MSE (ntrees)")
+
+plot(ntree_values, test_rsq_values_hard.coded,type="o", xlab = "Number of Trees", ylab = "Test R-squared", main = "Random Forest Cross Validation Test R-squared (ntrees)")
+text(ntree_values,test_rsq_values_hard.coded,labels=round(test_rsq_values_hard.coded,4),pos=3,xpd=TRUE)
+```
+```{r}
+# [Kaleo]
+
+#commented out for computation time..
+
+#using efficient model (50 trees...for now)
+house_rf = randomForest(price ~ ., data = train.dat, ntree = 50)
+rf_test_pred = predict(house_rf,newdata=test.dat)
+rf_train_pred = predict(house_rf,newdata=train.dat)
+
+rf_test_mse = mean((rf_test_pred - test.dat$price)^2)
+rf_test_rsq = cor(rf_test_pred,test.dat$price)^2
+rf_train_rsq = cor(rf_train_pred,train.dat$price)^2
+
+cat("test mse:",rf_test_mse,"train rsq:", rf_train_rsq, "test rsq:",rf_test_rsq)
+```
+
+```{r}
+#[Kaleo]
+
+# relative variable importance
+par(mar = c(7, 5, 4, 2))
+
+var_importance = importance(house_rf)
+top_features = var_importance[order(var_importance[,1], decreasing = TRUE), ][1:12]
+
+barplot(top_features,names.arg = rownames(top_features),las=2)
+```
+
+```{r}
+# [Kaleo] 
+# change column names back
+colnames(train.dat) = og.names
+colnames(test.dat) = og.names
+```
 \newpage
 ## VI. Model Limitation and Assumptions (15 points)
 
