@@ -32,7 +32,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 source("libs_funcs.R")
 
-library(readr)
 HouseSales<-read.csv("KC_House_Sales.csv")
 ```
 \newpage
@@ -262,10 +261,6 @@ From geographical map, it is evident that properties situated around the latitud
 The map clearly shows a correlation between location and property value per square foot, with central urban areas exhibiting the highest values. This pattern is typical for urban centers where proximity to amenities, employment opportunities, and other socioeconomic factors drive up real estate prices.
 
 ```{r Map visualizatoin of average prices by squre foot distribution over long and lat}
-library(ggmap)
-library(ggplot2)
-library(dplyr)      
-library(car)
 
 register_stadiamaps(key = '765cbcd1-2ec2-40e3-8a81-98624e616208')
 df_summary <- ndf_house %>%
@@ -539,15 +534,8 @@ house_lm2<-lm(price^lambda~.,data=test.dat)
 
 *Build an alternative model based on one of the following approaches to predict price: regression tree, NN, or SVM. Explore using a logistic regression. Check the applicable model assumptions. Apply in-sample and out-of-sample testing, backtesting and review the comparative goodness of fit of the candidate models. Describe step by step your procedure to get to the best model and why you believe it is fit for purpose.*
 
-##Random Forest
 
-```{r}
-## [Kaleo]
-## importing libraries
-
-#install.packages("randomForest")
-#library(randomForest)
-```
+### Random Forest
 
 ```{r}
 # [Kaleo]
@@ -631,6 +619,103 @@ barplot(top_features,names.arg = rownames(top_features),las=2)
 colnames(train.dat) = og.names
 colnames(test.dat) = og.names
 ```
+
+
+
+### Regression Tree Model
+
+```{r}
+# [Luciano]
+
+# Build the regression tree model
+tree_model <- rpart(price ~ ., data = train.dat, method = "anova")
+print(summary(tree_model))
+
+rpart.plot(tree_model, main="Regression Tree", extra=1, under=TRUE, faclen=0, cex=0.75)
+
+# Prediction and Performance
+tree_predictions <- predict(tree_model, test.dat)
+tree_rmse <- sqrt(mean((tree_predictions - test.dat$price)^2))
+print(paste("Tree RMSE:", tree_rmse))
+
+```
+
+
+### Neural Network Model
+
+```{r}
+# [Luciano]
+
+# Build the neural network model
+nn_model <- nnet(price ~ ., data = train.dat, size = 5, linout = TRUE, trace = FALSE, MaxNWts = 5000)
+print(nn_model)
+
+# Prediction and Performance
+nn_predictions <- predict(nn_model, test.dat, type = "raw")
+nn_rmse <- sqrt(mean((nn_predictions - test.dat$price)^2))
+print(paste("NN RMSE:", nn_rmse))
+
+```
+
+
+### Support Vector Machine (SVM) Model
+
+```{r}
+# [Luciano]
+
+# Build the SVM model
+svm_model <- svm(price ~ ., data = train.dat)
+print(summary(svm_model))
+
+# Prediction and Performance
+svm_predictions <- predict(svm_model, test.dat)
+svm_rmse <- sqrt(mean((svm_predictions - test.dat$price)^2))
+print(paste("SVM RMSE:", svm_rmse))
+
+```
+
+
+### Logistic Regression Model
+
+```{r}
+# [Luciano]
+
+# Calculate the median price
+median_price <- median(train.dat$price)
+
+# Create a binary variable based on the median price
+train.dat$price_binary <- ifelse(train.dat$price > median_price, 1, 0)
+test.dat$price_binary <- ifelse(test.dat$price > median_price, 1, 0)
+
+```
+
+```{r}
+# [Luciano]
+
+log_model <- glm(price_binary ~ ., data = train.dat, family = binomial())
+print(summary(log_model))
+
+# Predicting probabilities
+log_predictions_prob <- predict(log_model, test.dat, type = "response")
+
+# Binning probabilities into two categories: 0 and 1
+log_predictions <- ifelse(log_predictions_prob > 0.5, 1, 0)
+
+# Ensuring factors have the same levels
+log_predictions_factor <- factor(log_predictions, levels = c(0, 1))
+test_price_binary_factor <- factor(test.dat$price_binary, levels = c(0, 1))
+
+# Confusion Matrix
+log_conf_mat <- caret::confusionMatrix(log_predictions_factor, test_price_binary_factor)
+print(log_conf_mat)
+
+```
+
+
+
+
+
+
 \newpage
 ## VI. Model Limitation and Assumptions (15 points)
 

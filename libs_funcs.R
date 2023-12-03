@@ -30,6 +30,13 @@ library(neuralnet)
 library(corrplot)
 library(gridExtra)
 library(fpc)
+library(randomForest)
+library(rpart)
+library(e1071)
+library(nnet)
+library(kernlab)
+library(rpart.plot)
+
 
 # Functions 
 
