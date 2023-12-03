@@ -487,30 +487,15 @@ knitr::kable(cbind(R.Square.Train,R.Square.Test), align = "c",
 
 *Build a regression model to predict price.  And of course,  create the train data set which contains 70% of the data and use set.seed (1023). The remaining 30% will be your test data set. Investigate the data and combine the level of categorical variables if needed and drop variables. For example, you can drop id, Latitude, Longitude, etc. *
 
-```{r}
-set.seed(1023)
-df_house = df_house[-c(26:31, 33:102)]
-
-n<-dim(df_house)[1]
-IND<-sample(c(1:n),round(n*0.7))
-train.dat<-df_house[IND,]
-test.dat<-df_house[-c(IND),]
-
-dim(train.dat)
-dim(test.dat)
-```
 
 
 ```{r}
-	
-library(e1071)
-library(kernlab)
 
 # find optimal cost of misclassification
-tune.out <- tune(svm, price~., data = train.dat, kernel = "linear",
-                 ranges = list(cost = c(0.001, 0.01, 0.1, 1, 5, 10, 100)))
+# tune.out <- tune(svm, price~., data = train.dat, kernel = "linear",
+#                 ranges = list(cost = c(0.001, 0.01, 0.1, 1, 5, 10, 100)))
 # extract the best model
-(bestmod <- tune.out$best.model)
+# (bestmod <- tune.out$best.model)
 ```
 
 
