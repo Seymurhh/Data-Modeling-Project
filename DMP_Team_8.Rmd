@@ -29,6 +29,9 @@ editor_options:
 \newpage
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+source("libs_funcs.R")
+
 library(readr)
 HouseSales<-read.csv("KC_House_Sales.csv")
 ```
@@ -168,8 +171,6 @@ summary(ndf_house$price)
 
 ### Graphical Analysis - in progress - Seymur
 
-***[Add here the initial analysis]***
-
 The pairwise scatter plot shows the correlation between highly correlated variables extracted from heatmap correlation matrix.
 
 - there is a strong correlation between sqft_living and price, indicated that as the living area increases, so does the house price increase.
@@ -177,7 +178,6 @@ The pairwise scatter plot shows the correlation between highly correlated variab
 - Each variable's distribution is shown on the diagonal, with price notably skewed towards lower values, indicating most homes are on the more affordable end of the spectrum with fewer high-priced outliers.
 
 ```{r}
-library(GGally)
 
 # Pairwise scatter plot with correlation coefficients
 ggpairs(ndf_house, columns = c("price", "sqft_living", "bedrooms", "bathrooms", "grade"), 
@@ -198,7 +198,6 @@ ggplot(df_house, aes(x = price)) +
 **Analysis**: The first boxplot shows that house prices generally increase with the number of bedrooms, but vary widely, especially for homes with more bedrooms. The second boxplot indicates that house prices rise with better house grades, with greater price variability at higher grades.Both plots demonstrate that while there is a general trend of increasing price with more bedrooms and higher grades, there is also a considerable variation within these categories. The presence of outliers suggests that factors other than the number of bedrooms and house grade can significantly influence house prices.
 
 ```{r}
-library(ggplot2)
 
 # Boxplot for price by number of bedrooms
 ggplot(df_house, aes(x = factor(bedrooms), y = price)) + 
@@ -211,20 +210,9 @@ ggplot(df_house, aes(x = factor(grade), y = price)) +
   labs(title = "Boxplot of Prices by House Grade", x = "Grade", y = "Price")
 
 ```
-
-```{r}
-
-ggplot(df_house, aes(x = sqft_living, y = price)) + 
-  geom_point(alpha = 0.5) +
-  geom_smooth(method = "lm", color = "red") +
-  labs(title = "Scatter Plot of Price vs Sqft Living with Regression Line", x = "Sqft Living", y = "Price")
-
-```
 **Analysis**: the average price tends to increase with the number of bedrooms up to a certain point, but then the trend is less consistent. For instance, homes with 6 bedrooms have a higher average price than those with 7 or 8 bedrooms, and the average price for homes with 11 bedrooms is lower than for those with fewer bedrooms. There is a notable outlier at 33 bedrooms with a relatively low average price, which could indicate an atypical property or data error.
 
 ```{r}
-
-library(ggplot2)
 
 average_prices <- aggregate(price ~ bedrooms, data = ndf_house, FUN = mean)
 ggplot(average_prices, aes(x = factor(bedrooms), y = price)) +
@@ -238,8 +226,6 @@ ggplot(average_prices, aes(x = factor(bedrooms), y = price)) +
 
 ```{r}
 
-library(ggplot2)
-
 ggplot(df_house, aes(x = sqft_living, y = price)) +
   geom_point(aes(color = factor(bedrooms)), alpha = 0.6) +
   scale_color_brewer(type = 'seq', palette = 'Blues') +
@@ -252,26 +238,12 @@ ggplot(df_house, aes(x = factor(waterfront), y = price)) +
   geom_boxplot() +
   labs(title = "Boxplot of House Prices by Waterfront", x = "Waterfront", y = "Price")
 ```
-```{r}
-ggplot(df_house, aes(x = yr_built, y = price)) +
-  geom_point(aes(color = factor(bedrooms)), alpha = 0.6) +
-  scale_color_brewer(type = 'seq', palette = 'Purples') +
-  labs(title = "House Price vs. Year Built", x = "Year Built", y = "Price")
-```
 
-```{r}
-ggplot(df_house, aes(x = sqft_lot, y = price)) +
-  geom_point(aes(color = factor(bedrooms)), alpha = 0.6) +
-  scale_color_brewer(type = 'seq', palette = 'Greens') +
-  labs(title = "House Price vs. Lot Size", x = "Lot Size (sqft)", y = "Price")
+**Analysis**: From geographical map, it is evident that properties situated around the latitude line of 47.6 and longitude between -122.25 and -122.00, which corresponds to the central and northern parts of Seattle, command higher prices per square foot. The relatively lower-priced properties per square foot, shown in orange, are more dispersed and located primarily south of central Seattle, extending towards Tacoma, as well as in the outlying suburban areas.It is also noticeable that along the latitudinal line around 47.4, there are pockets of high-priced properties per square foot, potentially indicating affluent neighborhoods or areas with high-value real estate.
 
-```
-
-***[Add here the initial analysis]***
+The map clearly shows a correlation between location and property value per square foot, with central urban areas exhibiting the highest values. This pattern is typical for urban centers where proximity to amenities, employment opportunities, and other socioeconomic factors drive up real estate prices.
 
 ```{r Geo dist of house prices in King County}
-
-library(ggplot2)
 
 # Scatter plot of properties
 ggplot(data = ndf_house, aes(x = long, y = lat, color = price)) +
@@ -283,45 +255,10 @@ ggplot(data = ndf_house, aes(x = long, y = lat, color = price)) +
 
 ```
 
-## [Analysis section] 
-
-From geographical map, it is evident that properties situated around the latitude line of 47.6 and longitude between -122.25 and -122.00, which corresponds to the central and northern parts of Seattle, command higher prices per square foot. The relatively lower-priced properties per square foot, shown in orange, are more dispersed and located primarily south of central Seattle, extending towards Tacoma, as well as in the outlying suburban areas.It is also noticeable that along the latitudinal line around 47.4, there are pockets of high-priced properties per square foot, potentially indicating affluent neighborhoods or areas with high-value real estate.
-
-The map clearly shows a correlation between location and property value per square foot, with central urban areas exhibiting the highest values. This pattern is typical for urban centers where proximity to amenities, employment opportunities, and other socioeconomic factors drive up real estate prices.
-
-```{r Map visualizatoin of average prices by squre foot distribution over long and lat}
-library(ggmap)
-library(ggplot2)
-library(dplyr)      
-library(car)
-
-register_stadiamaps(key = '765cbcd1-2ec2-40e3-8a81-98624e616208')
-df_summary <- ndf_house %>%
-  mutate(price_per_sqft = price / sqft_living) %>%
-  group_by(long, lat) %>%
-  summarize(avg_price_per_sqft = mean(price_per_sqft, na.rm = TRUE), .groups = 'drop')
-
-king_county_map <- get_stadiamap(bbox = c(left = min(df_house$long), 
-                                         bottom = min(df_house$lat), 
-                                         right = max(df_house$long), 
-                                         top = max(df_house$lat)),
-                                 maptype = "stamen_terrain",
-                                 zoom = 10)
-ggmap(king_county_map) +
-  geom_point(data = df_summary, aes(x = long, y = lat, color = avg_price_per_sqft), 
-             alpha = 0.5, size = 1) +
-  scale_color_gradient(low = "orange", high = "darkblue", name = "Avg Price per Sqft") +
-  labs(title = "Average Price per Sqft of Properties in King County",
-       x = "Longitude", y = "Latitude") +
-  theme_minimal()
-
-```
 ### Zipcode visualizations (can discard)
 ***Zipcode is a valid predictor***
 
 ```{r}
-library(dplyr)
-library(scales)
 # [Kaleo]
 ggplot( df_house, aes(x = as.factor(zipcode), y = price)) +
   geom_boxplot()+theme(axis.text.x = element_text(angle = 90,vjust=0.5))
@@ -363,8 +300,6 @@ ggplot(heatmap_data, aes(x = factor(zipcode, levels = zipcode), y = 1, fill = me
 ***[Add here the initial analysis of the correlation matrix]***
 
 ```{r Correlation Matrix}
-
-library(pheatmap)
 # [Kaleo]
 #correlation matrix
 cor_matrix = cor(ndf_house)
@@ -440,7 +375,6 @@ head(df_house)
 
 ```
 
-
 ### Zipcode Dummy Variables
 
 ```{r}
@@ -476,6 +410,7 @@ dim(train.dat)
 dim(test.dat)
 ```
 
+**Analysis**:
 
 ```{r}
 house_lm<-lm(price ~.,data=train.dat)
@@ -510,18 +445,16 @@ or if p-value < alpha (0.01) reject the hull
 P value is < 2.2e-16. So we reject $H_o$, Error variances are not constant.
 
 ```{r}
-library(lmtest)
 bptest(house_lm, studentize = FALSE)
 ```
 
 ```{r}
-library(MASS)
 par(mfrow=c(1,1))
 bc<-boxcox(house_lm,lambda=seq(-4,4,by=0.1))
 lambda <- bc$x[which.max(bc$y)] 
 lambda  #This is the optimal lambda
 ```
-
+**Analysis**:
 
 ```{r}
 house_lm1<-lm(price^lambda~.,data=train.dat)
@@ -547,8 +480,6 @@ knitr::kable(cbind(R.Square.Train,R.Square.Test), align = "c",
 
 
 
-
-
 \newpage
 ## IV. Model Performance Testing (15 points)
 
@@ -559,7 +490,7 @@ knitr::kable(cbind(R.Square.Train,R.Square.Test), align = "c",
 ##Best Subset Regression
 
 ```{r}
-library(olsrr)
+
 house_lm2<-lm(price^lambda~.,data=test.dat)
 # k1<-ols_step_best_subset(house_lm2)
 # k1
@@ -582,7 +513,7 @@ house_lm2<-lm(price^lambda~.,data=test.dat)
 ## importing libraries
 
 #install.packages("randomForest")
-library(randomForest)
+#library(randomForest)
 ```
 
 ```{r}
