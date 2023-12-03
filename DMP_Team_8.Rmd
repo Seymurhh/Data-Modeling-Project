@@ -1,0 +1,530 @@
+---
+title: "HARVARD EXTENSION SCHOOL"
+subtitle: "EXT CSCI E-106 Model Data Class Group Project Template"
+author: 
+- Author Kaleo Pudim
+- Author Luciano Carvalho
+- Author Ibrahim Hashim
+- Author Bethun Bhowmik
+- Author Mohanish Kashiwar
+- Author Seymur Hasanov
+
+tags: [logistic, neuronal networks, SVM, etc..]
+abstract: 
+  This is the location for your abstract.
+
+  It must consist of two paragraphs.
+date: "`r format(Sys.time(), '%d %B %Y')`"
+geometry: margin=1.3cm
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: 2
+  html_document:
+    df_print: paged
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+\newpage
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+source("libs_funcs.R")
+
+library(readr)
+HouseSales<-read.csv("KC_House_Sales.csv")
+```
+\newpage
+## House Sales in King County, USA data to be used in the Final Project
+
+| Variable| Description |
+| :-------:| :------- |
+| id| **Unique ID for each home sold (it is not a predictor)**    |
+| date| *Date of the home sale*    |
+| price| *Price of each home sold*    |
+| bedrooms| *Number of bedrooms*    |
+| bathrooms| *Number of bathrooms, where ".5" accounts for a bathroom with a toilet but no shower*    |
+| sqft_living| *Square footage of the apartment interior living space*    |
+| sqft_lot| *Square footage of the land space*    |
+| floors| *Number of floors*    |
+| waterfront| *A dummy variable for whether the apartment was overlooking the waterfront or not*    |
+| view| *An index from 0 to 4 of how good the view of the property was*    |
+| condition| *An index from 1 to 5 on the condition of the apartment,*    |
+| grade| *An index from 1 to 13, where 1-3 falls short of building construction and design, 7 has an average level of construction and design, and 11-13 has a high-quality level of construction and design.*    |
+| sqft_above| *The square footage of the interior housing space that is above ground level*    | 
+| sqft_basement| *The square footage of the interior housing space that is below ground level*    |
+| yr_built| *The year the house was initially built*    |
+| yr_renovated| *The year of the house’s last renovation*    |
+| zipcode| *What zipcode area the house is in*    |
+| lat| *Latitude*    |
+| long| *Longitude*    |
+| sqft_living15| *The square footage of interior housing living space for the nearest 15 neighbors*    |
+| sqft_lot15| *The square footage of the land lots of the nearest 15 neighbors*    |
+\newpage
+## Instructions:
+0.  Join a team with your fellow students with appropriate size (Four Students total)
+1.  Load and Review the dataset named "KC_House_Sales'csv
+2.	Create the train data set which contains 70% of the data and use set.seed (1023). The remaining 30% will be your test data set.
+3.	Investigate the data and combine the level of categorical variables if needed and drop variables as needed. For example, you can drop id, Latitude, Longitude, etc.
+4.	Build a regression model to predict price. 
+5.	Create scatter plots and a correlation matrix for the train data set. Interpret the possible relationship between the response.
+6.	Build the best multiple linear models by using the stepwise selection method. Compare the performance of the best two linear models. 
+7.	Make sure that model assumption(s) are checked for the final model. Apply remedy measures (transformation, etc.) that helps satisfy the assumptions. 
+8.	Investigate unequal variances and multicollinearity. If necessary, apply remedial methods (WLS, Ridge, Elastic Net, Lasso, etc.). 
+9.	Build an alternative model based on one of the following approaches to predict price: regression tree, NN, or SVM.  Check the applicable model assumptions. Explore using a logistic regression. 
+10.	Use the test data set to assess the model performances from above.
+11.	Based on the performances on both train and test data sets, determine your primary (champion) model and the other model which would be your benchmark model.
+12.	Create a model development document that describes the model following this template, input the name of the authors, Harvard IDs, the name of the Group, all of your code and calculations, etc..:
+
+## Due Date: December 18th, 2023 at 11:59 pm EST
+
+**Notes**
+**No typographical errors, grammar mistakes, or misspelled words, use English language**
+**All tables need to be numbered and describe their content in the body of the document**
+**All figures/graphs need to be numbered and describe their content**
+**All results must be accurate and clearly explained for a casual reviewer to fully understand their purpose and impact**
+**Submit both the RMD markdown file and PDF with the sections with appropriate explanations. A more formal document in Word can be used in place of the pdf file but must include all appropriate explanations.**
+
+Executive Summary
+
+This section will describe the model usage, your conclusions and any regulatory and internal requirements. In a real world scneario, this section is for senior management who do not need to know the details. They need to know high level (the purpose of the model, limitations of the model and any issues).
+
+
+\newpage
+## I. Introduction (5 points)
+
+*This section needs to introduce the reader to the problem to be resolved, the purpose, and the scope of the statistical testing applied. What you are doing with your prediction? What is the purpose of the model? What methods were trained on the data, how large is the test sample, and how did you build the model?*
+
+--- in-progress ---
+
+This project aims to develop a predictive model for house prices in King County, USA. The model's purpose is to provide an analytical tool for understanding the key factors influencing property values in this area, which is significant for various stakeholders in the real estate sector.
+
+Our primary data source is the 'KC_House_Sales' dataset, which includes detailed information on various house attributes. **(Add here the hypothesis of initial exploration on house prices)**.
+
+The methodology adopted for this project combines conventional statistical techniques with modern data analytics methods. Initial models will be based on linear regression, with further exploration into more complex approaches like neural networks and decision trees, depending on their performance in preliminary analyses.
+
+To ensure robust model training and validation, the dataset has been divided into a training set (70%) and a test set (30%). This division is crucial for evaluating the model's effectiveness in making predictions on new, unseen data.
+
+\newpage
+## II. Description of the data and quality (15 points)
+
+*Here you need to review your data, the statistical test applied to understand the predictors and the response and how are they correlated. Extensive graph analysis is recommended. Is the data continuous, or categorical, do any transformation needed? Do you need dummies? *
+
+### Data Overview
+
+[Add here initial observation analysis]
+
+```{r Data Overview}
+
+df_house = read.csv("KC_House_Sales.csv")
+cat("Number of NA values in dataframe:",sum(is.na(df_house))) #no NA values
+head(df_house)
+
+```
+
+### Data Types, Categories and Cleaning
+
+[Add here info about the data and what was performed]
+
+```{r Data types, Categories and Cleaning}
+
+#removing `id` column
+df_house = subset(df_house, select = -id)
+
+#converting `price` to numeric
+df_house$price <- as.numeric(gsub("[\\$,]", "", df_house$price))
+
+##cleaning `date` and adding `year`,`month`,`day` columns
+df_house$date <- as.POSIXct(df_house$date, format = "%Y%m%d")
+df_house$year <- as.numeric(format(df_house$date, "%Y"))
+df_house$month <- as.numeric(format(df_house$date, "%m"))
+df_house$day <- as.numeric(format(df_house$date, "%d"))
+
+head(df_house)
+```
+
+```{r Convert variables to numeric data}
+
+#converting all to numeric...ignores date column
+ndf_house = df_house[sapply(df_house, is.numeric)]
+
+head(ndf_house)
+
+```
+
+### Stat Summary - in progress
+
+[Add here the initial analysis of the summary, if applicable]
+
+```{r Stat Summary}
+
+str(ndf_house)
+summary(ndf_house)
+
+```
+
+```{r Stat summary of the price}
+summary(ndf_house$price)
+```
+
+
+### Graphical Analysis - in progress - Seymur
+
+The pairwise scatter plot shows the correlation between highly correlated variables extracted from heatmap correlation matrix.
+
+- there is a strong correlation between sqft_living and price, indicated that as the living area increases, so does the house price increase.
+- A strong positive correlation with grade, implying that higher-quality houses tend to be more expensive.
+- Each variable's distribution is shown on the diagonal, with price notably skewed towards lower values, indicating most homes are on the more affordable end of the spectrum with fewer high-priced outliers.
+
+```{r}
+
+# Pairwise scatter plot with correlation coefficients
+ggpairs(ndf_house, columns = c("price", "sqft_living", "bedrooms", "bathrooms", "grade"), 
+        title = "Pairwise Scatter Plots with House Price")
+
+```
+
+**Analysis**: The histogram below shows the distribution of house prices, revealing that most houses are in the lower price range with a significant decrease in the number of houses as the price increases, indicating a right-skewed distribution with relatively few high-priced houses.
+
+```{r Histogram of prices}
+
+# Histogram of house prices
+ggplot(df_house, aes(x = price)) +
+  geom_histogram(bins = 30, fill = "blue", color = "black") +
+  labs(title = "Histogram of House Prices", x = "Price", y = "Count")
+
+```
+**Analysis**: The first boxplot shows that house prices generally increase with the number of bedrooms, but vary widely, especially for homes with more bedrooms. The second boxplot indicates that house prices rise with better house grades, with greater price variability at higher grades.Both plots demonstrate that while there is a general trend of increasing price with more bedrooms and higher grades, there is also a considerable variation within these categories. The presence of outliers suggests that factors other than the number of bedrooms and house grade can significantly influence house prices.
+
+```{r}
+
+# Boxplot for price by number of bedrooms
+ggplot(df_house, aes(x = factor(bedrooms), y = price)) + 
+  geom_boxplot() +
+  labs(title = "Boxplot of Prices by Number of Bedrooms", x = "Number of Bedrooms", y = "Price")
+
+# Boxplot for price by house grade
+ggplot(df_house, aes(x = factor(grade), y = price)) + 
+  geom_boxplot() +
+  labs(title = "Boxplot of Prices by House Grade", x = "Grade", y = "Price")
+
+```
+**Analysis**: the average price tends to increase with the number of bedrooms up to a certain point, but then the trend is less consistent. For instance, homes with 6 bedrooms have a higher average price than those with 7 or 8 bedrooms, and the average price for homes with 11 bedrooms is lower than for those with fewer bedrooms. There is a notable outlier at 33 bedrooms with a relatively low average price, which could indicate an atypical property or data error.
+
+```{r}
+
+average_prices <- aggregate(price ~ bedrooms, data = ndf_house, FUN = mean)
+ggplot(average_prices, aes(x = factor(bedrooms), y = price)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(title = "Average Price by Number of Bedrooms",
+       x = "Number of Bedrooms",
+       y = "Average Price") +
+  theme_minimal()
+
+```
+
+```{r}
+
+ggplot(df_house, aes(x = sqft_living, y = price)) +
+  geom_point(aes(color = factor(bedrooms)), alpha = 0.6) +
+  scale_color_brewer(type = 'seq', palette = 'Blues') +
+  labs(title = "House Price vs. Square Footage of Living Space", x = "Square Footage of Living Space", y = "Price")
+
+```
+
+```{r}
+ggplot(df_house, aes(x = factor(waterfront), y = price)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of House Prices by Waterfront", x = "Waterfront", y = "Price")
+```
+
+**Analysis**: From geographical map, it is evident that properties situated around the latitude line of 47.6 and longitude between -122.25 and -122.00, which corresponds to the central and northern parts of Seattle, command higher prices per square foot. The relatively lower-priced properties per square foot, shown in orange, are more dispersed and located primarily south of central Seattle, extending towards Tacoma, as well as in the outlying suburban areas.It is also noticeable that along the latitudinal line around 47.4, there are pockets of high-priced properties per square foot, potentially indicating affluent neighborhoods or areas with high-value real estate.
+
+The map clearly shows a correlation between location and property value per square foot, with central urban areas exhibiting the highest values. This pattern is typical for urban centers where proximity to amenities, employment opportunities, and other socioeconomic factors drive up real estate prices.
+
+```{r Geo dist of house prices in King County}
+
+# Scatter plot of properties
+ggplot(data = ndf_house, aes(x = long, y = lat, color = price)) +
+  geom_point(alpha = 0.5) +
+  scale_color_gradient(low = "blue", high = "red") +
+  labs(title = "Geographical Distribution of House Prices in King County",
+       x = "Longitude", y = "Latitude", color = "Price") +
+  theme_minimal()
+
+```
+
+### Zipcode visualizations (can discard)
+***Zipcode is a valid predictor***
+
+```{r}
+
+ggplot( df_house, aes(x = as.factor(zipcode), y = price)) +
+  geom_boxplot()+theme(axis.text.x = element_text(angle = 90,vjust=0.5))
+```
+
+```{r}
+heatmap_data <- df_house %>%
+  group_by(zipcode) %>%
+  summarize(med_price = median(price),
+            min_price = min(price),
+            max_price = max(price))
+heatmap_data <- heatmap_data %>% 
+  arrange(desc(med_price))
+
+ggplot(heatmap_data, aes(x = factor(zipcode, levels = zipcode), y = 1, fill = med_price)) +
+  geom_tile() +
+  geom_text(aes(label = paste(scales::comma(min_price),"/",
+                              scales::comma(med_price),"/",
+                              scales::comma(max_price)),
+                vjust = 0.5,angle=90),
+            color = "black", size = 3)+
+  scale_fill_gradient(low = "lightyellow", high = "red", name = "Median Price",
+                      labels = scales::comma_format()) +
+  labs(title = "Heatmap of median prices by zipcode (min/med/max)",
+       x = "zip",
+       y = "") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 0,vjust=0.5),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        legend.position = "bottom",
+        legend.key.width = unit(2, "cm"))
+```
+
+### Correlation Analysis - in progress
+
+***[Add here the initial analysis of the correlation matrix]***
+
+```{r Correlation Matrix}
+
+#correlation matrix
+cor_matrix = cor(ndf_house)
+correlation_df = as.data.frame(cor_matrix)
+
+#new dataframe with variables 'highly' (>0.2) correlated with price
+x_high = subset(ndf_house, select = c(view,waterfront,sqft_basement,sqft_living,
+                                      sqft_living15,sqft_above,grade,bathrooms,bedrooms,floors,lat))
+
+pheatmap(cor_matrix,
+         color = colorRampPalette(c("blue", "white", "red"))(20),
+         main = "correlation matrix heatmap",
+         fontsize = 8,
+         cellwidth = 15,
+         cellheight = 11,
+         display_numbers = TRUE
+)
+```
+
+**Creating a new dataframe with variables 'highly' (>0.2) correlated with price**
+
+```{r}
+head(x_high)
+```
+
+### Data Transformation
+
+### Categorical Variables and Age Analysis
+
+#### Renovation Indicator Variable
+
+A binary variable named 'renovated' was introduced to indicate whether a property has undergone renovation. This variable is set to 1 if the 'yr_renovated' field is not zero, signifying that the property has been renovated at least once. Otherwise, it is set to 0, indicating no renovation. This distinction provides a straightforward way to assess the impact of renovations on property values.
+
+```{r}
+
+# Creating a new variable 'renovated' 
+# 1 if the property has been renovated (yr_renovated != 0), 0 otherwise
+df_house$renovated = ifelse(df_house$yr_renovated != 0, 1, 0)
+
+```
+
+#### Dummy Variables for yr_built
+
+To capture the historical aspect of the properties, the 'yr_built' variable was categorized into six distinct periods: pre-1901, 1901-1925, 1926-1950, 1951-1975, 1976-2000, and post-2000. Dummy variables were then created for each of these categories, allowing for a nuanced analysis of how the construction era affects house prices, while facilitating easier interpretation in regression models.
+
+```{r}
+# Defining breaks for year built
+breaks = c(-Inf, 1900, 1925, 1950, 1975, 2000, Inf)
+labels = c("<=1900", "1901-1925", "1926-1950", "1951-1975", "1976-2000", "2001+")
+
+# Creating factor variable for year built categories
+df_house$yr_built_cat = cut(df_house$yr_built, breaks = breaks, labels = labels, right = FALSE)
+
+
+# Creating dummy variables
+yr_built_dummies = model.matrix(~yr_built_cat-1, data = df_house)
+colnames(yr_built_dummies) = labels
+df_house = cbind(df_house, yr_built_dummies)
+```
+
+#### Property Age Calculation
+
+This is a tentative way to consider "age since las renovation" and see if there's a correlation between the time a house was last built/renovated on its selling price. A new variable called 'age' was calculated to represent the current age of each property. If a property was renovated, its age is the difference between 2023 and the renovation year ('yr_renovated'). If not renovated, the age is the difference between 2023 and the year the house was built ('yr_built'). This variable helps in understanding the effect of property age and recent renovations on house prices.
+
+```{r}
+
+# Creating 'age' column
+df_house$age = ifelse(df_house$renovated == 1, 2023 - df_house$yr_renovated, 2023 - df_house$yr_built)
+
+head(df_house)
+
+
+```
+
+### Zipcode Dummy Variables
+
+```{r}
+#store zip codes
+zipcodes = data.frame(df_house$zipcode,df_house$price) 
+colnames(zipcodes) = c("zip","price")
+
+#create dummies
+dummy_zipcodes = model.matrix(~ 0 + as.factor(zipcode), data = df_house)
+colnames(dummy_zipcodes) = paste0("zipcode_", levels(as.factor(df_house$zipcode)))
+df_house = cbind(df_house, dummy_zipcodes)
+#df_house = subset(df_house, select = -c(zipcode))
+
+head(df_house)
+```
+
+### Summary of the section II
+
+\newpage
+## III. Model Development Process (15 points) - Bethun Bhowmik (in progress)
+
+*Build a regression model to predict price.  And of course,  create the train data set which contains 70% of the data and use set.seed (1023). The remaining 30% will be your test data set. Investigate the data and combine the level of categorical variables if needed and drop variables. For example, you can drop id, Latitude, Longitude, etc. *
+
+```{r}
+set.seed(1023)
+n<-dim(df_house)[1]
+IND<-sample(c(1:n),round(n*0.7))
+train.dat<-df_house[IND,]
+test.dat<-df_house[-c(IND),]
+
+dim(train.dat)
+dim(test.dat)
+```
+
+**Analysis**:
+
+```{r}
+house_lm<-lm(price ~.,data=train.dat)
+summary(house_lm)
+par(mfrow=c(2,2))
+plot(house_lm)
+
+```
+
+
+```{r}
+predictors_to_drop <- c("<=1900", "1901-1925", "1926-1950", "1951-1975", "1976-2000", "2001+", "zipcode_98198", "zipcode_98199", "sqft_basement")
+
+# Update the model by excluding the specified predictors
+updated <- as.formula(paste("price ~ .", paste0("- `", predictors_to_drop, "`", collapse = "")))
+house_lm <- update(house_lm, formula = updated)
+summary(house_lm)
+
+```
+
+```{r}
+ei<-house_lm$residuals
+boxplot(ei,horizontal=TRUE,staplewex=0.5,col=2,xlab="House Price Regression Residuals")
+plot(house_lm$fitted.values,ei,xlab="Fitted Values House Linear Model",ylab="Residuals House Linear Model")
+```
+
+$H_o$: Error variances are constant
+$H_a$: Error variances are not constant
+Decision Rule is if statistic> critical reject the null
+or if p-value < alpha (0.01) reject the hull
+
+P value is < 2.2e-16. So we reject $H_o$, Error variances are not constant.
+
+```{r}
+bptest(house_lm, studentize = FALSE)
+```
+
+```{r}
+par(mfrow=c(1,1))
+bc<-boxcox(house_lm,lambda=seq(-4,4,by=0.1))
+lambda <- bc$x[which.max(bc$y)] 
+lambda  #This is the optimal lambda
+```
+**Analysis**:
+
+```{r}
+house_lm1<-lm(price^lambda~.,data=train.dat)
+summary(house_lm1)
+par(mfrow=c(2,2))
+plot(house_lm1)
+
+```
+
+```{r}
+pred<- predict(house_lm1,test.dat)^(1/lambda)
+act<-test.dat$price
+
+SST<-var(act)*(length(act)-1)
+SSE<-sum((act-pred)^2)
+R.Square.Test <- 1- SSE/SST
+R.Square.Test
+R.Square.Train=0.887
+
+knitr::kable(cbind(R.Square.Train,R.Square.Test), align = "c",
+      caption = "Pseudo $R^2$ values for Train and Test")
+```
+
+
+
+\newpage
+## IV. Model Performance Testing (15 points)
+
+*Use the test data set to assess the model performances. Here, build the best multiple linear models by using the stepwise both ways selection method. Compare the performance of the best two linear models. Make sure that model assumption(s) are checked for the final linear model. Apply remedy measures (transformation, etc.) that helps satisfy the assumptions. In particular you must deeply investigate unequal variances and multicollinearity. If necessary, apply remedial methods (WLS, Ridge, Elastic Net, Lasso, etc.). *
+
+
+
+##Best Subset Regression
+
+```{r}
+
+house_lm2<-lm(price^lambda~.,data=test.dat)
+# k1<-ols_step_best_subset(house_lm2)
+# k1
+# plot(k1,guide="none")
+```
+
+
+
+
+
+\newpage
+## V. Challenger Models (15 points)
+
+*Build an alternative model based on one of the following approaches to predict price: regression tree, NN, or SVM. Explore using a logistic regression. Check the applicable model assumptions. Apply in-sample and out-of-sample testing, backtesting and review the comparative goodness of fit of the candidate models. Describe step by step your procedure to get to the best model and why you believe it is fit for purpose.*
+
+\newpage
+## VI. Model Limitation and Assumptions (15 points)
+
+*Based on the performances on both train and test data sets, determine your primary (champion) model and the other model which would be your benchmark model. Validate your models using the test sample. Do the residuals look normal? Does it matter given your technique? How is the prediction performance using Pseudo R^2, SSE, RMSE?  Benchmark the model against alternatives. How good is the relative fit? Are there any serious violations of the model assumptions? Has the model had issues or limitations that the user must know? (Which assumptions are needed to support the Champion model?)* 
+
+
+\newpage
+## VII. Ongoing Model Monitoring Plan (5 points)
+
+*How would you picture the model needing to be monitored, which quantitative thresholds and triggers would you set to decide when the model needs to be replaced? What are the assumptions that the model must comply with for its continuous use?*
+
+
+\newpage
+## VIII. Conclusion (5 points)
+
+*Summarize your results here. What is the best model for the data and why?*
+
+## Bibliography (7 points)
+
+*Please include all references, articles and papers in this section.*
+
+## Appendix (3 points)
+
+*Please add any additional supporting graphs, plots and data analysis.*
+
+
