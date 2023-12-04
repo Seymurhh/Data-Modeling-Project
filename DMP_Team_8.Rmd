@@ -29,13 +29,13 @@ source("libs_funcs.R")
 HouseSales<-read.csv("KC_House_Sales.csv")
 ```
 \newpage
-## Executive Summary
+# Executive Summary
 
 This section will describe the model usage, your conclusions and any regulatory and internal requirements. In a real world scenario, this section is for senior management who do not need to know the details. They need to know high level (the purpose of the model, limitations of the model and any issues).
 
 
 \newpage
-## I. Introduction (5 points)
+# I. Introduction (5 points)
 
 *This section needs to introduce the reader to the problem to be resolved, the purpose, and the scope of the statistical testing applied. What you are doing with your prediction? What is the purpose of the model? What methods were trained on the data, how large is the test sample, and how did you build the model?*
 
@@ -50,13 +50,11 @@ The methodology adopted for this project combines conventional statistical techn
 To ensure robust model training and validation, the dataset has been divided into a training set (70%) and a test set (30%). This division is crucial for evaluating the model's effectiveness in making predictions on new, unseen data.
 
 \newpage
-## II. Description of the data and quality (15 points)
+# II. Description of the data and quality (15 points)
 
 *Here you need to review your data, the statistical test applied to understand the predictors and the response and how are they correlated. Extensive graph analysis is recommended. Is the data continuous, or categorical, do any transformation needed? Do you need dummies? *
 
-### Data Overview
-
-[Add here initial observation analysis]
+## Data Overview
 
 ```{r Data Overview}
 
@@ -66,7 +64,9 @@ head(df_house)
 
 ```
 
-### Data Types, Categories and Cleaning
+
+
+## Data Types, Categories and Cleaning
 
 [Add here info about the data and what was performed]
 
@@ -96,7 +96,7 @@ head(ndf_house)
 
 ```
 
-### Stat Summary - in progress
+## Stat Summary - in progress
 
 [Add here the initial analysis of the summary, if applicable]
 
@@ -112,7 +112,7 @@ summary(ndf_house$price)
 ```
 
 
-### Graphical Analysis - in progress - Seymur
+## Graphical Analysis - in progress - Seymur
 
 The pairwise scatter plot shows the correlation between highly correlated variables extracted from heatmap correlation matrix.
 
@@ -229,7 +229,7 @@ ggmap(king_county_map) +
   theme_minimal()
 
 ```
-### Zipcode visualizations (can discard)
+## Zipcode visualizations (can discard)
 ***Zipcode is a valid predictor***
 
 ```{r}
@@ -269,7 +269,7 @@ ggplot(heatmap_data, aes(x = factor(zipcode, levels = zipcode), y = 1, fill = me
         legend.key.width = unit(2, "cm"))
 ```
 
-### Correlation Analysis - in progress
+## Correlation Analysis - in progress
 
 ***[Add here the initial analysis of the correlation matrix]***
 
@@ -300,11 +300,11 @@ pheatmap(cor_matrix,
 head(x_high)
 ```
 
-### Data Transformation
+## Data Transformation
 
-### Categorical Variables and Age Analysis
+## Categorical Variables and Age Analysis
 
-#### Renovation Indicator Variable
+### Renovation Indicator Variable
 
 A binary variable named 'renovated' was introduced to indicate whether a property has undergone renovation. This variable is set to 1 if the 'yr_renovated' field is not zero, signifying that the property has been renovated at least once. Otherwise, it is set to 0, indicating no renovation. This distinction provides a straightforward way to assess the impact of renovations on property values.
 
@@ -316,7 +316,7 @@ df_house$renovated = ifelse(df_house$yr_renovated != 0, 1, 0)
 
 ```
 
-#### Property Age Calculation
+### Property Age Calculation
 
 This is a tentative way to consider "age since las renovation" and see if there's a correlation between the time a house was last built/renovated on its selling price. A new variable called 'age' was calculated to represent the current age of each property. If a property was renovated, its age is the difference between 2023 and the renovation year ('yr_renovated'). If not renovated, the age is the difference between 2023 and the year the house was built ('yr_built'). This variable helps in understanding the effect of property age and recent renovations on house prices.
 
@@ -344,10 +344,10 @@ dim(test.dat)
 ```
 
 
-### Summary of the section II
+## Summary of the section II
 
 \newpage
-## III. Model Development Process (15 points) - Bethun Bhowmik (in progress)
+# III. Model Development Process (15 points) - Bethun Bhowmik (in progress)
 
 *Build a regression model to predict price.  And of course,  create the train data set which contains 70% of the data and use set.seed (1023). The remaining 30% will be your test data set. Investigate the data and combine the level of categorical variables if needed and drop variables. For example, you can drop id, Latitude, Longitude, etc. *
 
@@ -455,7 +455,7 @@ knitr::kable(cbind(R.Square.Train,R.Square.Test), align = "c",
 ```
 
 \newpage
-## III. Model Development Process (15 points) - SVM Mohanish (in progress)
+# III. Model Development Process (15 points) - SVM Mohanish (in progress)
 
 *Build a regression model to predict price.  And of course,  create the train data set which contains 70% of the data and use set.seed (1023). The remaining 30% will be your test data set. Investigate the data and combine the level of categorical variables if needed and drop variables. For example, you can drop id, Latitude, Longitude, etc. *
 
@@ -500,13 +500,13 @@ knitr::kable(cbind(R.Square.Train,R.Square.Test), align = "c",
 
 
 \newpage
-## IV. Model Performance Testing (15 points)
+# IV. Model Performance Testing (15 points)
 
 *Use the test data set to assess the model performances. Here, build the best multiple linear models by using the stepwise both ways selection method. Compare the performance of the best two linear models. Make sure that model assumption(s) are checked for the final linear model. Apply remedy measures (transformation, etc.) that helps satisfy the assumptions. In particular you must deeply investigate unequal variances and multicollinearity. If necessary, apply remedial methods (WLS, Ridge, Elastic Net, Lasso, etc.). *
 
 
 
-##Best Subset Regression
+## Best Subset Regression
 
 ```{r}
 
@@ -521,12 +521,12 @@ house_lm2<-lm(price^lambda~.,data=test.dat)
 
 
 \newpage
-## V. Challenger Models (15 points)
+# V. Challenger Models (15 points)
 
 *Build an alternative model based on one of the following approaches to predict price: regression tree, NN, or SVM. Explore using a logistic regression. Check the applicable model assumptions. Apply in-sample and out-of-sample testing, backtesting and review the comparative goodness of fit of the candidate models. Describe step by step your procedure to get to the best model and why you believe it is fit for purpose.*
 
 
-### Random Forest
+## Random Forest
 
 ```{r}
 #[Kaleo]
@@ -593,7 +593,7 @@ barplot(top_features,names.arg = rownames(top_features),las=2)
 ```
 
 
-### Regression Tree Model
+## Regression Tree Model
 
 ```{r}
 # [Luciano]
@@ -612,7 +612,7 @@ print(paste("Tree RMSE:", tree_rmse))
 ```
 
 
-### Neural Network Model
+## Neural Network Model
 
 ```{r}
 # [Luciano]
@@ -629,7 +629,7 @@ print(paste("NN RMSE:", nn_rmse))
 ```
 
 
-### Support Vector Machine (SVM) Model
+## Support Vector Machine (SVM) Model
 
 ```{r}
 # [Luciano]
@@ -646,7 +646,7 @@ print(paste("SVM RMSE:", svm_rmse))
 ```
 
 
-### Logistic Regression Model
+## Logistic Regression Model
 
 ```{r Price binary calculation }
 # [Luciano]
@@ -691,7 +691,7 @@ plot(log_model)
 ```
 4 UPs
 
-#### \color{blue} *Analysis*: The diagnostic plots suggest that while the regression model captures the overall trend, there are indications of non-normality in residuals, potential heteroscedasticity, and the presence of influential outliers, warranting further investigation into data transformation or alternative modeling approaches.
+**Analysis**: The diagnostic plots suggest that while the regression model captures the overall trend, there are indications of non-normality in residuals, potential heteroscedasticity, and the presence of influential outliers, warranting further investigation into data transformation or alternative modeling approaches.
 
 
 ```{r ROC Curve for Logistic Regression}
@@ -704,7 +704,7 @@ plot(roc_curve, main = "ROC Curve")
 ROC Curve
 
 
-#### \color{blue} *Analysis*: The ROC curve demonstrates perfect classification performance with maximal sensitivity and specificity
+**Analysis**: The ROC curve demonstrates perfect classification performance with maximal sensitivity and specificity
 
 
 ```{r Variable Importance for Tree Model}
@@ -716,12 +716,12 @@ randomForest::varImpPlot(rf_model)
 ```
 Random Forest plot
 
-#### \color{blue} *Analysis*: The Variable Importance plot from a Random Forest model highlights 'price.binary' as the most influential predictor, with 'sqft_living', 'grade', and 'sqft_living15' also contributing significantly to model accuracy, suggesting their strong predictive power in the Random Forest model.
+**Analysis**: The Variable Importance plot from a Random Forest model highlights 'price.binary' as the most influential predictor, with 'sqft_living', 'grade', and 'sqft_living15' also contributing significantly to model accuracy, suggesting their strong predictive power in the Random Forest model.
 
 
 
 \newpage
-## VI. Model Limitation and Assumptions (15 points)
+# VI. Model Limitation and Assumptions (15 points)
 
 *Based on the performances on both train and test data sets, determine your primary (champion) model and the other model which would be your benchmark model. Validate your models using the test sample. Do the residuals look normal? Does it matter given your technique? How is the prediction performance using Pseudo R^2, SSE, RMSE?  Benchmark the model against alternatives. How good is the relative fit? Are there any serious violations of the model assumptions? Has the model had issues or limitations that the user must know? (Which assumptions are needed to support the Champion model?)* 
 
@@ -733,21 +733,21 @@ Random Forest plot
 results.df
 ```
 \newpage
-## VII. Ongoing Model Monitoring Plan (5 points)
+# VII. Ongoing Model Monitoring Plan (5 points)
 
 *How would you picture the model needing to be monitored, which quantitative thresholds and triggers would you set to decide when the model needs to be replaced? What are the assumptions that the model must comply with for its continuous use?*
 
 
 \newpage
-## VIII. Conclusion (5 points)
+# VIII. Conclusion (5 points)
 
 *Summarize your results here. What is the best model for the data and why?*
 
-## Bibliography (7 points)
+# Bibliography (7 points)
 
 *Please include all references, articles and papers in this section.*
 
-## Appendix (3 points)
+# Appendix (3 points)
 
 *Please add any additional supporting graphs, plots and data analysis.*
 
