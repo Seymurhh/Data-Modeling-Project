@@ -526,72 +526,110 @@ house_lm2<-lm(price^lambda~.,data=test.dat)
 *Build an alternative model based on one of the following approaches to predict price: regression tree, NN, or SVM. Explore using a logistic regression. Check the applicable model assumptions. Apply in-sample and out-of-sample testing, backtesting and review the comparative goodness of fit of the candidate models. Describe step by step your procedure to get to the best model and why you believe it is fit for purpose.*
 
 
-## Random Forest
+## Regression Tree (Kaleo)
 
 ```{r}
 #[Kaleo]
 
-ntree_values <- c(55, 112, 150, 200, 250)
+depth_values <- c(2, 3, 4, 5, 6)
 
-mse_values = numeric(length(ntree_values))
-test_rsq_values = numeric(length(ntree_values))
-train_rsq_values = numeric(length(ntree_values))
+mse_values = numeric(length(depth_values))
+test_rsq_values = numeric(length(depth_values))
+train_rsq_values = numeric(length(depth_values))
 
 # commented out cross validation to save computation time!!
 
-# for (i in seq_along(ntree_values)) {
-#   ntree = ntree_values[i]
-#   
-#   model = randomForest(price ~ ., data = train.dat, ntree = ntree)
-#   predictions_test <- predict(model, newdata = test.dat)
-#   predictions_train <- predict(model, newdata = train.dat)
-#   
-#   mse_values[i] <- mean((predictions_test - test.dat$price)^2)
-#   test_rsq_values[i] = cor(predictions_test,test.dat$price)^2
-#   train_rsq_values[i] = cor(predictions_train,train.dat$price)^2
-# }
+for (i in seq_along(depth_values)) {
+  depth = depth_values[i]
+
+  model = rpart(price ~ ., 
+                data = train.dat, 
+                method = "anova",
+                control=rpart.control(maxdepth=depth))
+  predictions_test <- predict(model, newdata = test.dat)
+  predictions_train <- predict(model, newdata = train.dat)
+
+  mse_values[i] <- mean((predictions_test - test.dat$price)^2)
+  test_rsq_values[i] = cor(predictions_test,test.dat$price)^2
+  train_rsq_values[i] = cor(predictions_train,train.dat$price)^2
+}
 ```
 
 ```{r}
 #[Kaleo]
-mse_hard.coded = c(18959180557,19044061189,19147650224,18975362291,18893426330)
-test_rsq_values_hard.coded = c(0.8734077,0.8730189,0.8719060,0.8740622,0.8747472)
 
 # Plot the results
-plot(ntree_values, mse_hard.coded, type = "b", xlab = "Number of Trees", ylab = "Mean Squared Error", main = "Random Forest Cross Validation Test MSE (ntrees)")
+plot(depth_values, mse_values, type = "b", xlab = "Depth Value", ylab = "Root Mean Squared Error", main = "Regression Tree Cross Validation Test MSE (depth)")
 
-plot(ntree_values, test_rsq_values_hard.coded,type="o", xlab = "Number of Trees", ylab = "Test R-squared", main = "Random Forest Cross Validation Test R-squared (ntrees)")
-text(ntree_values,test_rsq_values_hard.coded,labels=round(test_rsq_values_hard.coded,4),pos=3,xpd=TRUE)
+plot(depth_values, test_rsq_values, type="o", xlab = "Depth Value", ylab = "Test R-squared", main = "Regression Tree Cross Validation Test R-squared (depth)")
+text(depth_values,test_rsq_values,labels=round(test_rsq_values,4),pos=3,xpd=TRUE)
+```
+```{r}
+#[Kaleo]
+#fitting decision tree with best depth
+
+dtm = rpart(price ~ ., 
+              data = train.dat, 
+              method = "anova",
+              control=rpart.control(maxdepth=5))
+
+imp = dtm$variable.importance
+dt_test_pred <- predict(dtm, newdata=test.dat)
+dt_train_pred <- predict(dtm, newdata=train.dat)
+dt_test_results = postResample(pred = dt_test_pred, obs = test.dat$price)
+dt_train_results = postResample(pred = dt_train_pred, obs = train.dat$price)
+dt_test_sse = sum((dt_test_pred - test.dat$price)^2)
+
+#variable importance may be more reliable if considering other values from cross validation...work in progress
+barplot(imp,las=2,main="Variable importance in Decision Tree")
 ```
 ```{r}
 # [Kaleo]
+#append results
+results.df = rbind(results.df,data.frame(model = "Decision Tree Regression",
+                            R.Squared.Train = unname(dt_train_results[2]),
+                            R.Squared.Test = unname(dt_test_results[2]),
+                            RMSE.test = unname(dt_test_results[1]),
+                            SSE.test = dt_test_sse))
+```
 
-#commented out for computation time..
+## Random Forest Model
+```{r}
+# [Kaleo]
+# Fitting Random Forest model
+# Cross validate number of features!!...work in progress
 
-#using efficient model (50 trees...for now)
-house_rf = randomForest(price ~ ., data = train.dat, ntree = 50)
-rf_test_pred = predict(house_rf,newdata=test.dat)
-rf_train_pred = predict(house_rf,newdata=train.dat)
+rf = randomForest(price ~ .-price_binary, 
+              data = train.dat,
+              ntree = 500,
+              importance=TRUE)
+```
+```{r}
+# [Kaleo]
+#variable importance
+randomForest::varImpPlot(rf)
 
-rf_test_mse = mean((rf_test_pred - test.dat$price)^2)
-rf_test_rsq = cor(rf_test_pred,test.dat$price)^2
-rf_train_rsq = cor(rf_train_pred,train.dat$price)^2
-
-cat("test mse:",rf_test_mse,"train rsq:", rf_train_rsq, "test rsq:",rf_test_rsq)
+#fix permuation importance - better for mixed data (ordinal, categorical, quantitative,etc)
+# rfPermute(rf,train.dat,train.dat$price,na.action=na.omit,nrep = 100)
 ```
 
 ```{r}
 #[Kaleo]
+# Random Forest Results
 
-# relative variable importance
-par(mar = c(7, 5, 4, 2))
+rf_train_pred = predict(rf, newdata = train.dat)
+rf_test_pred = predict(rf, newdata = test.dat)
 
-var_importance = importance(house_rf)
-top_features = var_importance[order(var_importance[,1], decreasing = TRUE), ][1:12]
+rf_train_results = postResample(pred = rf_train_pred, obs = train.dat$price)
+rf_test_results = postResample(pred = rf_test_pred, obs = test.dat$price)
+rf_test_sse = sum((rf_test_pred - test.dat$price)^2)
 
-barplot(top_features,names.arg = rownames(top_features),las=2)
+results.df = rbind(results.df,data.frame(model = "Random Forest",
+                            R.Squared.Train = unname(rf_train_results[2]),
+                            R.Squared.Test = unname(rf_test_results[2]),
+                            RMSE.test = unname(rf_test_results[1]),
+                            SSE.test = rf_test_sse))
 ```
-
 
 ## Regression Tree Model
 
@@ -607,7 +645,14 @@ rpart.plot(tree_model, main="Regression Tree", extra=1, under=TRUE, faclen=0, ce
 # Prediction and Performance
 tree_predictions <- predict(tree_model, test.dat)
 tree_rmse <- sqrt(mean((tree_predictions - test.dat$price)^2))
-print(paste("Tree RMSE:", tree_rmse))
+
+# [Kaleo] added rsquared
+tree_test_pred <- predict(tree_model, newdata=test.dat)
+tree_train_pred <- predict(tree_model, newdata=train.dat)
+tree_test_results = postResample(pred = tree_test_pred, obs = test.dat$price)
+tree_train_results = postResample(pred = tree_train_pred, obs = train.dat$price)
+
+print(paste("Tree RMSE:", tree_rmse,"Train Rsq:",tree_train_results[2],"Test Rsq:",tree_test_results[2]))
 
 ```
 
@@ -627,7 +672,6 @@ nn_rmse <- sqrt(mean((nn_predictions - test.dat$price)^2))
 print(paste("NN RMSE:", nn_rmse))
 
 ```
-
 
 ## Support Vector Machine (SVM) Model
 
@@ -710,8 +754,11 @@ ROC Curve
 ```{r Variable Importance for Tree Model}
 
 # randomForest model for variable importance
-rf_model <- randomForest(price ~ ., data = train.dat)
-randomForest::varImpPlot(rf_model)
+
+# [Kaleo] commented out to reduce computation time...already did random forest
+
+# rf_model <- randomForest(price ~ ., data = train.dat)
+# randomForest::varImpPlot(rf_model)
 
 ```
 Random Forest plot
