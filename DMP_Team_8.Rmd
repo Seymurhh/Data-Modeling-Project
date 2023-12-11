@@ -24,18 +24,6 @@ editor_options:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-## Helper to display regression function with n coefficients
-dispRegFunc <- function(reg) {
-  coefs <- reg$coefficients
-  b0 = coefs[1]
-  n <- length(coefs)
-  my_formula <- paste0("Y = ", round(b0, digits = 6))
-  for (i in 2:n) {
-    my_formula <- paste0(my_formula, " + ", round(coefs[i],6), names(coefs)[i])
-  }
-  my_formula
-}
-
 source("libs_funcs.R")
 
 HouseSales<-read.csv("KC_House_Sales.csv")
@@ -51,15 +39,19 @@ This section will describe the model usage, your conclusions and any regulatory 
 
 *This section needs to introduce the reader to the problem to be resolved, the purpose, and the scope of the statistical testing applied. What you are doing with your prediction? What is the purpose of the model? What methods were trained on the data, how large is the test sample, and how did you build the model?*
 
---- in-progress ---
+In the ever-evolving landscape of real estate, the ability to accurately predict house prices is invaluable. This project, undertaken by a dedicated team from Harvard Extension School, delves into this realm, focusing on King County, USA. The motivation behind our work is twofold: firstly, to provide a robust predictive tool for potential investors and market analysts, and secondly, to contribute to the academic understanding of real estate market dynamics.
 
-This project aims to develop a predictive model for house prices in King County, USA. The model's purpose is to provide an analytical tool for understanding the key factors influencing property values in this area, which is significant for various stakeholders in the real estate sector.
+Our approach is grounded in the analysis of the 'KC_House_Sales' dataset, a comprehensive collection of house attributes within King County. The dataset, rich in detail, includes features such as square footage, the number of bedrooms, and geographical location, etc., all of which are pivotal in determining house prices. The initial phase of our project involved a thorough data cleaning process. This step was crucial in ensuring the integrity of our analysis, involving the removal of irrelevant variables, handling missing values, and converting data types for consistency.
 
-Our primary data source is the 'KC_House_Sales' dataset, which includes detailed information on various house attributes. **(Add here the hypothesis of initial exploration on house prices)**.
+Once the data was prepared, we embarked on a methodological journey, exploring various statistical and machine learning techniques. Our primary method, linear regression, served as a foundation model, offering insights into the direct relationships between house features and their prices. However, recognizing the complexity of the real estate market, we expanded our toolkit to include more advanced models like neural networks, decision trees, and support vector machines (SVM). Each of these methods brought a unique perspective and depth to our analysis, enabling us to capture non-linear relationships and complex interactions between variables.
 
-The methodology adopted for this project combines conventional statistical techniques with modern data analytics methods. Initial models will be based on linear regression, with further exploration into more complex approaches like neural networks and decision trees, depending on their performance in preliminary analyses.
+The structure of our project involved splitting the dataset into two parts: 70% for training and 30% for validation. This split was strategically chosen to ensure the robustness of our models against unseen data, a critical aspect of predictive modeling. The training phase was an iterative process, where each model was refined through a series of evaluations and adjustments. In doing so, we aimed to strike a balance between model complexity and predictive accuracy.
 
-To ensure robust model training and validation, the dataset has been divided into a training set (70%) and a test set (30%). This division is crucial for evaluating the model's effectiveness in making predictions on new, unseen data.
+Our exploratory data analysis revealed several key insights. We observed that certain features, such as square footage and location, had a significant impact on house prices. This initial observation guided our feature selection and engineering process, where we developed new variables that could potentially enhance the model's performance.
+
+As we progressed, the need for a rigorous evaluation framework became apparent. To this end, we employed various metrics such as Mean Squared Error (MSE) and R-squared values. These metrics were instrumental in assessing the performance of our models, both on the training and validation sets. The final selection of our primary model, which we refer to as the "champion" model, was based on a comprehensive evaluation of these metrics.
+
+In conclusion, this project represents a significant endeavor in the field of predictive analytics for real estate. Through a blend of traditional statistical methods and advanced machine learning techniques, we have developed a model that not only predicts house prices in King County with a high degree of accuracy but also offers insights into the factors that drive these prices. As we move forward, our focus will be on refining the model, exploring new data sources, and adapting to the changing dynamics of the real estate market.
 
 \newpage
 # II. Description of the data and quality (15 points)
@@ -67,6 +59,8 @@ To ensure robust model training and validation, the dataset has been divided int
 *Here you need to review your data, the statistical test applied to understand the predictors and the response and how are they correlated. Extensive graph analysis is recommended. Is the data continuous, or categorical, do any transformation needed? Do you need dummies? *
 
 ## Data Overview
+
+The dataset presented for analysis encompasses a range of housing attributes for properties sold in King County, including the sale price, number of bedrooms and bathrooms, square footage of living and lot space, and other characteristics like the presence of a waterfront, views, and the condition and grade of the house. Each entry is timestamped, providing a date of sale, which can be instrumental in understanding market trends over time.
 
 ```{r Data Overview}
 
@@ -76,11 +70,11 @@ head(df_house)
 
 ```
 
-
-
 ## Data Types, Categories and Cleaning
 
-[Add here info about the data and what was performed]
+Our dataset includes a blend of continuous and categorical data types. Notably, the 'zipcode' and 'waterfront' variables are categorical despite their numeric appearance. 'Zipcode' represents different regions, and 'waterfront' is a binary indicator, thus requiring special attention during preprocessing. These variables, along with others like 'view' and 'condition', will be transformed into dummy variables to facilitate their use in our regression models.
+
+The data cleaning process has involved removing non-informative variables such as IDs, correcting data types (e.g., transforming sale price to a numeric format and parsing dates into a usable format), and creating new variables that could reveal temporal trends (e.g., year, month, day of sale).
 
 ```{r Data types, Categories and Cleaning}
 # [Kaleo]
@@ -108,23 +102,23 @@ head(ndf_house)
 
 ```
 
-## Stat Summary - in progress
+## Initial Statistical Summary
 
-[Add here the initial analysis of the summary, if applicable]
+The dataset from King County includes 21,613 observations with 22 variables related to house sales. Variables include continuous data like price, square footage, and lat/long coordinates, and categorical data such as bedrooms, floors, and waterfront status. The price ranges from $75,000 to $7,700,000, with a mean of $540,088. Houses range from 0 to 33 bedrooms, reflecting diverse property types. The dataset also contains binary and ordinal variables, such as view and condition, that require dummy coding for analysis.
 
 ```{r Stat Summary}
 
-str(ndf_house)
-summary(ndf_house)
+str(df_house)
+summary(df_house)
 
 ```
 
 ```{r Stat summary of the price}
-summary(ndf_house$price)
+summary(df_house$price)
 ```
 
 
-## Graphical Analysis - in progress - Seymur
+## Graphical Analysis
 
 The pairwise scatter plot shows the correlation between highly correlated variables extracted from heatmap correlation matrix.
 
@@ -179,14 +173,7 @@ ggplot(average_prices, aes(x = factor(bedrooms), y = price)) +
 
 ```
 
-```{r }
-
-ggplot(df_house, aes(x = sqft_living, y = price)) +
-  geom_point(aes(color = factor(bedrooms)), alpha = 0.6) +
-  scale_color_brewer(type = 'seq', palette = 'Blues') +
-  labs(title = "House Price vs. Square Footage of Living Space", x = "Square Footage of Living Space", y = "Price")
-
-```
+**Analysis**: the spread of prices for waterfront homes is wider, indicating more variability in price. Notably, waterfront properties have more high-priced outliers, suggesting that while many waterfront homes are priced higher, a few are exceptionally expensive. Non-waterfront homes have a more compact price distribution but also feature outliers, indicating some are priced significantly above the median.
 
 ```{r Outlier analysis for Waterfront vs Mountain view}
 
@@ -212,35 +199,6 @@ ggplot(data = ndf_house, aes(x = long, y = lat, color = price)) +
 
 ```
 
-## [Analysis section] 
-
-From geographical map, it is evident that properties situated around the latitude line of 47.6 and longitude between -122.25 and -122.00, which corresponds to the central and northern parts of Seattle, command higher prices per square foot. The relatively lower-priced properties per square foot, shown in orange, are more dispersed and located primarily south of central Seattle, extending towards Tacoma, as well as in the outlying suburban areas.It is also noticeable that along the latitudinal line around 47.4, there are pockets of high-priced properties per square foot, potentially indicating affluent neighborhoods or areas with high-value real estate.
-
-The map clearly shows a correlation between location and property value per square foot, with central urban areas exhibiting the highest values. This pattern is typical for urban centers where proximity to amenities, employment opportunities, and other socioeconomic factors drive up real estate prices.
-
-```{r Map visualizatoin of average prices by squre foot distribution over long and lat}
-
-register_stadiamaps(key = '765cbcd1-2ec2-40e3-8a81-98624e616208')
-df_summary <- ndf_house %>%
-  mutate(price_per_sqft = price / sqft_living) %>%
-  group_by(long, lat) %>%
-  summarize(avg_price_per_sqft = mean(price_per_sqft, na.rm = TRUE), .groups = 'drop')
-
-king_county_map <- get_stadiamap(bbox = c(left = min(df_house$long), 
-                                         bottom = min(df_house$lat), 
-                                         right = max(df_house$long), 
-                                         top = max(df_house$lat)),
-                                 maptype = "stamen_terrain",
-                                 zoom = 10)
-ggmap(king_county_map) +
-  geom_point(data = df_summary, aes(x = long, y = lat, color = avg_price_per_sqft), 
-             alpha = 0.5, size = 1) +
-  scale_color_gradient(low = "orange", high = "darkblue", name = "Avg Price per Sqft") +
-  labs(title = "Average Price per Sqft of Properties in King County",
-       x = "Longitude", y = "Latitude") +
-  theme_minimal()
-
-```
 ## Zipcode visualizations (can discard)
 ***Zipcode is a valid predictor***
 
@@ -281,9 +239,9 @@ ggplot(heatmap_data, aes(x = factor(zipcode, levels = zipcode), y = 1, fill = me
         legend.key.width = unit(2, "cm"))
 ```
 
-## Correlation Analysis - in progress
+## Correlation Analysis
 
-***[Add here the initial analysis of the correlation matrix]***
+**Analysis**: the heatmap shows the correlation between different variables. The heatmap indicates that 'sqft_living', 'grade', and 'sqft_above' are highly correlated with 'price'. This suggests that larger living spaces, higher house grades, and more above-ground square footage are associated with higher house prices. These variables could serve as key predictors in a pricing model. We will explore them further int he next model development process.
 
 ```{r Correlation Matrix}
 # [Kaleo]
@@ -311,8 +269,6 @@ pheatmap(cor_matrix,
 # [Kaleo]
 head(x_high)
 ```
-
-## Data Transformation
 
 ## Categorical Variables and Age Analysis
 
@@ -358,15 +314,14 @@ dim(test.dat)
 
 ## Summary of the section II
 
+In Section II, we thoroughly explored the King County house sales dataset, examining both continuous and categorical variables through statistical tests and extensive graphical analysis. We highlighted the strong correlations between variables like 'sqft_living', 'grade', 'sqft_above', and 'price'. Transformations and dummy variable creation were crucial in preparing data for modeling. The section concluded with the development of new variables to encapsulate the age and renovation status of properties, offering deeper insights for our predictive models.
+
 \newpage
-# III. Model Development Process (15 points) - (Bethun Bhowmik)
+# III. Model Development Process (15 points) - Bethun Bhowmik (in progress)
 
 *Build a regression model to predict price.  And of course,  create the train data set which contains 70% of the data and use set.seed (1023). The remaining 30% will be your test data set. Investigate the data and combine the level of categorical variables if needed and drop variables. For example, you can drop id, Latitude, Longitude, etc. *
 
-The KC House sales dataset is split into train(70%) and test(30%) datasets, with 15129 observations in the train dataset and 6484 observations in the test dataset.
-
 ```{r}
-#[Bethun]
 set.seed(1023)
 n<-dim(df_house)[1]
 IND<-sample(c(1:n),round(n*0.7))
@@ -378,115 +333,55 @@ dim(test.dat)
 ```
 
 **Analysis**:
-The house_lm model to predict price has:
-- Residual Standard Error of 193,600
-- Multiple R-square of 71.38%
-- p-value of < 2.2e-16
-- MSE of 37,494,980,807
-
-Overall, the model appears to be statistically significant overall given the low p-value for the F-statistic. The multiple R-square suggests that 71.38% of the variability in price is explained by the model.
-Moreover, all most predictors (except sqft_lot) have a statistically significant impact on the house price. Predictions on the test dataset should be done to further validate model usefulness.
-
-From the model plot we observe the following:
-- LINEARITY ASSUMPTION: From the Residuals vs Fitted plot, as the residuals seem to be randomly dispersed around the horizontal axis and the line is horizontal, a linear regression model may be appropriate, however we may need to transforming the response variable.
-- NORMALITY ASSUMPTION: From the Q-Q Residuals plot, as the points are out of the diagonal line on either ends, the residuals do not meet the normality assumption.
-- CONSTANT VARIANCE ASSUMPTION: The scale location plot points to non constant variance. The HOMOSCEDASTICITY ASSUMPTION is violated.Moreover the line is curvilinear.
-- The impact of bad data like influential and outlier observations seems to be impactful when inspecting the the Residual vs. Leverage graph
 
 ```{r}
-#[Bethun]
 house_lm<-lm(price ~.,data=train.dat)
 summary(house_lm)
 par(mfrow=c(2,2))
 plot(house_lm)
-MSE <- summary(house_lm)$sigma^2
-print(MSE)
+
 ```
 
-**Analysis**:
-The R-square values on both training and test data are quite close - 71.38% and 70.86% respectively. This suggests that the model generalizes well to new data, maintaining a similar level of explanatory power. The RMSE of 204,868.3 indicates the average magnitude of errors in predicting house prices on the test data. The SSE of 2.721402e+14 represents the sum of squared differences between predicted and observed values on the test data. A lower RMSE and SSE indicates better model fit, and we will explore furher on how these values can be lowered.
-
 ```{r}
-#[Bethun]
+# Results dataframe to append model scores
+
+# Calculate scores (mse,rmse,r-squared)
+
 # Test data Predictions
 house_lm_test_pred <- predict(house_lm, newdata = test.dat)
-
+# Test MSE
 house_lm_test_mse <- mean((house_lm_test_pred - test.dat$price)^2)
+# Test RMSE
 house_lm_test_rmse <- sqrt(house_lm_test_mse)
+# Test Residuals
 house_lm_test_residuals <- test.dat$price - house_lm_test_pred
+# Test R-squared
 house_lm_test_rsq <- 1 - var(house_lm_test_residuals) / var(test.dat$price)
+# SSE
 house_lm_test_sse <- sum((test.dat$price - house_lm_test_pred)^2)
-results.df <- data.frame(model = "Linear Regression Test Data Predictions",
+
+results.df <- data.frame(model = "Linear Regression All (Baseline)",
                          R.Squared.Train = summary(house_lm)$r.square,
                          R.Squared.Test = house_lm_test_rsq,
                          RMSE.test = house_lm_test_rmse,
                          SSE.test = house_lm_test_sse)
-print(results.df)
 ```
 
-**Analysis**:
-The insignificant predictor sqft_lot is dropped and the model is refitted. We observe that the Multiple R-square value remains unchanged at 71.38%. The model is as follows:
-
-Price = -74344803.92767 + -34633.405255bedrooms + 32821.338262bathrooms + 143.671881sqft_living + 8767.015515floors + 531351.549043waterfront + 52065.87946view + 24875.912771condition + 82737.693562grade + 22.301049sqft_above + -896.223982yr_built + 4065.130653yr_renovated + -507.797776zipcode + 473638.095898lat + -206204.537141long + 21.65297sqft_living15 + -0.25171sqft_lot15 + 38482.930296year + 1380.790546month + -331.741298day + -7982223.272107renovated + 1440.530732age + 101303.883852price_binary
-
 ```{r}
-#[Bethun]
-predictors_to_drop <- c("sqft_lot")
+predictors_to_drop <- c("<=1900", "1901-1925", "1926-1950", "1951-1975", "1976-2000", "2001+", "zipcode_98198", "zipcode_98199", "sqft_basement")
 
 # Update the model by excluding the specified predictors
 updated <- as.formula(paste("price ~ .", paste0("- `", predictors_to_drop, "`", collapse = "")))
 house_lm <- update(house_lm, formula = updated)
 summary(house_lm)
-dispRegFunc(house_lm)
+
 ```
 
-
-**Analysis**:
-
-On plotting the boxplot of residuals, we observe multiple outliers on both ends of the whiskers. Moreover, when we plot the residuals against the fitted values, we observe that the residuals spread out with increase in fitted values along x-axis.
-
 ```{r}
-#[Bethun]
 ei<-house_lm$residuals
 boxplot(ei,horizontal=TRUE,staplewex=0.5,col=2,xlab="House Price Regression Residuals")
 plot(house_lm$fitted.values,ei,xlab="Fitted Values House Linear Model",ylab="Residuals House Linear Model")
 ```
-
-**Analysis**:
-Predictors with low p-values of < 2.2e-16 (e.g. bedrooms, bathrooms, sqft_living, etc.) are statistically significant and are important in predicting price. Some predictors that have a have higher p-value (e.g. floors, zipcode, month, day) may not be statistically significant in predicting price.
-
-```{r}
-#[Bethun]
-anova(house_lm)
-```
-
-
-
-**Analysis**:
-
-A two sides t statistical test is used for testing individual coefficients and their significance. The critical t -value applicable given alpha=0.01 and n-2 degrees of freedom is 2.576.
-H0: intercept =0, HA: intercept is not 0
-H0: slope= 0    , HA: slope is not 0
-Decision rule: when t > t critical reject null
-
-The model, as indicated by the significant coefficients, suggests that features such as the number of bedrooms, bathrooms, square footage of living space, waterfront status, view, grade, etc, play a statistically significant role in predicting the house price.
-
-```{r}
-#[Bethun]
-
-conf= 0.01/2     #Note we divide by 2 because this is a two tail test,if alpha=0.05 then use .05/2
-df<-21613-2            #manually calculating the degrees of freedom
-value<-formatC(qt(conf,df,lower.tail=FALSE))    
-print(paste("Critical T values: ",value))
-#coefficients
-matrix_coef <- summary(house_lm)$coefficients  # Extract coefficients in matrix
-matrix_coef   
-
-my_estimates <- matrix_coef[ , 1]  # Matrix manipulation to extract estimates
-
-#Step 6: Pr(>|t|) < 0.01 there is sufficient statistical evidence to reject null for both parameters. Using a t-test we noted that t-values (6.259865 and abs(4.102897) are larger than t-critical that is 2.637
-```
-
 
 $H_o$: Error variances are constant
 $H_a$: Error variances are not constant
@@ -495,47 +390,27 @@ or if p-value < alpha (0.01) reject the hull
 
 P value is < 2.2e-16. So we reject $H_o$, Error variances are not constant.
 
-**Analysis**:
-
 ```{r}
-#[Bethun]
 bptest(house_lm, studentize = FALSE)
 ```
-**Analysis**:
-For Boxcox transormation, the optimal lambda is -0.04040404 with 95% confidence interval range which is close to zero.Although, we can estimate lambda to be zero and apply logarithmic transformation of the data, we have done the boxcox transformation with exact optimal lambda value for better accuracy.
 
 ```{r}
-#[Bethun]
 par(mfrow=c(1,1))
 bc<-boxcox(house_lm,lambda=seq(-4,4,by=0.1))
 lambda <- bc$x[which.max(bc$y)] 
 lambda  #This is the optimal lambda
 ```
 **Analysis**:
-After boxcox transformation, we observe that
-- Residual Standard Error has reduced significantly to 0.004981 from 193,600
-- Multiple R-square has increased to 84.03% from 71.38%
-- p-value remains same at < 2.2e-16
-
-Overall, the model appears to be a much better fit that before. From the model plot we observe the following:
-- LINEARITY ASSUMPTION: The Residuals vs Fitted plot looks better than before and confirms that a linear regression model is appropriate
-- NORMALITY ASSUMPTION: The points are much better aligned along the diagonal in the Q-Q Residuals plot, however some tails remain
-- CONSTANT VARIANCE ASSUMPTION: The Scale Location plot points to constant variance
-- There are still some outlier observations which may be to be impactful as seen from the the Residual vs. Leverage graph
 
 ```{r}
-#[Bethun]
 house_lm1<-lm(price^lambda~.,data=train.dat)
 summary(house_lm1)
 par(mfrow=c(2,2))
 plot(house_lm1)
-dispRegFunc(house_lm1)
+
 ```
-**Analysis**:
-On predicting the values of the Boxcox transformed model on the test dataset, we observe a R-square test of 75.79% compared to R-square train of 84.03%, from which we conclude that the transformed model generalizes well to new data.
 
 ```{r}
-#[Bethun]
 pred<- predict(house_lm1,test.dat)^(1/lambda)
 act<-test.dat$price
 
@@ -543,7 +418,7 @@ SST<-var(act)*(length(act)-1)
 SSE<-sum((act-pred)^2)
 R.Square.Test <- 1- SSE/SST
 R.Square.Test
-R.Square.Train=0.8403
+R.Square.Train=0.887
 
 knitr::kable(cbind(R.Square.Train,R.Square.Test), align = "c",
       caption = "Pseudo $R^2$ values for Train and Test")
@@ -621,72 +496,110 @@ house_lm2<-lm(price^lambda~.,data=test.dat)
 *Build an alternative model based on one of the following approaches to predict price: regression tree, NN, or SVM. Explore using a logistic regression. Check the applicable model assumptions. Apply in-sample and out-of-sample testing, backtesting and review the comparative goodness of fit of the candidate models. Describe step by step your procedure to get to the best model and why you believe it is fit for purpose.*
 
 
-## Random Forest
+## Regression Tree (Kaleo)
 
 ```{r}
 #[Kaleo]
 
-ntree_values <- c(55, 112, 150, 200, 250)
+depth_values <- c(2, 3, 4, 5, 6)
 
-mse_values = numeric(length(ntree_values))
-test_rsq_values = numeric(length(ntree_values))
-train_rsq_values = numeric(length(ntree_values))
+mse_values = numeric(length(depth_values))
+test_rsq_values = numeric(length(depth_values))
+train_rsq_values = numeric(length(depth_values))
 
 # commented out cross validation to save computation time!!
 
-# for (i in seq_along(ntree_values)) {
-#   ntree = ntree_values[i]
-#   
-#   model = randomForest(price ~ ., data = train.dat, ntree = ntree)
-#   predictions_test <- predict(model, newdata = test.dat)
-#   predictions_train <- predict(model, newdata = train.dat)
-#   
-#   mse_values[i] <- mean((predictions_test - test.dat$price)^2)
-#   test_rsq_values[i] = cor(predictions_test,test.dat$price)^2
-#   train_rsq_values[i] = cor(predictions_train,train.dat$price)^2
-# }
+for (i in seq_along(depth_values)) {
+  depth = depth_values[i]
+
+  model = rpart(price ~ ., 
+                data = train.dat, 
+                method = "anova",
+                control=rpart.control(maxdepth=depth))
+  predictions_test <- predict(model, newdata = test.dat)
+  predictions_train <- predict(model, newdata = train.dat)
+
+  mse_values[i] <- mean((predictions_test - test.dat$price)^2)
+  test_rsq_values[i] = cor(predictions_test,test.dat$price)^2
+  train_rsq_values[i] = cor(predictions_train,train.dat$price)^2
+}
 ```
 
 ```{r}
 #[Kaleo]
-mse_hard.coded = c(18959180557,19044061189,19147650224,18975362291,18893426330)
-test_rsq_values_hard.coded = c(0.8734077,0.8730189,0.8719060,0.8740622,0.8747472)
 
 # Plot the results
-plot(ntree_values, mse_hard.coded, type = "b", xlab = "Number of Trees", ylab = "Mean Squared Error", main = "Random Forest Cross Validation Test MSE (ntrees)")
+plot(depth_values, mse_values, type = "b", xlab = "Depth Value", ylab = "Root Mean Squared Error", main = "Regression Tree Cross Validation Test MSE (depth)")
 
-plot(ntree_values, test_rsq_values_hard.coded,type="o", xlab = "Number of Trees", ylab = "Test R-squared", main = "Random Forest Cross Validation Test R-squared (ntrees)")
-text(ntree_values,test_rsq_values_hard.coded,labels=round(test_rsq_values_hard.coded,4),pos=3,xpd=TRUE)
+plot(depth_values, test_rsq_values, type="o", xlab = "Depth Value", ylab = "Test R-squared", main = "Regression Tree Cross Validation Test R-squared (depth)")
+text(depth_values,test_rsq_values,labels=round(test_rsq_values,4),pos=3,xpd=TRUE)
+```
+```{r}
+#[Kaleo]
+#fitting decision tree with best depth
+
+dtm = rpart(price ~ ., 
+              data = train.dat, 
+              method = "anova",
+              control=rpart.control(maxdepth=5))
+
+imp = dtm$variable.importance
+dt_test_pred <- predict(dtm, newdata=test.dat)
+dt_train_pred <- predict(dtm, newdata=train.dat)
+dt_test_results = postResample(pred = dt_test_pred, obs = test.dat$price)
+dt_train_results = postResample(pred = dt_train_pred, obs = train.dat$price)
+dt_test_sse = sum((dt_test_pred - test.dat$price)^2)
+
+#variable importance may be more reliable if considering other values from cross validation...work in progress
+barplot(imp,las=2,main="Variable importance in Decision Tree")
 ```
 ```{r}
 # [Kaleo]
+#append results
+results.df = rbind(results.df,data.frame(model = "Decision Tree Regression",
+                            R.Squared.Train = unname(dt_train_results[2]),
+                            R.Squared.Test = unname(dt_test_results[2]),
+                            RMSE.test = unname(dt_test_results[1]),
+                            SSE.test = dt_test_sse))
+```
 
-#commented out for computation time..
+## Random Forest Model
+```{r}
+# [Kaleo]
+# Fitting Random Forest model
+# Cross validate number of features!!...work in progress
 
-#using efficient model (50 trees...for now)
-house_rf = randomForest(price ~ ., data = train.dat, ntree = 50)
-rf_test_pred = predict(house_rf,newdata=test.dat)
-rf_train_pred = predict(house_rf,newdata=train.dat)
+rf = randomForest(price ~ .-price_binary, 
+              data = train.dat,
+              ntree = 500,
+              importance=TRUE)
+```
+```{r}
+# [Kaleo]
+#variable importance
+randomForest::varImpPlot(rf)
 
-rf_test_mse = mean((rf_test_pred - test.dat$price)^2)
-rf_test_rsq = cor(rf_test_pred,test.dat$price)^2
-rf_train_rsq = cor(rf_train_pred,train.dat$price)^2
-
-cat("test mse:",rf_test_mse,"train rsq:", rf_train_rsq, "test rsq:",rf_test_rsq)
+#fix permuation importance - better for mixed data (ordinal, categorical, quantitative,etc)
+# rfPermute(rf,train.dat,train.dat$price,na.action=na.omit,nrep = 100)
 ```
 
 ```{r}
 #[Kaleo]
+# Random Forest Results
 
-# relative variable importance
-par(mar = c(7, 5, 4, 2))
+rf_train_pred = predict(rf, newdata = train.dat)
+rf_test_pred = predict(rf, newdata = test.dat)
 
-var_importance = importance(house_rf)
-top_features = var_importance[order(var_importance[,1], decreasing = TRUE), ][1:12]
+rf_train_results = postResample(pred = rf_train_pred, obs = train.dat$price)
+rf_test_results = postResample(pred = rf_test_pred, obs = test.dat$price)
+rf_test_sse = sum((rf_test_pred - test.dat$price)^2)
 
-barplot(top_features,names.arg = rownames(top_features),las=2)
+results.df = rbind(results.df,data.frame(model = "Random Forest",
+                            R.Squared.Train = unname(rf_train_results[2]),
+                            R.Squared.Test = unname(rf_test_results[2]),
+                            RMSE.test = unname(rf_test_results[1]),
+                            SSE.test = rf_test_sse))
 ```
-
 
 ## Regression Tree Model
 
@@ -702,7 +615,14 @@ rpart.plot(tree_model, main="Regression Tree", extra=1, under=TRUE, faclen=0, ce
 # Prediction and Performance
 tree_predictions <- predict(tree_model, test.dat)
 tree_rmse <- sqrt(mean((tree_predictions - test.dat$price)^2))
-print(paste("Tree RMSE:", tree_rmse))
+
+# [Kaleo] added rsquared
+tree_test_pred <- predict(tree_model, newdata=test.dat)
+tree_train_pred <- predict(tree_model, newdata=train.dat)
+tree_test_results = postResample(pred = tree_test_pred, obs = test.dat$price)
+tree_train_results = postResample(pred = tree_train_pred, obs = train.dat$price)
+
+print(paste("Tree RMSE:", tree_rmse,"Train Rsq:",tree_train_results[2],"Test Rsq:",tree_test_results[2]))
 
 ```
 
@@ -722,7 +642,6 @@ nn_rmse <- sqrt(mean((nn_predictions - test.dat$price)^2))
 print(paste("NN RMSE:", nn_rmse))
 
 ```
-
 
 ## Support Vector Machine (SVM) Model
 
@@ -805,8 +724,11 @@ ROC Curve
 ```{r Variable Importance for Tree Model}
 
 # randomForest model for variable importance
-rf_model <- randomForest(price ~ ., data = train.dat)
-randomForest::varImpPlot(rf_model)
+
+# [Kaleo] commented out to reduce computation time...already did random forest
+
+# rf_model <- randomForest(price ~ ., data = train.dat)
+# randomForest::varImpPlot(rf_model)
 
 ```
 Random Forest plot
