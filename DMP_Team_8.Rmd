@@ -39,15 +39,19 @@ This section will describe the model usage, your conclusions and any regulatory 
 
 *This section needs to introduce the reader to the problem to be resolved, the purpose, and the scope of the statistical testing applied. What you are doing with your prediction? What is the purpose of the model? What methods were trained on the data, how large is the test sample, and how did you build the model?*
 
---- in-progress ---
+In the ever-evolving landscape of real estate, the ability to accurately predict house prices is invaluable. This project, undertaken by a dedicated team from Harvard Extension School, delves into this realm, focusing on King County, USA. The motivation behind our work is twofold: firstly, to provide a robust predictive tool for potential investors and market analysts, and secondly, to contribute to the academic understanding of real estate market dynamics.
 
-This project aims to develop a predictive model for house prices in King County, USA. The model's purpose is to provide an analytical tool for understanding the key factors influencing property values in this area, which is significant for various stakeholders in the real estate sector.
+Our approach is grounded in the analysis of the 'KC_House_Sales' dataset, a comprehensive collection of house attributes within King County. The dataset, rich in detail, includes features such as square footage, the number of bedrooms, and geographical location, etc., all of which are pivotal in determining house prices. The initial phase of our project involved a thorough data cleaning process. This step was crucial in ensuring the integrity of our analysis, involving the removal of irrelevant variables, handling missing values, and converting data types for consistency.
 
-Our primary data source is the 'KC_House_Sales' dataset, which includes detailed information on various house attributes. **(Add here the hypothesis of initial exploration on house prices)**.
+Once the data was prepared, we embarked on a methodological journey, exploring various statistical and machine learning techniques. Our primary method, linear regression, served as a foundation model, offering insights into the direct relationships between house features and their prices. However, recognizing the complexity of the real estate market, we expanded our toolkit to include more advanced models like neural networks, decision trees, and support vector machines (SVM). Each of these methods brought a unique perspective and depth to our analysis, enabling us to capture non-linear relationships and complex interactions between variables.
 
-The methodology adopted for this project combines conventional statistical techniques with modern data analytics methods. Initial models will be based on linear regression, with further exploration into more complex approaches like neural networks and decision trees, depending on their performance in preliminary analyses.
+The structure of our project involved splitting the dataset into two parts: 70% for training and 30% for validation. This split was strategically chosen to ensure the robustness of our models against unseen data, a critical aspect of predictive modeling. The training phase was an iterative process, where each model was refined through a series of evaluations and adjustments. In doing so, we aimed to strike a balance between model complexity and predictive accuracy.
 
-To ensure robust model training and validation, the dataset has been divided into a training set (70%) and a test set (30%). This division is crucial for evaluating the model's effectiveness in making predictions on new, unseen data.
+Our exploratory data analysis revealed several key insights. We observed that certain features, such as square footage and location, had a significant impact on house prices. This initial observation guided our feature selection and engineering process, where we developed new variables that could potentially enhance the model's performance.
+
+As we progressed, the need for a rigorous evaluation framework became apparent. To this end, we employed various metrics such as Mean Squared Error (MSE) and R-squared values. These metrics were instrumental in assessing the performance of our models, both on the training and validation sets. The final selection of our primary model, which we refer to as the "champion" model, was based on a comprehensive evaluation of these metrics.
+
+In conclusion, this project represents a significant endeavor in the field of predictive analytics for real estate. Through a blend of traditional statistical methods and advanced machine learning techniques, we have developed a model that not only predicts house prices in King County with a high degree of accuracy but also offers insights into the factors that drive these prices. As we move forward, our focus will be on refining the model, exploring new data sources, and adapting to the changing dynamics of the real estate market.
 
 \newpage
 # II. Description of the data and quality (15 points)
@@ -55,6 +59,8 @@ To ensure robust model training and validation, the dataset has been divided int
 *Here you need to review your data, the statistical test applied to understand the predictors and the response and how are they correlated. Extensive graph analysis is recommended. Is the data continuous, or categorical, do any transformation needed? Do you need dummies? *
 
 ## Data Overview
+
+The dataset presented for analysis encompasses a range of housing attributes for properties sold in King County, including the sale price, number of bedrooms and bathrooms, square footage of living and lot space, and other characteristics like the presence of a waterfront, views, and the condition and grade of the house. Each entry is timestamped, providing a date of sale, which can be instrumental in understanding market trends over time.
 
 ```{r Data Overview}
 
@@ -68,7 +74,9 @@ head(df_house)
 
 ## Data Types, Categories and Cleaning
 
-[Add here info about the data and what was performed]
+Our dataset includes a blend of continuous and categorical data types. Notably, the 'zipcode' and 'waterfront' variables are categorical despite their numeric appearance. 'Zipcode' represents different regions, and 'waterfront' is a binary indicator, thus requiring special attention during preprocessing. These variables, along with others like 'view' and 'condition', will be transformed into dummy variables to facilitate their use in our regression models.
+
+The data cleaning process has involved removing non-informative variables such as IDs, correcting data types (e.g., transforming sale price to a numeric format and parsing dates into a usable format), and creating new variables that could reveal temporal trends (e.g., year, month, day of sale).
 
 ```{r Data types, Categories and Cleaning}
 # [Kaleo]
@@ -96,23 +104,23 @@ head(ndf_house)
 
 ```
 
-## Stat Summary - in progress
+## Initial Statistical Summary
 
-[Add here the initial analysis of the summary, if applicable]
+The dataset from King County includes 21,613 observations with 22 variables related to house sales. Variables include continuous data like price, square footage, and lat/long coordinates, and categorical data such as bedrooms, floors, and waterfront status. The price ranges from $75,000 to $7,700,000, with a mean of $540,088. Houses range from 0 to 33 bedrooms, reflecting diverse property types. The dataset also contains binary and ordinal variables, such as view and condition, that require dummy coding for analysis.
 
 ```{r Stat Summary}
 
-str(ndf_house)
-summary(ndf_house)
+str(df_house)
+summary(df_house)
 
 ```
 
 ```{r Stat summary of the price}
-summary(ndf_house$price)
+summary(df_house$price)
 ```
 
 
-## Graphical Analysis - in progress - Seymur
+## Graphical Analysis
 
 The pairwise scatter plot shows the correlation between highly correlated variables extracted from heatmap correlation matrix.
 
@@ -167,14 +175,7 @@ ggplot(average_prices, aes(x = factor(bedrooms), y = price)) +
 
 ```
 
-```{r }
-
-ggplot(df_house, aes(x = sqft_living, y = price)) +
-  geom_point(aes(color = factor(bedrooms)), alpha = 0.6) +
-  scale_color_brewer(type = 'seq', palette = 'Blues') +
-  labs(title = "House Price vs. Square Footage of Living Space", x = "Square Footage of Living Space", y = "Price")
-
-```
+**Analysis**: the spread of prices for waterfront homes is wider, indicating more variability in price. Notably, waterfront properties have more high-priced outliers, suggesting that while many waterfront homes are priced higher, a few are exceptionally expensive. Non-waterfront homes have a more compact price distribution but also feature outliers, indicating some are priced significantly above the median.
 
 ```{r Outlier analysis for Waterfront vs Mountain view}
 
@@ -200,35 +201,6 @@ ggplot(data = ndf_house, aes(x = long, y = lat, color = price)) +
 
 ```
 
-## [Analysis section] 
-
-From geographical map, it is evident that properties situated around the latitude line of 47.6 and longitude between -122.25 and -122.00, which corresponds to the central and northern parts of Seattle, command higher prices per square foot. The relatively lower-priced properties per square foot, shown in orange, are more dispersed and located primarily south of central Seattle, extending towards Tacoma, as well as in the outlying suburban areas.It is also noticeable that along the latitudinal line around 47.4, there are pockets of high-priced properties per square foot, potentially indicating affluent neighborhoods or areas with high-value real estate.
-
-The map clearly shows a correlation between location and property value per square foot, with central urban areas exhibiting the highest values. This pattern is typical for urban centers where proximity to amenities, employment opportunities, and other socioeconomic factors drive up real estate prices.
-
-```{r Map visualizatoin of average prices by squre foot distribution over long and lat}
-
-register_stadiamaps(key = '765cbcd1-2ec2-40e3-8a81-98624e616208')
-df_summary <- ndf_house %>%
-  mutate(price_per_sqft = price / sqft_living) %>%
-  group_by(long, lat) %>%
-  summarize(avg_price_per_sqft = mean(price_per_sqft, na.rm = TRUE), .groups = 'drop')
-
-king_county_map <- get_stadiamap(bbox = c(left = min(df_house$long), 
-                                         bottom = min(df_house$lat), 
-                                         right = max(df_house$long), 
-                                         top = max(df_house$lat)),
-                                 maptype = "stamen_terrain",
-                                 zoom = 10)
-ggmap(king_county_map) +
-  geom_point(data = df_summary, aes(x = long, y = lat, color = avg_price_per_sqft), 
-             alpha = 0.5, size = 1) +
-  scale_color_gradient(low = "orange", high = "darkblue", name = "Avg Price per Sqft") +
-  labs(title = "Average Price per Sqft of Properties in King County",
-       x = "Longitude", y = "Latitude") +
-  theme_minimal()
-
-```
 ## Zipcode visualizations (can discard)
 ***Zipcode is a valid predictor***
 
@@ -269,9 +241,11 @@ ggplot(heatmap_data, aes(x = factor(zipcode, levels = zipcode), y = 1, fill = me
         legend.key.width = unit(2, "cm"))
 ```
 
-## Correlation Analysis - in progress
+## Correlation Analysis
 
-***[Add here the initial analysis of the correlation matrix]***
+**Analysis**: the heatmap shows the correlation between different variables. 
+ChatGPT
+The heatmap indicates that 'sqft_living', 'grade', and 'sqft_above' are highly correlated with 'price'. This suggests that larger living spaces, higher house grades, and more above-ground square footage are associated with higher house prices. These variables could serve as key predictors in a pricing model.
 
 ```{r Correlation Matrix}
 # [Kaleo]
@@ -299,8 +273,6 @@ pheatmap(cor_matrix,
 # [Kaleo]
 head(x_high)
 ```
-
-## Data Transformation
 
 ## Categorical Variables and Age Analysis
 
