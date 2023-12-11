@@ -38,6 +38,7 @@ library(kernlab)
 library(rpart.plot)
 library(rsq)
 library(rfPermute)
+library(ada)
 
 # Functions 
 
