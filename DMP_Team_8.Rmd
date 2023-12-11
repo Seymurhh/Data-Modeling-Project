@@ -559,7 +559,7 @@ for (i in seq_along(depth_values)) {
 #[Kaleo]
 
 # Plot the results
-plot(depth_values, Rmse_values, type = "b", xlab = "Depth Value", ylab = "Root Mean Squared Error", main = "Regression Tree Cross Validation Test MSE (depth)")
+plot(depth_values, mse_values, type = "b", xlab = "Depth Value", ylab = "Root Mean Squared Error", main = "Regression Tree Cross Validation Test MSE (depth)")
 
 plot(depth_values, test_rsq_values, type="o", xlab = "Depth Value", ylab = "Test R-squared", main = "Regression Tree Cross Validation Test R-squared (depth)")
 text(depth_values,test_rsq_values,labels=round(test_rsq_values,4),pos=3,xpd=TRUE)
@@ -592,6 +592,45 @@ results.df = rbind(results.df,data.frame(model = "Decision Tree Regression",
                             RMSE.test = unname(dt_test_results[1]),
                             SSE.test = dt_test_sse))
 ```
+
+## Random Forest Model
+```{r}
+# [Kaleo]
+# Fitting Random Forest model
+# Cross validate number of features!!...work in progress
+
+rf = randomForest(price ~ .-price_binary, 
+              data = train.dat,
+              ntree = 500,
+              importance=TRUE)
+```
+```{r}
+# [Kaleo]
+#variable importance
+randomForest::varImpPlot(rf)
+
+#fix permuation importance - better for mixed data (ordinal, categorical, quantitative,etc)
+# rfPermute(rf,train.dat,train.dat$price,na.action=na.omit,nrep = 100)
+```
+
+```{r}
+#[Kaleo]
+# Random Forest Results
+
+rf_train_pred = predict(rf, newdata = train.dat)
+rf_test_pred = predict(rf, newdata = test.dat)
+
+rf_train_results = postResample(pred = rf_train_pred, obs = train.dat$price)
+rf_test_results = postResample(pred = rf_test_pred, obs = test.dat$price)
+rf_test_sse = sum((rf_test_pred - test.dat$price)^2)
+
+results.df = rbind(results.df,data.frame(model = "Random Forest",
+                            R.Squared.Train = unname(rf_train_results[2]),
+                            R.Squared.Test = unname(rf_test_results[2]),
+                            RMSE.test = unname(rf_test_results[1]),
+                            SSE.test = rf_test_sse))
+```
+
 ## Regression Tree Model
 
 ```{r}
@@ -607,6 +646,7 @@ rpart.plot(tree_model, main="Regression Tree", extra=1, under=TRUE, faclen=0, ce
 tree_predictions <- predict(tree_model, test.dat)
 tree_rmse <- sqrt(mean((tree_predictions - test.dat$price)^2))
 
+# [Kaleo] added rsquared
 tree_test_pred <- predict(tree_model, newdata=test.dat)
 tree_train_pred <- predict(tree_model, newdata=train.dat)
 tree_test_results = postResample(pred = tree_test_pred, obs = test.dat$price)
@@ -632,7 +672,6 @@ nn_rmse <- sqrt(mean((nn_predictions - test.dat$price)^2))
 print(paste("NN RMSE:", nn_rmse))
 
 ```
-
 
 ## Support Vector Machine (SVM) Model
 
@@ -715,8 +754,11 @@ ROC Curve
 ```{r Variable Importance for Tree Model}
 
 # randomForest model for variable importance
-rf_model <- randomForest(price ~ ., data = train.dat)
-randomForest::varImpPlot(rf_model)
+
+# [Kaleo] commented out to reduce computation time...already did random forest
+
+# rf_model <- randomForest(price ~ ., data = train.dat)
+# randomForest::varImpPlot(rf_model)
 
 ```
 Random Forest plot
