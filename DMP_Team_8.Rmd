@@ -602,7 +602,8 @@ barplot(top_features,names.arg = rownames(top_features),las=2)
 tree_model <- rpart(price ~ ., data = train.dat, method = "anova")
 print(summary(tree_model))
 
-rpart.plot(tree_model, main="Regression Tree", extra=1, under=TRUE, faclen=0, cex=0.75)
+#rpart.plot(tree_model, main="Regression Tree", type = 4, extra = 1, under=TRUE, faclen=0, cex=0.75)
+rpart.plot(tree_model, main="Regression Tree", type = 4, extra = 1)
 
 # Prediction and Performance
 tree_predictions <- predict(tree_model, test.dat)
