@@ -24,6 +24,18 @@ editor_options:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
+## Helper to display regression function with n coefficients
+dispRegFunc <- function(reg) {
+  coefs <- reg$coefficients
+  b0 = coefs[1]
+  n <- length(coefs)
+  my_formula <- paste0("Y = ", round(b0, digits = 6))
+  for (i in 2:n) {
+    my_formula <- paste0(my_formula, " + ", round(coefs[i],6), names(coefs)[i])
+  }
+  my_formula
+}
+
 source("libs_funcs.R")
 
 HouseSales<-read.csv("KC_House_Sales.csv")
@@ -347,11 +359,14 @@ dim(test.dat)
 ## Summary of the section II
 
 \newpage
-# III. Model Development Process (15 points) - Bethun Bhowmik (in progress)
+# III. Model Development Process (15 points) - (Bethun Bhowmik)
 
 *Build a regression model to predict price.  And of course,  create the train data set which contains 70% of the data and use set.seed (1023). The remaining 30% will be your test data set. Investigate the data and combine the level of categorical variables if needed and drop variables. For example, you can drop id, Latitude, Longitude, etc. *
 
+The KC House sales dataset is split into train(70%) and test(30%) datasets, with 15129 observations in the train dataset and 6484 observations in the test dataset.
+
 ```{r}
+#[Bethun]
 set.seed(1023)
 n<-dim(df_house)[1]
 IND<-sample(c(1:n),round(n*0.7))
@@ -363,55 +378,115 @@ dim(test.dat)
 ```
 
 **Analysis**:
+The house_lm model to predict price has:
+- Residual Standard Error of 193,600
+- Multiple R-square of 71.38%
+- p-value of < 2.2e-16
+- MSE of 37,494,980,807
+
+Overall, the model appears to be statistically significant overall given the low p-value for the F-statistic. The multiple R-square suggests that 71.38% of the variability in price is explained by the model.
+Moreover, all most predictors (except sqft_lot) have a statistically significant impact on the house price. Predictions on the test dataset should be done to further validate model usefulness.
+
+From the model plot we observe the following:
+- LINEARITY ASSUMPTION: From the Residuals vs Fitted plot, as the residuals seem to be randomly dispersed around the horizontal axis and the line is horizontal, a linear regression model may be appropriate, however we may need to transforming the response variable.
+- NORMALITY ASSUMPTION: From the Q-Q Residuals plot, as the points are out of the diagonal line on either ends, the residuals do not meet the normality assumption.
+- CONSTANT VARIANCE ASSUMPTION: The scale location plot points to non constant variance. The HOMOSCEDASTICITY ASSUMPTION is violated.Moreover the line is curvilinear.
+- The impact of bad data like influential and outlier observations seems to be impactful when inspecting the the Residual vs. Leverage graph
 
 ```{r}
+#[Bethun]
 house_lm<-lm(price ~.,data=train.dat)
 summary(house_lm)
 par(mfrow=c(2,2))
 plot(house_lm)
-
+MSE <- summary(house_lm)$sigma^2
+print(MSE)
 ```
 
+**Analysis**:
+The R-square values on both training and test data are quite close - 71.38% and 70.86% respectively. This suggests that the model generalizes well to new data, maintaining a similar level of explanatory power. The RMSE of 204,868.3 indicates the average magnitude of errors in predicting house prices on the test data. The SSE of 2.721402e+14 represents the sum of squared differences between predicted and observed values on the test data. A lower RMSE and SSE indicates better model fit, and we will explore furher on how these values can be lowered.
+
 ```{r}
-# Results dataframe to append model scores
-
-# Calculate scores (mse,rmse,r-squared)
-
+#[Bethun]
 # Test data Predictions
 house_lm_test_pred <- predict(house_lm, newdata = test.dat)
-# Test MSE
-house_lm_test_mse <- mean((house_lm_test_pred - test.dat$price)^2)
-# Test RMSE
-house_lm_test_rmse <- sqrt(house_lm_test_mse)
-# Test Residuals
-house_lm_test_residuals <- test.dat$price - house_lm_test_pred
-# Test R-squared
-house_lm_test_rsq <- 1 - var(house_lm_test_residuals) / var(test.dat$price)
-# SSE
-house_lm_test_sse <- sum((test.dat$price - house_lm_test_pred)^2)
 
-results.df <- data.frame(model = "Linear Regression All (Baseline)",
+house_lm_test_mse <- mean((house_lm_test_pred - test.dat$price)^2)
+house_lm_test_rmse <- sqrt(house_lm_test_mse)
+house_lm_test_residuals <- test.dat$price - house_lm_test_pred
+house_lm_test_rsq <- 1 - var(house_lm_test_residuals) / var(test.dat$price)
+house_lm_test_sse <- sum((test.dat$price - house_lm_test_pred)^2)
+results.df <- data.frame(model = "Linear Regression Test Data Predictions",
                          R.Squared.Train = summary(house_lm)$r.square,
                          R.Squared.Test = house_lm_test_rsq,
                          RMSE.test = house_lm_test_rmse,
                          SSE.test = house_lm_test_sse)
+print(results.df)
 ```
 
+**Analysis**:
+The insignificant predictor sqft_lot is dropped and the model is refitted. We observe that the Multiple R-square value remains unchanged at 71.38%. The model is as follows:
+
+Price = -74344803.92767 + -34633.405255bedrooms + 32821.338262bathrooms + 143.671881sqft_living + 8767.015515floors + 531351.549043waterfront + 52065.87946view + 24875.912771condition + 82737.693562grade + 22.301049sqft_above + -896.223982yr_built + 4065.130653yr_renovated + -507.797776zipcode + 473638.095898lat + -206204.537141long + 21.65297sqft_living15 + -0.25171sqft_lot15 + 38482.930296year + 1380.790546month + -331.741298day + -7982223.272107renovated + 1440.530732age + 101303.883852price_binary
+
 ```{r}
-predictors_to_drop <- c("<=1900", "1901-1925", "1926-1950", "1951-1975", "1976-2000", "2001+", "zipcode_98198", "zipcode_98199", "sqft_basement")
+#[Bethun]
+predictors_to_drop <- c("sqft_lot")
 
 # Update the model by excluding the specified predictors
 updated <- as.formula(paste("price ~ .", paste0("- `", predictors_to_drop, "`", collapse = "")))
 house_lm <- update(house_lm, formula = updated)
 summary(house_lm)
-
+dispRegFunc(house_lm)
 ```
 
+
+**Analysis**:
+
+On plotting the boxplot of residuals, we observe multiple outliers on both ends of the whiskers. Moreover, when we plot the residuals against the fitted values, we observe that the residuals spread out with increase in fitted values along x-axis.
+
 ```{r}
+#[Bethun]
 ei<-house_lm$residuals
 boxplot(ei,horizontal=TRUE,staplewex=0.5,col=2,xlab="House Price Regression Residuals")
 plot(house_lm$fitted.values,ei,xlab="Fitted Values House Linear Model",ylab="Residuals House Linear Model")
 ```
+
+**Analysis**:
+Predictors with low p-values of < 2.2e-16 (e.g. bedrooms, bathrooms, sqft_living, etc.) are statistically significant and are important in predicting price. Some predictors that have a have higher p-value (e.g. floors, zipcode, month, day) may not be statistically significant in predicting price.
+
+```{r}
+#[Bethun]
+anova(house_lm)
+```
+
+
+
+**Analysis**:
+
+A two sides t statistical test is used for testing individual coefficients and their significance. The critical t -value applicable given alpha=0.01 and n-2 degrees of freedom is 2.576.
+H0: intercept =0, HA: intercept is not 0
+H0: slope= 0    , HA: slope is not 0
+Decision rule: when t > t critical reject null
+
+The model, as indicated by the significant coefficients, suggests that features such as the number of bedrooms, bathrooms, square footage of living space, waterfront status, view, grade, etc, play a statistically significant role in predicting the house price.
+
+```{r}
+#[Bethun]
+
+conf= 0.01/2     #Note we divide by 2 because this is a two tail test,if alpha=0.05 then use .05/2
+df<-21613-2            #manually calculating the degrees of freedom
+value<-formatC(qt(conf,df,lower.tail=FALSE))    
+print(paste("Critical T values: ",value))
+#coefficients
+matrix_coef <- summary(house_lm)$coefficients  # Extract coefficients in matrix
+matrix_coef   
+
+my_estimates <- matrix_coef[ , 1]  # Matrix manipulation to extract estimates
+
+#Step 6: Pr(>|t|) < 0.01 there is sufficient statistical evidence to reject null for both parameters. Using a t-test we noted that t-values (6.259865 and abs(4.102897) are larger than t-critical that is 2.637
+```
+
 
 $H_o$: Error variances are constant
 $H_a$: Error variances are not constant
@@ -420,27 +495,47 @@ or if p-value < alpha (0.01) reject the hull
 
 P value is < 2.2e-16. So we reject $H_o$, Error variances are not constant.
 
-```{r}
-bptest(house_lm, studentize = FALSE)
-```
+**Analysis**:
 
 ```{r}
+#[Bethun]
+bptest(house_lm, studentize = FALSE)
+```
+**Analysis**:
+For Boxcox transormation, the optimal lambda is -0.04040404 with 95% confidence interval range which is close to zero.Although, we can estimate lambda to be zero and apply logarithmic transformation of the data, we have done the boxcox transformation with exact optimal lambda value for better accuracy.
+
+```{r}
+#[Bethun]
 par(mfrow=c(1,1))
 bc<-boxcox(house_lm,lambda=seq(-4,4,by=0.1))
 lambda <- bc$x[which.max(bc$y)] 
 lambda  #This is the optimal lambda
 ```
 **Analysis**:
+After boxcox transformation, we observe that
+- Residual Standard Error has reduced significantly to 0.004981 from 193,600
+- Multiple R-square has increased to 84.03% from 71.38%
+- p-value remains same at < 2.2e-16
+
+Overall, the model appears to be a much better fit that before. From the model plot we observe the following:
+- LINEARITY ASSUMPTION: The Residuals vs Fitted plot looks better than before and confirms that a linear regression model is appropriate
+- NORMALITY ASSUMPTION: The points are much better aligned along the diagonal in the Q-Q Residuals plot, however some tails remain
+- CONSTANT VARIANCE ASSUMPTION: The Scale Location plot points to constant variance
+- There are still some outlier observations which may be to be impactful as seen from the the Residual vs. Leverage graph
 
 ```{r}
+#[Bethun]
 house_lm1<-lm(price^lambda~.,data=train.dat)
 summary(house_lm1)
 par(mfrow=c(2,2))
 plot(house_lm1)
-
+dispRegFunc(house_lm1)
 ```
+**Analysis**:
+On predicting the values of the Boxcox transformed model on the test dataset, we observe a R-square test of 75.79% compared to R-square train of 84.03%, from which we conclude that the transformed model generalizes well to new data.
 
 ```{r}
+#[Bethun]
 pred<- predict(house_lm1,test.dat)^(1/lambda)
 act<-test.dat$price
 
@@ -448,7 +543,7 @@ SST<-var(act)*(length(act)-1)
 SSE<-sum((act-pred)^2)
 R.Square.Test <- 1- SSE/SST
 R.Square.Test
-R.Square.Train=0.887
+R.Square.Train=0.8403
 
 knitr::kable(cbind(R.Square.Train,R.Square.Test), align = "c",
       caption = "Pseudo $R^2$ values for Train and Test")
@@ -503,180 +598,17 @@ knitr::kable(cbind(R.Square.Train,R.Square.Test), align = "c",
 # IV. Model Performance Testing (15 points)
 
 *Use the test data set to assess the model performances. Here, build the best multiple linear models by using the stepwise both ways selection method. Compare the performance of the best two linear models. Make sure that model assumption(s) are checked for the final linear model. Apply remedy measures (transformation, etc.) that helps satisfy the assumptions. In particular you must deeply investigate unequal variances and multicollinearity. If necessary, apply remedial methods (WLS, Ridge, Elastic Net, Lasso, etc.). *
-```{r}
-# Ibrahim
-# Stepwise both ways selection method
 
-# stepboth_model <- ols_step_both_p(house_lm1, train.dat)
-stepwise_model <- step(house_lm1, train.dat)
-stepwise_model
-par(mfrow=c(2,2))
-plot(stepwise_model)
 
-```
+
+## Best Subset Regression
 
 ```{r}
-# This is not working
-stepboth_model <- ols_step_both_p(house_lm1, train.dat)
-stepboth_model
-```
 
-```{r}
-# Plotting the main (boxcox) model that used the train data
-par(mfrow=c(2,2))
-plot(house_lm1)
-```
-Graph 1 (Residuals vs Fitted): (linearity assumption) A linear relationship seems appropriate. (The average mean error equal to zero assumption) The average mean seems to be equal to zero.
-
-Graph 2 (Q-Q Residuals): (normality assumption) There is minor departure from a normal distribution at the tails.
-
-Graph 3 (Scale-Location): (constant variance assumption) The residuals do not seem to be equally distributed throughout. (homoscedasticity assumption) The variances do not appear constant and the Breush-Pagan test indicates this with the p-value being lower than alpha.
-
-Graph 4 (Residuals vs Leverage): There are no influential outliers.
-
-```{r}
-# Weighted Least Squares Regression
-# We notice from the scale-location graph of the main model that the error variances are unequal.
-
-# Calculating the weights for the model
-ei <- house_lm1$residuals
-abs.ei <- abs(ei)
-g1 <- lm(abs.ei ~ train.dat$price)
-summary(g1)
-
-s <- g1$fitted.values
-wi = 1/(s^2)
-
-```
-
-```{r}
-# Weighted-least squares regression
-house_lm_wls <- lm(price ~ ., weights = wi, data = train.dat)
-
-summary(house_lm_wls)
-par(mfrow=c(2,2))
-plot(house_lm_wls)
-
-```
-
-```{r}
-# Testing the main (boxcox) model for multicollinearity
-vif(house_lm1)
-```
-yr_built, yr_rennovated, and renovated indicate multicollinearity issues.
-
-```{r}
-# Testing the weighted-least squares model for multicollinearity
-vif(house_lm_wls)
-```
-
-```{r}
-# Ridge Regression
-
-# Extract 'x' and 'y'
-x <- data.matrix(dplyr::select(train.dat, -price))
-y <- train.dat$price
-
-# Perform ridge regression
-house_lm_ridge <- glmnet::cv.glmnet(x, y, alpha = 0, nlambda = 100, lambda.min.ratio = 0.0001)
-best.lambda.ridge <- house_lm_ridge$lambda.min
-plot(house_lm_ridge)
-
-print(paste0("Ridge best lambda of ", round(best.lambda.ridge, digits = 3)))
-
-```
-
-```{r}
-# Lasso Regression
-house_lm_lasso <- glmnet::cv.glmnet(x, y, alpha = 1, nlambda = 100, lambda.min.ratio = 0.0001)
-best.lambda.lasso <- house_lm_lasso$lambda.min
-plot(house_lm_lasso)
-
-print(paste0("Lasso best lambda of ", round(best.lambda.lasso, digits = 3)))
-```
-
-```{r}
-# Elastic Net Regression
-house_lm_enet <- glmnet::cv.glmnet(x, y, alpha = 0.5, nlambda = 100, lambda.min.ratio = 0.0001)
-plot(house_lm_enet)
-best.lambda.enet <- house_lm_enet$lambda.min
-print(paste0("ElasticNet best lambda of ", round(best.lambda.enet, digits = 3)))
-```
-
-```{r}
-# Looking at the residuals using the Cook's distance chart
-ols_plot_cooksd_chart(house_lm1)
-
-# Studentized Residuals vs Leverage Plot
-ols_plot_resid_lev(house_lm1)
-
-# Deleted Studentized Residuals vs Fitted Values Plot
-ols_plot_resid_stud_fit(house_lm1)
-```
-
-```{r}
-# Robust Regression using Huber weights 
-# There are influential points (see plots above)
-house_lm_huber <- MASS::rlm(price ~ ., psi = psi.huber, data = train.dat)
-summary(house_lm_huber)
-plot(house_lm_huber)
-```
-
-```{r}
-# Robust Regression using bisquare weights 
-
-house_lm_bisquare <- MASS::rlm(price ~ ., psi = psi.bisquare, data = train.dat)
-summary(house_lm_bisquare)
-```
-```{r}
-price.predictors <- colnames(dplyr::select(df_house, -price))
-
-train.dat$price.lm <- stats::predict(house_lm1, train.dat)
-train.dat$price.sw.lm <- stats::predict(stepwise_model, train.dat)
-train.dat$price.ridge <-
-  stats::predict(house_lm_ridge, s = best.lambda.ridge, 
-                 newx = data.matrix(train.dat[price.predictors]))[,1]
-train.dat$price.lasso <-
-  stats::predict(house_lm_lasso, s = best.lambda.lasso, 
-                 newx = data.matrix(train.dat[price.predictors]))[,1]
-train.dat$price.en <-
-  stats::predict(house_lm_enet, s = best.lambda.enet, 
-                 newx = data.matrix(train.dat[price.predictors]))[,1]
-train.dat$price.huber <- stats::predict(house_lm_huber, train.dat)
-
-# SST, SSE, and R2
-sst <- sum((train.dat$price - mean(train.dat$price))^2)
-sse.lm <- sum((train.dat$price - train.dat$price.lm)^2)
-sse.sw <- sum((train.dat$price - train.dat$price.sw.lm)^2)
-sse.ridge <- sum((train.dat$price - train.dat$price.ridge)^2)
-sse.lasso <- sum((train.dat$price - train.dat$price.lasso)^2)
-sse.enet <- sum((train.dat$price - train.dat$price.en)^2)
-sse.huber <- sum((train.dat$price - train.dat$price.huber)^2)
-data.frame(Model = c('Linear', 'Stepwise', 'Ridge', 'Lasso', 'Elastic Net', 'Huber'),
-           R2 = c(round(1 - sse.lm / sst, digits = 4),
-                  round(1 - sse.sw / sst, digits = 4),
-                  round(1 - sse.ridge / sst, digits = 4),
-                  round(1 - sse.lasso / sst, digits = 4),
-                  round(1 - sse.enet / sst, digits = 4),
-                  round(1 - sse.huber / sst, digits = 4)),
-           MSE = c(round(sse.lm / nrow(train.dat), digits = 4),
-                  round(sse.sw / nrow(train.dat), digits = 4),
-                  round(sse.ridge / nrow(train.dat), digits = 4),
-                  round(sse.lasso / nrow(train.dat), digits = 4),
-                  round(sse.enet / nrow(train.dat), digits = 4),
-                  round(sse.huber / nrow(train.dat), digits = 4))) %>%
-  dplyr::arrange(desc(R2)) %>%
-  knitr::kable(caption = "R2 of Different Models")
-```
-
-
-```{r}
-# Best Subset Regression
-
-# This is not working
-k1<-ols_step_best_subset(house_lm1)
-k1
-plot(k1, guide="none")
+house_lm2<-lm(price^lambda~.,data=test.dat)
+# k1<-ols_step_best_subset(house_lm2)
+# k1
+# plot(k1,guide="none")
 ```
 
 
