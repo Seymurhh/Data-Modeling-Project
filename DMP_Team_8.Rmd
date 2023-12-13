@@ -104,6 +104,8 @@ df_house$year <- as.numeric(format(df_house$date, "%Y"))
 df_house$month <- as.numeric(format(df_house$date, "%m"))
 df_house$day <- as.numeric(format(df_house$date, "%d"))
 
+ndf_house = df_house[sapply(df_house, is.numeric)]
+
 head(df_house)
 ```
 
@@ -227,6 +229,13 @@ pheatmap(cor_matrix,
 )
 ```
 
+**Creating a new dataframe with variables 'highly' (>0.2) correlated with price**
+
+```{r}
+# [Kaleo]
+head(x_high)
+```
+
 ## Categorical Variables and Age Analysis
 
 ### Renovation Indicator Variable
@@ -305,8 +314,8 @@ Moreover, all most predictors (except sqft_lot) have a statistically significant
 From the model plot we observe the following:
 - LINEARITY ASSUMPTION: From the Residuals vs Fitted plot, as the residuals seem to be randomly dispersed around the horizontal axis and the line is horizontal, a linear regression model may be appropriate, however we may need to transforming the response variable.
 - NORMALITY ASSUMPTION: From the Q-Q Residuals plot, as the points are out of the diagonal line on either ends, the residuals do not meet the normality assumption.
-- CONSTANT VARIANCE ASSUMPTION: The scale location plot points to non constant variance. The HOMOSCEDASTICITY ASSUMPTION is violated.Moreover the line is curvilinear.
-- The impact of bad data like influential and outlier observations seems to be impactful when inspecting the the Residual vs. Leverage graph
+- CONSTANT VARIANCE ASSUMPTION: The scale location plot points to non constant variance. The HOMOSCEDASTICITY ASSUMPTION is violated. Moreover the line is curvilinear.
+- The impact of bad data like influential and outlier observations seems to be impactful when inspecting the Residual vs. Leverage graph
 
 ```{r}
 #[Bethun]
