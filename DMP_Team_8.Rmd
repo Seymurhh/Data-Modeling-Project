@@ -109,31 +109,6 @@ ndf_house = df_house[sapply(df_house, is.numeric)]
 head(df_house)
 ```
 
-```{r remove unnecessary variables}
-# [Seymur]
-# Remove redundant, unnecessary columns from dataset. 
-df_house[c("date", "lat", "long")] <- list(NULL)
-
-```
-
-
-```{r Identifying highly correlated variables}
-# [Seymur]
-# Correlation matrix
-corr_matrix <- cor(df_house, use = "complete.obs")  # use 'complete.obs' to handle missing values
-
-threshold <- 0.8
-high_corr <- which(abs(corr_matrix) > threshold, arr.ind = TRUE)
-high_corr <- high_corr[high_corr[, 1] < high_corr[, 2], ]
-
-for (pair in 1:nrow(high_corr)) {
-    row <- high_corr[pair, "row"]
-    col <- high_corr[pair, "col"]
-    cat(names(df_house)[row], "and", names(df_house)[col], "have a correlation of", corr_matrix[row, col], "\n")
-}
-
-```
-
 ## Categorical Variables and Age Analysis
 
 ### Renovation Indicator Variable
@@ -158,6 +133,33 @@ This is a tentative way to consider "age since las renovation" and see if there'
 df_house$age = ifelse(df_house$renovated == 1, 2023 - df_house$yr_renovated, 2023 - df_house$yr_built)
 
 head(df_house)
+
+```
+
+## Data Cleaning - handling unnecessary and highly correlated variables
+
+```{r Identifying highly correlated variables}
+# [Seymur]
+
+corr_matrix <- cor(df_house, use = "complete.obs")  # use 'complete.obs' to handle missing values
+
+threshold <- 0.8
+high_corr <- which(abs(corr_matrix) > threshold, arr.ind = TRUE)
+high_corr <- high_corr[high_corr[, 1] < high_corr[, 2], ]
+
+for (pair in 1:nrow(high_corr)) {
+    row <- high_corr[pair, "row"]
+    col <- high_corr[pair, "col"]
+    cat(names(df_house)[row], "and", names(df_house)[col], "have a correlation of", corr_matrix[row, col], "\n")
+}
+
+```
+
+```{r remove unnecessary variables}
+# [Seymur]
+
+# Remove redundant, unnecessary columns from dataset. 
+df_house[c("date", "lat", "long")] <- list(NULL)
 
 ```
 
