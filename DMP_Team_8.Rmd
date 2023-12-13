@@ -109,6 +109,58 @@ ndf_house = df_house[sapply(df_house, is.numeric)]
 head(df_house)
 ```
 
+```{r remove unnecessary variables}
+# [Seymur]
+# Remove redundant, unnecessary columns from dataset. 
+df_house[c("date", "lat", "long")] <- list(NULL)
+
+```
+
+
+```{r Identifying highly correlated variables}
+# [Seymur]
+# Correlation matrix
+corr_matrix <- cor(df_house, use = "complete.obs")  # use 'complete.obs' to handle missing values
+
+threshold <- 0.8
+high_corr <- which(abs(corr_matrix) > threshold, arr.ind = TRUE)
+high_corr <- high_corr[high_corr[, 1] < high_corr[, 2], ]
+
+for (pair in 1:nrow(high_corr)) {
+    row <- high_corr[pair, "row"]
+    col <- high_corr[pair, "col"]
+    cat(names(df_house)[row], "and", names(df_house)[col], "have a correlation of", corr_matrix[row, col], "\n")
+}
+
+```
+
+## Categorical Variables and Age Analysis
+
+### Renovation Indicator Variable
+
+A binary variable named 'renovated' was introduced to indicate whether a property has undergone renovation. This variable is set to 1 if the 'yr_renovated' field is not zero, signifying that the property has been renovated at least once. Otherwise, it is set to 0, indicating no renovation. This distinction provides a straightforward way to assess the impact of renovations on property values.
+
+```{r}
+
+# Creating a new variable 'renovated' 
+# 1 if the property has been renovated (yr_renovated != 0), 0 otherwise
+df_house$renovated = ifelse(df_house$yr_renovated != 0, 1, 0)
+
+```
+
+### Property Age Calculation
+
+This is a tentative way to consider "age since las renovation" and see if there's a correlation between the time a house was last built/renovated on its selling price. A new variable called 'age' was calculated to represent the current age of each property. If a property was renovated, its age is the difference between 2023 and the renovation year ('yr_renovated'). If not renovated, the age is the difference between 2023 and the year the house was built ('yr_built'). This variable helps in understanding the effect of property age and recent renovations on house prices.
+
+```{r}
+
+# Creating 'age' column
+df_house$age = ifelse(df_house$renovated == 1, 2023 - df_house$yr_renovated, 2023 - df_house$yr_built)
+
+head(df_house)
+
+```
+
 ## Initial Statistical Data Summary
 
 The dataset from King County includes 21,613 observations with 22 variables related to house sales. Variables include continuous data like price, square footage, and lat/long coordinates, and categorical data such as bedrooms, floors, and waterfront status. The price ranges from $75,000 to $7,700,000, with a mean of $540,088. Houses range from 0 to 33 bedrooms, reflecting diverse property types. The dataset also contains binary and ordinal variables, such as view and condition, that require dummy coding for analysis.
@@ -229,57 +281,6 @@ pheatmap(cor_matrix,
 )
 ```
 
-**Creating a new dataframe with variables 'highly' (>0.2) correlated with price**
-
-```{r}
-# [Kaleo]
-head(x_high)
-```
-
-## Categorical Variables and Age Analysis
-
-### Renovation Indicator Variable
-
-A binary variable named 'renovated' was introduced to indicate whether a property has undergone renovation. This variable is set to 1 if the 'yr_renovated' field is not zero, signifying that the property has been renovated at least once. Otherwise, it is set to 0, indicating no renovation. This distinction provides a straightforward way to assess the impact of renovations on property values.
-
-```{r}
-
-# Creating a new variable 'renovated' 
-# 1 if the property has been renovated (yr_renovated != 0), 0 otherwise
-df_house$renovated = ifelse(df_house$yr_renovated != 0, 1, 0)
-
-```
-
-### Property Age Calculation
-
-This is a tentative way to consider "age since las renovation" and see if there's a correlation between the time a house was last built/renovated on its selling price. A new variable called 'age' was calculated to represent the current age of each property. If a property was renovated, its age is the difference between 2023 and the renovation year ('yr_renovated'). If not renovated, the age is the difference between 2023 and the year the house was built ('yr_built'). This variable helps in understanding the effect of property age and recent renovations on house prices.
-
-```{r}
-
-# Creating 'age' column
-df_house$age = ifelse(df_house$renovated == 1, 2023 - df_house$yr_renovated, 2023 - df_house$yr_built)
-
-head(df_house)
-
-```
-
-
-```{r}
-df_house = df_house[-c(1, 13)]
-
-df_house$zipcode = as.character(df_house$zipcode)
-
-set.seed(1023)
-n<-dim(df_house)[1]
-IND<-sample(c(1:n),round(n*0.7))
-train.dat<-df_house[IND,]
-test.dat<-df_house[-c(IND),]
-
-dim(train.dat)
-dim(test.dat)
-```
-
-
 ## Summary of the section II
 
 In Section II, we thoroughly explored the King County house sales dataset, examining both continuous and categorical variables through statistical tests and extensive graphical analysis. We highlighted the strong correlations between variables like 'sqft_living', 'grade', 'sqft_above', and 'price'. Transformations and dummy variable creation were crucial in preparing data for modeling. The section concluded with the development of new variables to encapsulate the age and renovation status of properties, offering deeper insights for our predictive models.
@@ -293,6 +294,7 @@ The KC House sales dataset is split into train(70%) and test(30%) datasets, with
 
 ```{r}
 #[Bethun]
+
 set.seed(1023)
 n<-dim(df_house)[1]
 IND<-sample(c(1:n),round(n*0.7))
@@ -302,6 +304,7 @@ test.dat<-df_house[-c(IND),]
 dim(train.dat)
 dim(test.dat)
 ```
+
 
 **Analysis**:
 The house_lm model to predict price has:
@@ -526,19 +529,13 @@ knitr::kable(cbind(R.Square.Train,R.Square.Test), align = "c",
 *Use the test data set to assess the model performances. Here, build the best multiple linear models by using the stepwise both ways selection method. Compare the performance of the best two linear models. Make sure that model assumption(s) are checked for the final linear model. Apply remedy measures (transformation, etc.) that helps satisfy the assumptions. In particular you must deeply investigate unequal variances and multicollinearity. If necessary, apply remedial methods (WLS, Ridge, Elastic Net, Lasso, etc.). *
 
 
-
-## Best Subset Regression
-
 ```{r}
+#seymur
 
-house_lm2<-lm(price^lambda~.,data=test.dat)
-# k1<-ols_step_best_subset(house_lm2)
-# k1
-# plot(k1,guide="none")
+stepwise_model <- ols_step_both_p(house_lm, penter = 0.05, premove = 0.05)
+final_model <- lm(formula = stepwise_model$model, data = train.dat)
+summary(final_model)
 ```
-
-
-
 
 
 \newpage
