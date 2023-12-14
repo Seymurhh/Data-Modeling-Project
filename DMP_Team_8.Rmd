@@ -639,44 +639,41 @@ summary(house_lm_bisquare)
 **Analysis:** - please add here the analysis of the outcome
 
 ```{r}
+
 price.predictors <- colnames(dplyr::select(df_house, -price))
 
-train.dat$price.lm <- stats::predict(house_lm1, train.dat)
-train.dat$price.sw.lm <- stats::predict(stepwise_model, train.dat)
-train.dat$price.ridge <-
-  stats::predict(house_lm_ridge, s = best.lambda.ridge, 
-                 newx = data.matrix(train.dat[price.predictors]))[,1]
-train.dat$price.lasso <-
-  stats::predict(house_lm_lasso, s = best.lambda.lasso, 
-                 newx = data.matrix(train.dat[price.predictors]))[,1]
-train.dat$price.en <-
-  stats::predict(house_lm_enet, s = best.lambda.enet, 
-                 newx = data.matrix(train.dat[price.predictors]))[,1]
-train.dat$price.huber <- stats::predict(house_lm_huber, train.dat)
+# Predictions for each model, excluding stepwise_model
+predictions <- data.frame(
+  price = train.dat$price,
+  price.lm = predict(house_lm1, train.dat),
+  # price.sw.lm = predict(stepwise_model, train.dat), # Excluded due to predict method issue
+  price.ridge = predict(house_lm_ridge, s = best.lambda.ridge, newx = data.matrix(train.dat[price.predictors])),
+  price.lasso = predict(house_lm_lasso, s = best.lambda.lasso, newx = data.matrix(train.dat[price.predictors])),
+  price.en = predict(house_lm_enet, s = best.lambda.enet, newx = data.matrix(train.dat[price.predictors])),
+  price.huber = predict(house_lm_huber, train.dat)
+)
 
-# SST, SSE, and R2
-sst <- sum((train.dat$price - mean(train.dat$price))^2)
-sse.lm <- sum((train.dat$price - train.dat$price.lm)^2)
-sse.sw <- sum((train.dat$price - train.dat$price.sw.lm)^2)
-sse.ridge <- sum((train.dat$price - train.dat$price.ridge)^2)
-sse.lasso <- sum((train.dat$price - train.dat$price.lasso)^2)
-sse.enet <- sum((train.dat$price - train.dat$price.en)^2)
-sse.huber <- sum((train.dat$price - train.dat$price.huber)^2)
-data.frame(Model = c('Linear', 'Stepwise', 'Ridge', 'Lasso', 'Elastic Net', 'Huber'),
-           R2 = c(round(1 - sse.lm / sst, digits = 4),
-                  round(1 - sse.sw / sst, digits = 4),
-                  round(1 - sse.ridge / sst, digits = 4),
-                  round(1 - sse.lasso / sst, digits = 4),
-                  round(1 - sse.enet / sst, digits = 4),
-                  round(1 - sse.huber / sst, digits = 4)),
-           MSE = c(round(sse.lm / nrow(train.dat), digits = 4),
-                  round(sse.sw / nrow(train.dat), digits = 4),
-                  round(sse.ridge / nrow(train.dat), digits = 4),
-                  round(sse.lasso / nrow(train.dat), digits = 4),
-                  round(sse.enet / nrow(train.dat), digits = 4),
-                  round(sse.huber / nrow(train.dat), digits = 4))) %>%
+# Function to calculate SSE, R2, MSE, and RMSE
+calc_metrics <- function(actual, predicted) {
+  sse <- sum((actual - predicted) ^ 2)
+  mse <- sse / length(actual)
+  rmse <- sqrt(mse) # Calculate RMSE
+  sst <- sum((actual - mean(actual)) ^ 2)
+  r2 <- 1 - sse / sst
+  return(c(SSE = sse, MSE = mse, RMSE = rmse, R2 = r2))
+}
+
+# function to each set of predictions
+metrics <- data.frame(
+  Model = c("Linear", "Ridge", "Lasso", "Elastic Net", "Huber"),
+  do.call(rbind, lapply(2:ncol(predictions), function(i) calc_metrics(predictions$price, predictions[,i])))
+)
+
+# Display the metrics table with RMSE
+metrics %>%
   dplyr::arrange(desc(R2)) %>%
-  knitr::kable(caption = "R2 of Different Models")
+  knitr::kable(caption = "R2, MSE, and RMSE of Different Models")
+
 ```
 
 
