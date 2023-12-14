@@ -644,13 +644,14 @@ price.predictors <- colnames(dplyr::select(df_house, -price))
 
 # Predictions for each model, excluding stepwise_model
 predictions <- data.frame(
-  price = train.dat$price,
-  price.lm = predict(house_lm1, train.dat),
-  # price.sw.lm = predict(stepwise_model, train.dat), # Excluded due to predict method issue
-  price.ridge = predict(house_lm_ridge, s = best.lambda.ridge, newx = data.matrix(train.dat[price.predictors])),
-  price.lasso = predict(house_lm_lasso, s = best.lambda.lasso, newx = data.matrix(train.dat[price.predictors])),
-  price.en = predict(house_lm_enet, s = best.lambda.enet, newx = data.matrix(train.dat[price.predictors])),
-  price.huber = predict(house_lm_huber, train.dat)
+  price = test.dat$price,
+  price.lm = predict(house_lm1, test.dat),
+  price.sw.lm = predict(final_model, test.dat), # Excluded due to predict method issue
+  price.ridge = predict(house_lm_ridge, s = best.lambda.ridge, newx = data.matrix(test.dat[price.predictors])),
+  price.lasso = predict(house_lm_lasso, s = best.lambda.lasso, newx = data.matrix(test.dat[price.predictors])),
+  price.en = predict(house_lm_enet, s = best.lambda.enet, newx = data.matrix(test.dat[price.predictors])),
+  price.huber = predict(house_lm_huber, test.dat),
+  price.bisquare = predict(house_lm_bisquare, test.dat)
 )
 
 # Function to calculate SSE, R2, MSE, and RMSE
@@ -665,7 +666,7 @@ calc_metrics <- function(actual, predicted) {
 
 # function to each set of predictions
 metrics <- data.frame(
-  Model = c("Linear", "Ridge", "Lasso", "Elastic Net", "Huber"),
+  Model = c("Linear", "Stepwise", "Ridge", "Lasso", "Elastic Net", "Huber", "Bisquare"),
   do.call(rbind, lapply(2:ncol(predictions), function(i) calc_metrics(predictions$price, predictions[,i])))
 )
 
