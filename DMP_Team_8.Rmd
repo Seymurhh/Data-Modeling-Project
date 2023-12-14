@@ -367,11 +367,11 @@ Price = -74344803.92767 + -34633.405255bedrooms + 32821.338262bathrooms + 143.67
 
 ```{r}
 #[Bethun]
-predictors_to_drop <- c("sqft_lot")
+predictors_to_drop <- c("sqft_lot", "price_binary")
 
 # Update the model by excluding the specified predictors
 updated <- as.formula(paste("price ~ .", paste0("- `", predictors_to_drop, "`", collapse = "")))
-house_lm <- update(house_lm, formula = updated)
+house_lm <- update(house_lm, updated)
 summary(house_lm)
 dispRegFunc(house_lm)
 ```
@@ -469,18 +469,22 @@ dispRegFunc(house_lm1)
 On predicting the values of the Boxcox transformed model on the test dataset, we observe a R-square test of 75.79% compared to R-square train of 84.03%, from which we conclude that the transformed model generalizes well to new data.
 
 ```{r}
-#[Bethun]
+# [Bethun]
+# Test data Predictions
 pred<- predict(house_lm1,test.dat)^(1/lambda)
 act<-test.dat$price
 
-SST<-var(act)*(length(act)-1)
-SSE<-sum((act-pred)^2)
-R.Square.Test <- 1- SSE/SST
-R.Square.Test
-R.Square.Train=0.8403
-
-knitr::kable(cbind(R.Square.Train,R.Square.Test), align = "c",
-      caption = "Pseudo $R^2$ values for Train and Test")
+house_lm1_test_mse <- mean((pred - act)^2)
+house_lm1_test_rmse <- sqrt(house_lm1_test_mse)
+house_lm1_test_residuals <- act - pred
+house_lm1_test_rsq <- 1 - var(house_lm1_test_residuals) / var(act)
+house_lm1_test_sse <- sum((act - pred)^2)
+results.df1 <- data.frame(model = "Linear Regression Test Data Predictions after Boxcox",
+                         R.Squared.Train = summary(house_lm1)$r.square,
+                         R.Squared.Test = house_lm1_test_rsq,
+                         RMSE.test = house_lm1_test_rmse,
+                         SSE.test = house_lm1_test_sse)
+print(results.df1)
 ```
 
 \newpage
@@ -504,28 +508,7 @@ knitr::kable(cbind(R.Square.Train,R.Square.Test), align = "c",
 
 ```
 
-```{r}
 
-```
-
-
-```{r}
-
-```
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
 
 
 \newpage
@@ -909,6 +892,33 @@ Random Forest plot
 
 **Analysis**: The Variable Importance plot from a Random Forest model highlights 'price.binary' as the most influential predictor, with 'sqft_living', 'grade', and 'sqft_living15' also contributing significantly to model accuracy, suggesting their strong predictive power in the Random Forest model.
 
+## Neural Network - Seymur
+
+```{r prepare the NN data}
+normalize <- function(x) { return((x - min(x)) / (max(x) - min(x))) }
+
+train.dat.norm <- as.data.frame(lapply(train.dat, normalize))
+test.dat.norm <- as.data.frame(lapply(test.dat, normalize))
+```
+
+```{r build the NN model}
+house_NN <- neuralnet(price ~ ., data = train.dat.norm, hidden = c(2, 2), linear.output = TRUE)
+```
+
+```{r evaluate performance}
+
+model_results <- compute(house_NN, test.dat.norm[1:(ncol(test.dat.norm) - 1)])
+predicted_price <- model_results$net.result
+
+rmse_value <- rmse(predicted_price, test.dat.norm$price)
+r_squared_value <- r_squared(predicted_price, test.dat.norm$price)
+sse_value <- sse(predicted_price, test.dat.norm$price)
+
+cat("RMSE:", rmse_value, "\n")
+cat("R-squared:", r_squared_value, "\n")
+cat("SSE:", sse_value, "\n")
+
+```
 
 
 \newpage
