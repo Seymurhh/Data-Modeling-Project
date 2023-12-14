@@ -634,6 +634,7 @@ head10
 
 house_lm_bisquare <- MASS::rlm(price ~ ., psi = psi.bisquare, data = train.dat)
 summary(house_lm_bisquare)
+
 ```
 
 **Analysis:** - please add here the analysis of the outcome
@@ -642,11 +643,11 @@ summary(house_lm_bisquare)
 
 price.predictors <- colnames(dplyr::select(df_house, -price))
 
-# Predictions for each model, excluding stepwise_model
+# Predictions for each model using the test dataset
 predictions <- data.frame(
   price = test.dat$price,
   price.lm = predict(house_lm1, test.dat),
-  price.sw.lm = predict(final_model, test.dat), # Excluded due to predict method issue
+  price.sw.lm = predict(final_model, test.dat), # Stepwise model name = final_model
   price.ridge = predict(house_lm_ridge, s = best.lambda.ridge, newx = data.matrix(test.dat[price.predictors])),
   price.lasso = predict(house_lm_lasso, s = best.lambda.lasso, newx = data.matrix(test.dat[price.predictors])),
   price.en = predict(house_lm_enet, s = best.lambda.enet, newx = data.matrix(test.dat[price.predictors])),
@@ -661,7 +662,8 @@ calc_metrics <- function(actual, predicted) {
   rmse <- sqrt(mse) # Calculate RMSE
   sst <- sum((actual - mean(actual)) ^ 2)
   r2 <- 1 - sse / sst
-  return(c(SSE = sse, MSE = mse, RMSE = rmse, R2 = r2))
+  #return(c(RMSE = rmse, R2 = r2))
+  return(c(SST = sst, SSE = sse, MSE = mse, RMSE = rmse, R2 = r2))
 }
 
 # function to each set of predictions
