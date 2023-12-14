@@ -135,6 +135,12 @@ df_house$age = ifelse(df_house$renovated == 1, 2023 - df_house$yr_renovated, 202
 head(df_house)
 
 ```
+```{r converting zipcode to character}
+
+df_house$zipcode = as.character(df_house$zipcode)
+
+```
+
 
 ## Data Cleaning - handling unnecessary and highly correlated variables
 
@@ -367,7 +373,7 @@ Price = -74344803.92767 + -34633.405255bedrooms + 32821.338262bathrooms + 143.67
 
 ```{r}
 #[Bethun]
-predictors_to_drop <- c("sqft_lot", "price_binary")
+predictors_to_drop <- c("sqft_lot")
 
 # Update the model by excluding the specified predictors
 updated <- as.formula(paste("price ~ .", paste0("- `", predictors_to_drop, "`", collapse = "")))
@@ -488,30 +494,6 @@ print(results.df1)
 ```
 
 \newpage
-# III. Model Development Process (15 points) - SVM Mohanish (in progress)
-
-*Build a regression model to predict price.  And of course,  create the train data set which contains 70% of the data and use set.seed (1023). The remaining 30% will be your test data set. Investigate the data and combine the level of categorical variables if needed and drop variables. For example, you can drop id, Latitude, Longitude, etc. *
-
-
-
-```{r}
-
-# find optimal cost of misclassification
-# tune.out <- tune(svm, price~., data = train.dat, kernel = "linear",
-#                 ranges = list(cost = c(0.001, 0.01, 0.1, 1, 5, 10, 100)))
-# extract the best model
-# (bestmod <- tune.out$best.model)
-```
-
-
-```{r}
-
-```
-
-
-
-
-\newpage
 # IV. Model Performance Testing (15 points)
 
 *Use the test data set to assess the model performances. Here, build the best multiple linear models by using the stepwise both ways selection method. Compare the performance of the best two linear models. Make sure that model assumption(s) are checked for the final linear model. Apply remedy measures (transformation, etc.) that helps satisfy the assumptions. In particular you must deeply investigate unequal variances and multicollinearity. If necessary, apply remedial methods (WLS, Ridge, Elastic Net, Lasso, etc.). *
@@ -526,16 +508,24 @@ Graph 3 (Scale-Location): (constant variance assumption) The residuals do not se
 
 Graph 4 (Residuals vs Leverage): There are no influential outliers.
 
-```{r Stepwise variable selection}
-# Ibrahim
+```{r}
+library(olsrr)
 
-stepwise_model <- step(house_lm1, train.dat)
-stepwise_model
+initial_model <- house_lm1
+
+stepwise_model <- ols_step_both_p(initial_model, penter = 0.05, premove = 0.05)
+
+final_model <- lm(formula = stepwise_model$model, data = train.dat)
+summary(final_model)
+
+```
+
+```{r}
 par(mfrow=c(2,2))
 plot(stepwise_model)
-
-summary(stepwise_model)
 ```
+
+
 **Analysis:** - Please add here your analysis.
 
 ```{r WLS regression}
@@ -543,7 +533,7 @@ summary(stepwise_model)
 # We notice from the scale-location graph of the main model that the error variances are unequal.
 
 # Calculating the weights for the model
-ei <- house_lm1$residuals
+ei <- house_lm$residuals
 abs.ei <- abs(ei)
 g1 <- lm(abs.ei ~ train.dat$price)
 summary(g1)
@@ -555,7 +545,7 @@ wi = 1/(s^2)
 house_lm_wls <- lm(price ~ ., weights = wi, data = train.dat)
 
 summary(house_lm_wls)
-par(mfrow=c(2,2))
+#par(mfrow=c(2,2))
 plot(house_lm_wls)
 
 ```
@@ -564,11 +554,6 @@ plot(house_lm_wls)
 ```{r}
 # Testing the main (boxcox) model for multicollinearity
 vif(house_lm1)
-```
-
-```{r}
-# Testing the weighted-least squares model for multicollinearity
-vif(house_lm_wls)
 ```
 **Analysis:** - please add here the analysis of the outcome
 
@@ -630,6 +615,17 @@ house_lm_huber <- MASS::rlm(price ~ ., psi = psi.huber, data = train.dat)
 summary(house_lm_huber)
 plot(house_lm_huber)
 ```
+
+```{r}
+huber_weights <- data.frame(Observation = 1:nrow(train.dat), Residual = house_lm_huber$resid, Weight = house_lm_huber$w)
+
+a <- huber_weights[order(house_lm_huber$w), ]
+
+head10 <- head(a$Observation,10)
+head10
+
+```
+
 
 **Analysis:** - please add here the analysis of the outcome
 
@@ -937,7 +933,6 @@ results.df
 # VII. Ongoing Model Monitoring Plan (5 points)
 
 *How would you picture the model needing to be monitored, which quantitative thresholds and triggers would you set to decide when the model needs to be replaced? What are the assumptions that the model must comply with for its continuous use?*
-
 
 \newpage
 # VIII. Conclusion (5 points)
