@@ -41,6 +41,8 @@ library(rfPermute)
 library(ada)
 library(glmnet)
 library(stats)
+library(Metrics)
+
 
 # Functions 
 
@@ -76,6 +78,21 @@ dispRegFunc <- function(reg) {
   my_formula
 }
 
+
+
+sse <- function(predicted, actual) {
+  sum((predicted - actual)^2)
+}
+
+rmse <- function(predicted, actual) {
+  sqrt(mean((predicted - actual) ^ 2))
+}
+
+r_squared <- function(predicted, actual) {
+  correlation <- cor(predicted, actual)
+  r_squared_value <- correlation^2
+  return(r_squared_value)
+}
 
   
 
