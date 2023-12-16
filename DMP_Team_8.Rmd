@@ -438,8 +438,9 @@ plot(house_lm$fitted.values, ei,
 Predictors with low p-values of < 2.2e-16 (e.g. bedrooms, bathrooms, sqft_living, etc.) are statistically significant and are important in predicting price. Some predictors that have a have higher p-value (e.g. floors, zipcode, month, day) may not be statistically significant in predicting price.
 
 ```{r}
-#[Bethun]
+
 anova(house_lm)
+
 ```
 
 **Analysis**:
@@ -452,19 +453,27 @@ Decision rule: when t > t critical reject null
 The model, as indicated by the significant coefficients, suggests that features such as the number of bedrooms, bathrooms, square footage of living space, waterfront status, view, grade, etc, play a statistically significant role in predicting the house price.
 
 ```{r}
-#[Bethun]
 
-conf= 0.01/2     #Note we divide by 2 because this is a two tail test,if alpha=0.05 then use .05/2
-df<-21613-2            #manually calculating the degrees of freedom
+# We divide by 2 because this is a two tail test
+# ... if alpha=0.05, then use .05/2
+conf= 0.01/2
+
+# Manually calculate the degrees of freedom
+df<-21613-2            
 value<-formatC(qt(conf,df,lower.tail=FALSE))    
 print(paste("Critical T values: ",value))
-#coefficients
-matrix_coef <- summary(house_lm)$coefficients  # Extract coefficients in matrix
+
+# Extract coefficients in matrix
+matrix_coef <- summary(house_lm)$coefficients
 matrix_coef   
 
-my_estimates <- matrix_coef[ , 1]  # Matrix manipulation to extract estimates
+# Matrix manipulation to extract estimates
+my_estimates <- matrix_coef[ , 1]
 
-#Step 6: Pr(>|t|) < 0.01 there is sufficient statistical evidence to reject null for both parameters. Using a t-test we noted that t-values (6.259865 and abs(4.102897) are larger than t-critical that is 2.637
+# Step 6: Pr(>|t|) < 0.01 there is sufficient statistical evidence to reject 
+# null for both parameters. Using a t-test we noted that t-values 
+# (6.259865 and abs(4.102897) are larger than t-critical that is 2.637
+
 ```
 
 
@@ -478,18 +487,20 @@ P value is < 2.2e-16. So we reject $H_o$, Error variances are not constant.
 **Analysis**:
 
 ```{r}
-#[Bethun]
+
 bptest(house_lm, studentize = FALSE)
+
 ```
 **Analysis**:
-For Boxcox transormation, the optimal lambda is -0.04040404 with 95% confidence interval range which is close to zero.Although, we can estimate lambda to be zero and apply logarithmic transformation of the data, we have done the boxcox transformation with exact optimal lambda value for better accuracy.
+For Boxcox transormation, the optimal lambda is -0.1 with 95% confidence interval range which is close to zero. Although, we can estimate lambda to be zero and apply logarithmic transformation of the data, we have done the boxcox transformation with exact optimal lambda value for better accuracy.
 
 ```{r}
-#[Bethun]
-par(mfrow=c(1,1))
-bc<-boxcox(house_lm,lambda=seq(-4,4,by=0.1))
-lambda <- bc$x[which.max(bc$y)] 
-lambda  #This is the optimal lambda
+
+bc <- boxcox(house_lm, lambda=seq(-10, 10, by=1))
+optimal_lambda <- bc$x[which.max(bc$y)]
+cat("The optimal lambda is:", optimal_lambda, "\n")
+
+
 ```
 **Analysis**:
 After boxcox transformation, we observe that
@@ -504,18 +515,19 @@ Overall, the model appears to be a much better fit that before. From the model p
 - There are still some outlier observations which may be to be impactful as seen from the the Residual vs. Leverage graph
 
 ```{r}
-#[Bethun]
+
 house_lm1<-lm(price^lambda~.,data=train.dat)
 summary(house_lm1)
 par(mfrow=c(2,2))
 plot(house_lm1)
 dispRegFunc(house_lm1)
+
 ```
 **Analysis**:
 On predicting the values of the Boxcox transformed model on the test dataset, we observe a R-square test of 75.79% compared to R-square train of 84.03%, from which we conclude that the transformed model generalizes well to new data.
 
 ```{r}
-# [Bethun]
+
 # Test data Predictions
 pred<- predict(house_lm1,test.dat)^(1/lambda)
 act<-test.dat$price
@@ -525,16 +537,21 @@ house_lm1_test_rmse <- sqrt(house_lm1_test_mse)
 house_lm1_test_residuals <- act - pred
 house_lm1_test_rsq <- 1 - var(house_lm1_test_residuals) / var(act)
 house_lm1_test_sse <- sum((act - pred)^2)
-results.df1 <- data.frame(model = "Linear Regression Test Data Predictions after Boxcox",
-                         R.Squared.Train = summary(house_lm1)$r.square,
-                         R.Squared.Test = house_lm1_test_rsq,
-                         RMSE.test = house_lm1_test_rmse,
-                         SSE.test = house_lm1_test_sse)
-print(results.df1)
+
+# Append results
+results.df = rbind(results.df, 
+                   data.frame(model = "Linear Regression Test after Boxcox",
+                              R.Squared.Train = summary(house_lm1)$r.square,
+                              R.Squared.Test = house_lm1_test_rsq,
+                              RMSE.test = house_lm1_test_rmse,
+                              SSE.test = house_lm1_test_sse))
+
+print(results.df)
+
 ```
 
 \newpage
-# IV. Model Performance Testing (15 points)
+# IV. Model Performance Testing
 
 *Use the test data set to assess the model performances. Here, build the best multiple linear models by using the stepwise both ways selection method. Compare the performance of the best two linear models. Make sure that model assumption(s) are checked for the final linear model. Apply remedy measures (transformation, etc.) that helps satisfy the assumptions. In particular you must deeply investigate unequal variances and multicollinearity. If necessary, apply remedial methods (WLS, Ridge, Elastic Net, Lasso, etc.). *
 
@@ -549,7 +566,6 @@ Graph 3 (Scale-Location): (constant variance assumption) The residuals do not se
 Graph 4 (Residuals vs Leverage): There are no influential outliers.
 
 ```{r}
-library(olsrr)
 
 initial_model <- house_lm1
 
@@ -561,8 +577,23 @@ summary(final_model)
 ```
 
 ```{r}
-par(mfrow=c(2,2))
-plot(stepwise_model)
+
+par(mfrow=c(2,3))
+
+# Call the plot function for each plot individually with modified parameters
+plot(stepwise_model$rsquare, 
+     xlab=NA, ylab="R-Square", pch=20, col="blue", type="b")
+plot(stepwise_model$aic, 
+     xlab=NA, ylab="AIC", pch=20, col="blue", type="b")
+plot(stepwise_model$sbc, 
+     xlab=NA, ylab="SBC", pch=20, col="blue", type="b")
+plot(stepwise_model$adjr, 
+     xlab=NA, ylab="Adj. R-Square", pch=20, col="blue", type="b")
+plot(stepwise_model$mallows_cp, 
+     xlab=NA, ylab="Mallows Cp", pch=20, col="blue", type="b")
+plot(stepwise_model$sbic, 
+     xlab=NA, ylab="SBIC", pch=20, col="blue", type="b")
+
 ```
 
 
@@ -571,7 +602,8 @@ plot(stepwise_model)
 ```{r WLS regression}
 
 # Weighted Least Squares Regression
-# We notice from the scale-location graph of the main model that the error variances are unequal.
+# We notice from the scale-location graph of the main model 
+# that the error variances are unequal.
 
 # Calculating the weights for the model
 ei <- house_lm$residuals
@@ -645,11 +677,14 @@ print(paste0("Lasso best lambda of ", round(best.lambda.lasso, digits = 3)))
 
 ```{r Elastic Net Regression}
 
-house_lm_enet <- glmnet::cv.glmnet(x, y, alpha = 0.5, 
-                                   nlambda = 100, lambda.min.ratio = 0.0001)
+house_lm_enet <- glmnet::cv.glmnet(
+  x, y, alpha = 0.5, nlambda = 100, lambda.min.ratio = 0.0001)
+
 plot(house_lm_enet)
+
 best.lambda.enet <- house_lm_enet$lambda.min
-print(paste0("ElasticNet best lambda of ", round(best.lambda.enet, digits = 3)))
+print(paste0("ElasticNet best lambda of ", 
+             round(best.lambda.enet, digits = 3)))
 
 ```
 
@@ -759,9 +794,7 @@ metrics %>%
 ```
 
 \newpage
-# V. Challenger Models (15 points)
-
-*Build an alternative model based on one of the following approaches to predict price: regression tree, NN, or SVM. Explore using a logistic regression. Check the applicable model assumptions. Apply in-sample and out-of-sample testing, backtesting and review the comparative goodness of fit of the candidate models. Describe step by step your procedure to get to the best model and why you believe it is fit for purpose.*
+# V. Challenger Models
 
 In this section, we explore alternative predictive models to challenge our primary regression model. This is crucial for ensuring our final model's robustness by comparing it against these 'challenger' models. Here, we experiment with different modeling techniques such as regression trees, neural networks, or SVMs, evaluating their performance and applicability. This comparative analysis helps in understanding the strengths and weaknesses of various approaches, guiding us to select the most effective model for predicting real estate prices in King County.
 
@@ -967,7 +1000,9 @@ This subsection is dedicated to the visual exploration of the Support Vector Mac
 
 ```{r SVM Scatter Plot of Actual vs. Predicted Prices}
 
-plot(test.dat$price, svm_predictions, main="SVM Actual vs. Predicted Prices", xlab="Actual Prices", ylab="Predicted Prices")
+plot(test.dat$price, svm_predictions, 
+     main="SVM Actual vs. Predicted Prices", 
+     xlab="Actual Prices", ylab="Predicted Prices")
 abline(0, 1, col="red")
 
 ```
@@ -978,7 +1013,10 @@ abline(0, 1, col="red")
 ```{r SVM Histogram of Prediction Errors}
 
 svm_errors <- test.dat$price - svm_predictions
-hist(svm_errors, main="SVM Prediction Error Distribution", xlab="Prediction Error")
+
+hist(svm_errors, 
+     main="SVM Prediction Error Distribution", 
+     xlab="Prediction Error")
 
 ```
 
@@ -987,7 +1025,9 @@ hist(svm_errors, main="SVM Prediction Error Distribution", xlab="Prediction Erro
 
 ```{r SVM Plot of Residuals vs. Fitted Values}
 
-plot(svm_predictions, svm_errors, main="SVM Residuals vs. Predicted", xlab="Predicted Prices", ylab="Residuals")
+plot(svm_predictions, svm_errors, 
+     main="SVM Residuals vs. Predicted", 
+     xlab="Predicted Prices", ylab="Residuals")
 abline(h=0, col="blue")
 
 ```
@@ -1016,7 +1056,9 @@ Here, we construct the neural network model using the normalized data and visual
 
 ```{r Build and Plot the NN model}
 
-house_NN <- neuralnet(price ~ ., data = train.dat.norm, hidden = c(2, 2), linear.output = TRUE)
+house_NN <- neuralnet(
+  price ~ ., data = train.dat.norm, hidden = c(2, 2), linear.output = TRUE)
+
 plot(house_NN, main="Neural Network Architecture Visualization")
 
 ```
@@ -1062,7 +1104,9 @@ hist(errors, main = "Distribution of Prediction Errors", xlab = "Error")
 
 ```{r Prediction Accuracy Plot}
 
-plot(test.dat.norm$price, predicted_price, main = "Actual vs. Predicted Prices", xlab = "Actual Prices", ylab = "Predicted Prices")
+plot(test.dat.norm$price, predicted_price, 
+     main = "Actual vs. Predicted Prices", 
+     xlab = "Actual Prices", ylab = "Predicted Prices")
 abline(0, 1, col = "red")
 
 ```
@@ -1077,10 +1121,13 @@ abline(0, 1, col = "red")
 
 ```{r Printing all important results}
 
-# Results dataframe...We're supposed to use Pseudo R-squared, SSE, RMSE, as seen above. 
+# Results dataframe
+
+# We're supposed to use Pseudo R-squared, SSE, RMSE, as seen above. 
 # We'll have to look into 'Pseudo R-squared' most likely
 
 results.df
+
 ```
 
 \newpage
@@ -1126,12 +1173,5 @@ Supplementary Analyses and Visuals
 
 ### Full Model Performance Metrics
 
-
-
-
-
-
-
-## 
 
 
