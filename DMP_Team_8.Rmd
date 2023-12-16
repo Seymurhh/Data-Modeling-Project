@@ -516,7 +516,7 @@ Overall, the model appears to be a much better fit that before. From the model p
 
 ```{r}
 
-house_lm1<-lm(price^lambda~.,data=train.dat)
+house_lm1<-lm(price^optimal_lambda~.,data=train.dat)
 summary(house_lm1)
 par(mfrow=c(2,2))
 plot(house_lm1)
@@ -529,7 +529,7 @@ On predicting the values of the Boxcox transformed model on the test dataset, we
 ```{r}
 
 # Test data Predictions
-pred<- predict(house_lm1,test.dat)^(1/lambda)
+pred<- predict(house_lm1,test.dat)^(1/optimal_lambda)
 act<-test.dat$price
 
 house_lm1_test_mse <- mean((pred - act)^2)
