@@ -1025,6 +1025,16 @@ results.df
 
 *How would you picture the model needing to be monitored, which quantitative thresholds and triggers would you set to decide when the model needs to be replaced? What are the assumptions that the model must comply with for its continuous use?*
 
+For model monitoring, we need to:
+1. regularly check for changes in the distribution of input or target variables, track the importance of variables, monitor model stability, and check for the presence of outliers in new data that might affect model performance.
+2. define the key performance metrics for regression models e.g Mean Squared Error (MSE), Root Mean Squared Error (RMSE), Mean Absolute Error (MAE), R-squared, SSE, Confusion Matrix, F1 score, etc; and set thresholds for these metrics based on the acceptable level of model performance. 
+3. periodically validate the model on new data to ensure it generalizes well. Cross-validation can be implement to assess model performance on unseen data.
+4. be mindful of changes in the business environment, processes, customer behavior, or external/internal factors may affect the model's performance. We can setup alerts to notify stakeholders when model performance drops below acceptable levels
+5. maintain detailed documentation of the model, including its assumptions, methodologies, and any updates made.
+5. regularly assess the model for bias that may affect certain demographic groups unfairly, and also ensure that the model complies with any regulatory requirements. 
+
+The model must comply with various assumptions for regression model to hold such as linearity, independence, homoscedasticity, normality of residuals, etc
+
 \newpage
 # VIII. Conclusion
 
