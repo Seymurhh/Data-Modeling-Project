@@ -22,7 +22,7 @@ editor_options:
 ---
 \newpage
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warnings = FALSE)
 
 # Load all libraries and aux functions
 source("libs_funcs.R")
@@ -126,7 +126,9 @@ This is a tentative way to consider *"age since last renovation"* and see if the
 ```{r Property Age Calculation}
 
 # Creating 'age' column
-df_house$age = ifelse(df_house$renovated == 1, 2023 - df_house$yr_renovated, 2023 - df_house$yr_built)
+df_house$age = ifelse(df_house$renovated == 1, 
+                      2023 - df_house$yr_renovated, 
+                      2023 - df_house$yr_built)
 
 head(df_house)
 
@@ -153,22 +155,25 @@ In the "Correlation Analysis" section, we delve into examining the relationships
 
 ```{r Correlation Matrix}
 
-#correlation matrix
+# Correlation Matrix
 cor_matrix = cor(ndf_house)
 correlation_df = as.data.frame(cor_matrix)
 
-#new dataframe with variables 'highly' (>0.2) correlated with price
-x_high = subset(ndf_house, select = c(view,waterfront,sqft_basement,sqft_living,
-                                      sqft_living15,sqft_above,grade,bathrooms,bedrooms,floors,lat))
+# New dataframe with variables 'highly' (>0.2) correlated with price
+x_high = subset(ndf_house, 
+                select = c(view, waterfront, sqft_basement, sqft_living, 
+                           sqft_living15, sqft_above, grade, bathrooms, 
+                           bedrooms, floors, lat))
 
 pheatmap(cor_matrix,
          color = colorRampPalette(c("blue", "white", "red"))(20),
-         main = "correlation matrix heatmap",
+         main = "Correlation Matrix Heatmap",
          fontsize = 8,
          cellwidth = 15,
          cellheight = 11,
          display_numbers = TRUE
 )
+
 ```
 
 **Analysis**: Following the generation of the correlation plot, a thorough analysis is vital. For example, high correlations between 'sqft_living', 'grade', 'sqft_above', and 'price' indicate a strong linear relationship, suggesting that larger homes, built with a high-quality level of construction and design, and more above-ground square footage, tend to be more expensive. These variables could serve as key predictors in a pricing model. We will explore them further int he next model development process. However, it's essential to note that correlation does not imply causation. Variables like 'zipcode', now treated as categorical, will not be represented in this correlation matrix, reminding us to consider geographical influences separately. Additionally, observing any potential multicollinearity between predictors is crucial, as it can affect the reliability of the regression model. Finally, interpreting these correlations within the context of the real estate market in King County provides insights into local housing trends and factors influencing house prices.
@@ -182,7 +187,8 @@ This section focuses on identifying highly correlated variables within the King 
 
 df_house <- df_house[sapply(df_house, is.numeric)]
 
-corr_matrix <- cor(df_house, use = "complete.obs")  # use 'complete.obs' to handle missing values
+# use 'complete.obs' to handle missing values
+corr_matrix <- cor(df_house, use = "complete.obs")
 
 threshold <- 0.8
 high_corr <- which(abs(corr_matrix) > threshold, arr.ind = TRUE)
@@ -191,7 +197,8 @@ high_corr <- high_corr[high_corr[, 1] < high_corr[, 2], ]
 for (pair in 1:nrow(high_corr)) {
     row <- high_corr[pair, "row"]
     col <- high_corr[pair, "col"]
-    cat(names(df_house)[row], "and", names(df_house)[col], "have a correlation of", corr_matrix[row, col], "\n")
+    cat(names(df_house)[row], "and", names(df_house)[col], 
+        "have a correlation of", corr_matrix[row, col], "\n")
 }
 
 ```
@@ -203,7 +210,8 @@ This section of the analysis is dedicated to refining the dataset by removing va
 ```{r Remove unnecessary variables}
 
 # Remove redundant, unnecessary columns from dataset. 
-df_house[c("sqft_living", "yr_renovated", "yr_built", "month", "day")] <- list(NULL)
+df_house[c("sqft_living", "yr_renovated", 
+           "yr_built", "month", "day")] <- list(NULL)
 
 ```
 
@@ -219,7 +227,10 @@ summary(df_house)
 ```
 
 ```{r Stat summary of the price}
+
+# Stat summary of the price
 summary(df_house$price)
+
 ```
 
 ## Graphical Analysis
@@ -233,7 +244,8 @@ The pairwise scatter plot shows the correlation between highly correlated variab
 ```{r Pairwise scatter plot}
 
 # Pairwise scatter plot with correlation coefficients
-ggpairs(ndf_house, columns = c("price", "sqft_living", "bedrooms", "bathrooms", "grade"), 
+ggpairs(ndf_house, 
+        columns = c("price", "sqft_living", "bedrooms", "bathrooms", "grade"), 
         title = "Pairwise Scatter Plots with House Price")
 
 ```
@@ -255,18 +267,21 @@ ggplot(df_house, aes(x = price)) +
 # Boxplot for price by number of bedrooms
 ggplot(df_house, aes(x = factor(bedrooms), y = price)) + 
   geom_boxplot() +
-  labs(title = "Boxplot of Prices by Number of Bedrooms", x = "Number of Bedrooms", y = "Price")
+  labs(title = "Boxplot of Prices by Number of Bedrooms", 
+       x = "Number of Bedrooms", y = "Price")
 
 # Boxplot for price by house grade
 ggplot(df_house, aes(x = factor(grade), y = price)) + 
   geom_boxplot() +
-  labs(title = "Boxplot of Prices by House Grade", x = "Grade", y = "Price")
+  labs(title = "Boxplot of Prices by House Grade", 
+       x = "Grade", y = "Price")
 
 ```
 **Analysis**: the average price tends to increase with the number of bedrooms up to a certain point, but then the trend is less consistent. For instance, homes with 6 bedrooms have a higher average price than those with 7 or 8 bedrooms, and the average price for homes with 11 bedrooms is lower than for those with fewer bedrooms. There is a notable outlier at 33 bedrooms with a relatively low average price, which could indicate an atypical property or data error.
 
 ```{r Average Price analysis}
 
+# Average Price analysis
 average_prices <- aggregate(price ~ bedrooms, data = ndf_house, FUN = mean)
 ggplot(average_prices, aes(x = factor(bedrooms), y = price)) +
   geom_bar(stat = "identity", fill = "skyblue") +
@@ -308,14 +323,13 @@ ggplot(data = ndf_house, aes(x = long, y = lat, color = price)) +
 In Section II, we thoroughly explored the King County house sales dataset, examining both continuous and categorical variables through statistical tests and extensive graphical analysis. We highlighted the strong correlations between variables like 'sqft_living', 'grade', 'sqft_above', and 'price'. Transformations and dummy variable creation were crucial in preparing data for modeling. The section concluded with the development of new variables to encapsulate the age and renovation status of properties, offering deeper insights for our predictive models.
 
 \newpage
-# III. Model Development Process (15 points) - (Bethun Bhowmik)
+# III. Model Development Process
 
 *Build a regression model to predict price.  And of course,  create the train data set which contains 70% of the data and use set.seed (1023). The remaining 30% will be your test data set. Investigate the data and combine the level of categorical variables if needed and drop variables. For example, you can drop id, Latitude, Longitude, etc. *
 
 The KC House sales dataset is split into train(70%) and test(30%) datasets, with 15129 observations in the train dataset and 6484 observations in the test dataset.
 
 ```{r}
-#[Bethun]
 
 set.seed(1023)
 n<-dim(df_house)[1]
@@ -344,24 +358,24 @@ From the model plot we observe the following:
 - The impact of bad data like influential and outlier observations seems to be impactful when inspecting the Residual vs. Leverage graph
 
 ```{r}
-#[Bethun]
+
 house_lm<-lm(price ~.,data=train.dat)
 summary(house_lm)
 par(mfrow=c(2,2))
 plot(house_lm)
 MSE <- summary(house_lm)$sigma^2
 print(MSE)
+
 ```
 ```{r}
 vif(house_lm)
 ```
 
-
 **Analysis**:
 The R-square values on both training and test data are quite close - 71.38% and 70.86% respectively. This suggests that the model generalizes well to new data, maintaining a similar level of explanatory power. The RMSE of 204,868.3 indicates the average magnitude of errors in predicting house prices on the test data. The SSE of 2.721402e+14 represents the sum of squared differences between predicted and observed values on the test data. A lower RMSE and SSE indicates better model fit, and we will explore furher on how these values can be lowered.
 
 ```{r}
-#[Bethun]
+
 # Test data Predictions
 house_lm_test_pred <- predict(house_lm, newdata = test.dat)
 
@@ -370,12 +384,16 @@ house_lm_test_rmse <- sqrt(house_lm_test_mse)
 house_lm_test_residuals <- test.dat$price - house_lm_test_pred
 house_lm_test_rsq <- 1 - var(house_lm_test_residuals) / var(test.dat$price)
 house_lm_test_sse <- sum((test.dat$price - house_lm_test_pred)^2)
+
+# Add the predictions to the results
 results.df <- data.frame(model = "Linear Regression Test Data Predictions",
                          R.Squared.Train = summary(house_lm)$r.square,
                          R.Squared.Test = house_lm_test_rsq,
                          RMSE.test = house_lm_test_rmse,
                          SSE.test = house_lm_test_sse)
+
 print(results.df)
+
 ```
 
 **Analysis**:
@@ -384,14 +402,18 @@ The insignificant predictor sqft_lot is dropped and the model is refitted. We ob
 Price = -74344803.92767 + -34633.405255bedrooms + 32821.338262bathrooms + 143.671881sqft_living + 8767.015515floors + 531351.549043waterfront + 52065.87946view + 24875.912771condition + 82737.693562grade + 22.301049sqft_above + -896.223982yr_built + 4065.130653yr_renovated + -507.797776zipcode + 473638.095898lat + -206204.537141long + 21.65297sqft_living15 + -0.25171sqft_lot15 + 38482.930296year + 1380.790546month + -331.741298day + -7982223.272107renovated + 1440.530732age + 101303.883852price_binary
 
 ```{r}
-#[Bethun]
+
 predictors_to_drop <- c("sqft_lot")
 
 # Update the model by excluding the specified predictors
-updated <- as.formula(paste("price ~ .", paste0("- `", predictors_to_drop, "`", collapse = "")))
+updated <- as.formula(
+  paste("price ~ .", 
+        paste0("- `", predictors_to_drop, "`", collapse = "")))
+
 house_lm <- update(house_lm, updated)
 summary(house_lm)
 dispRegFunc(house_lm)
+
 ```
 
 
@@ -400,10 +422,16 @@ dispRegFunc(house_lm)
 On plotting the boxplot of residuals, we observe multiple outliers on both ends of the whiskers. Moreover, when we plot the residuals against the fitted values, we observe that the residuals spread out with increase in fitted values along x-axis.
 
 ```{r}
-#[Bethun]
-ei<-house_lm$residuals
-boxplot(ei,horizontal=TRUE,staplewex=0.5,col=2,xlab="House Price Regression Residuals")
-plot(house_lm$fitted.values,ei,xlab="Fitted Values House Linear Model",ylab="Residuals House Linear Model")
+
+ei <- house_lm$residuals
+
+boxplot(ei, horizontal=TRUE, 
+        staplewex=0.5, col=2, xlab="House Price Regression Residuals")
+
+plot(house_lm$fitted.values, ei, 
+     xlab="Fitted Values House Linear Model", 
+     ylab="Residuals House Linear Model")
+
 ```
 
 **Analysis**:
@@ -541,6 +569,7 @@ plot(stepwise_model)
 **Analysis:** - Please add here your analysis.
 
 ```{r WLS regression}
+
 # Weighted Least Squares Regression
 # We notice from the scale-location graph of the main model that the error variances are unequal.
 
@@ -557,27 +586,39 @@ wi = 1/(s^2)
 house_lm_wls <- lm(price ~ ., weights = wi, data = train.dat)
 
 summary(house_lm_wls)
-#par(mfrow=c(2,2))
-plot(house_lm_wls)
 
 ```
+
+```{r Plot the WLS Regression}
+
+par(mfrow=c(2,2))
+suppressWarnings(plot(house_lm_wls))
+
+```
+
 **Analysis:** As of now, there is no multicollinearity issues in the train data set since we have handled the highly correlated variables at the initial section.
 
-```{r}
+```{r }
+
 # Testing the main (boxcox) model for multicollinearity
 vif(house_lm1)
+
 ```
+
 **Analysis:** - please add here the analysis of the outcome
 
-```{r - Ridge Regression}
-# Ridge Regression
+
+```{r Ridge Regression}
 
 # Extract 'x' and 'y'
 x <- data.matrix(dplyr::select(train.dat, -price))
 y <- train.dat$price
 
 # Perform ridge regression
-house_lm_ridge <- glmnet::cv.glmnet(x, y, alpha = 0, nlambda = 100, lambda.min.ratio = 0.0001)
+house_lm_ridge <- glmnet::cv.glmnet(x, y, alpha = 0, 
+                                    nlambda = 100, 
+                                    lambda.min.ratio = 0.0001)
+
 best.lambda.ridge <- house_lm_ridge$lambda.min
 plot(house_lm_ridge)
 
@@ -586,23 +627,30 @@ print(paste0("Ridge best lambda of ", round(best.lambda.ridge, digits = 3)))
 ```
 **Analysis:** - please add here the analysis of the outcome
 
-```{r}
-# Lasso Regression
-house_lm_lasso <- glmnet::cv.glmnet(x, y, alpha = 1, nlambda = 100, lambda.min.ratio = 0.0001)
+```{r Lasso Regression}
+
+house_lm_lasso <- glmnet::cv.glmnet(x, y, 
+                                    alpha = 1, 
+                                    nlambda = 100, 
+                                    lambda.min.ratio = 0.0001)
+
 best.lambda.lasso <- house_lm_lasso$lambda.min
 plot(house_lm_lasso)
 
 print(paste0("Lasso best lambda of ", round(best.lambda.lasso, digits = 3)))
+
 ```
 
 **Analysis:** - please add here the analysis of the outcome
 
-```{r}
-# Elastic Net Regression
-house_lm_enet <- glmnet::cv.glmnet(x, y, alpha = 0.5, nlambda = 100, lambda.min.ratio = 0.0001)
+```{r Elastic Net Regression}
+
+house_lm_enet <- glmnet::cv.glmnet(x, y, alpha = 0.5, 
+                                   nlambda = 100, lambda.min.ratio = 0.0001)
 plot(house_lm_enet)
 best.lambda.enet <- house_lm_enet$lambda.min
 print(paste0("ElasticNet best lambda of ", round(best.lambda.enet, digits = 3)))
+
 ```
 
 **Analysis:** - please add here the analysis of the outcome
@@ -629,7 +677,10 @@ plot(house_lm_huber)
 ```
 
 ```{r}
-huber_weights <- data.frame(Observation = 1:nrow(train.dat), Residual = house_lm_huber$resid, Weight = house_lm_huber$w)
+
+huber_weights <- data.frame(Observation = 1:nrow(train.dat), 
+                            Residual = house_lm_huber$resid, 
+                            Weight = house_lm_huber$w)
 
 a <- huber_weights[order(house_lm_huber$w), ]
 
@@ -659,10 +710,13 @@ price.predictors <- colnames(dplyr::select(df_house, -price))
 predictions <- data.frame(
   price = test.dat$price,
   price.lm = predict(house_lm1, test.dat),
-  price.sw.lm = predict(final_model, test.dat), # Stepwise model name = final_model
-  price.ridge = predict(house_lm_ridge, s = best.lambda.ridge, newx = data.matrix(test.dat[price.predictors])),
-  price.lasso = predict(house_lm_lasso, s = best.lambda.lasso, newx = data.matrix(test.dat[price.predictors])),
-  price.en = predict(house_lm_enet, s = best.lambda.enet, newx = data.matrix(test.dat[price.predictors])),
+  price.sw.lm = predict(final_model, test.dat), # Stepwise model = final_model
+  price.ridge = predict(house_lm_ridge, s = best.lambda.ridge, 
+                        newx = data.matrix(test.dat[price.predictors])),
+  price.lasso = predict(house_lm_lasso, s = best.lambda.lasso, 
+                        newx = data.matrix(test.dat[price.predictors])),
+  price.en = predict(house_lm_enet, s = best.lambda.enet, 
+                     newx = data.matrix(test.dat[price.predictors])),
   price.huber = predict(house_lm_huber, test.dat),
   price.bisquare = predict(house_lm_bisquare, test.dat)
 )
@@ -680,8 +734,11 @@ calc_metrics <- function(actual, predicted) {
 
 # function to each set of predictions
 metrics <- data.frame(
-  Model = c("Linear", "Stepwise", "Ridge", "Lasso", "Elastic Net", "Huber", "Bisquare"),
-  do.call(rbind, lapply(2:ncol(predictions), function(i) calc_metrics(predictions$price, predictions[,i])))
+  Model = c("Linear", "Stepwise", "Ridge", "Lasso", 
+            "Elastic Net", "Huber", "Bisquare"),
+  do.call(rbind, 
+          lapply(2:ncol(predictions), 
+                 function(i) calc_metrics(predictions$price, predictions[,i])))
 )
 
 # Display the metrics table with RMSE
@@ -773,7 +830,9 @@ Analysis of the regression tree model's accuracy across varying depths, utilizin
 
 ```{r Plot the RMSE results}
 
-plot(depth_values, mse_values, type = "b", xlab = "Depth Value", ylab = "Root Mean Squared Error", main = "Regression Tree Cross Validation (RMSE vs depth)")
+plot(depth_values, mse_values, type = "b", 
+     xlab = "Depth Value", ylab = "Root Mean Squared Error", 
+     main = "Regression Tree Cross Validation (RMSE vs depth)")
 
 ```
 
@@ -785,8 +844,11 @@ Influence of tree depth on the regression tree model's explanatory power, as ind
 
 ```{r Plot the R-squared results}
 
-plot(depth_values, test_rsq_values, type="o", xlab = "Depth Value", ylab = "Test R-squared", main = "Regression Tree Cross Validation (R2 vs depth)")
-text(depth_values,test_rsq_values,labels=round(test_rsq_values,4),pos=3,xpd=TRUE)
+plot(depth_values, test_rsq_values, type="o", 
+     xlab = "Depth Value", ylab = "Test R-squared", 
+     main = "Regression Tree Cross Validation (R2 vs depth)")
+text(depth_values, test_rsq_values, 
+     labels=round(test_rsq_values,4), pos=3, xpd=TRUE)
 
 ```
 
@@ -805,7 +867,8 @@ dt_test_results = postResample(pred = dt_test_pred, obs = test.dat$price)
 dt_train_results = postResample(pred = dt_train_pred, obs = train.dat$price)
 dt_test_sse = sum((dt_test_pred - test.dat$price)^2)
 
-# Variable importance may be more reliable if considering other values from cross validation
+# Variable importance may be more reliable 
+# if considering other values from cross validation
 blue_gradient <- colorRampPalette(c("blue", "white"))(length(imp))
 barplot(imp, las=2, main="Variable Importance in Decision Tree", 
         col=blue_gradient, cex.names=0.8, cex.axis=0.7, cex.lab=0.7)
@@ -839,11 +902,13 @@ rf = randomForest(price ~ .,
 ```
 
 ```{r RF variable importance}
-#
+
 randomForest::varImpPlot(rf)
 
-#fix permuation importance - better for mixed data (ordinal, categorical, quantitative,etc)
+# fix permuation importance - 
+# better for mixed data (ordinal, categorical, quantitative, etc)
 # rfPermute(rf,train.dat,train.dat$price,na.action=na.omit,nrep = 100)
+
 ```
 
 ```{r Random Forest Results}
@@ -861,8 +926,6 @@ results.df = rbind(results.df,data.frame(model = "Random Forest",
                             RMSE.test = unname(rf_test_results[1]),
                             SSE.test = rf_test_sse))
 ```
-
-
 
 
 ## Support Vector Machine (SVM) Model
