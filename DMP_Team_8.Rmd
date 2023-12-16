@@ -179,7 +179,6 @@ pheatmap(cor_matrix,
 This section focuses on identifying highly correlated variables within the King County house sales dataset. Through an R script, we systematically extract numeric variables and construct a correlation matrix, applying a threshold to spotlight significant correlations. We aim to reveal pairs of variables with a correlation coefficient exceeding 0.8, signifying strong linear relationships. This analysis is crucial in understanding interdependencies among variables, guiding us in avoiding multicollinearity in our predictive models and ensuring their statistical integrity and interpretability.
 
 ```{r Identifying highly correlated variables}
-# [Seymur]
 
 df_house <- df_house[sapply(df_house, is.numeric)]
 
@@ -711,9 +710,11 @@ In this section, we explore alternative predictive models to challenge our prima
 
 ## Regression Tree Models
 
+This block is designed to determine the optimal depth for a regression tree model predicting house prices. It iterates over a predefined set of depth values, constructing a model at each depth, and calculating MSE and R-squared values for both the test and training datasets. The loop stores these metrics for each depth, and upon completion, it identifies the depth that yields the highest R-squared value on the test data, suggesting the best generalization performance.
+
 ```{r}
 
-depth_values <- c(2, 3, 4, 5, 6)
+depth_values <- c(2, 3, 4, 5, 6, 7, 8)
 
 mse_values = numeric(length(depth_values))
 test_rsq_values = numeric(length(depth_values))
@@ -722,40 +723,80 @@ train_rsq_values = numeric(length(depth_values))
 for (i in seq_along(depth_values)) {
   depth = depth_values[i]
 
-  model = rpart(price ~ ., 
-                data = train.dat, 
-                method = "anova",
-                control=rpart.control(maxdepth=depth))
-  predictions_test <- predict(model, newdata = test.dat)
-  predictions_train <- predict(model, newdata = train.dat)
+  regression_tree_model = rpart(price ~ ., 
+                                data = train.dat, 
+                                method = "anova", 
+                                control=rpart.control(maxdepth=depth))
+  predictions_test <- predict(regression_tree_model, newdata = test.dat)
+  predictions_train <- predict(regression_tree_model, newdata = train.dat)
 
-  # Plot the tree
-  rpart.plot(model, main=paste("Regression Tree - Depth: ", depth), type = 4, extra = 1)
-  
   mse_values[i] <- mean((predictions_test - test.dat$price)^2)
   test_rsq_values[i] = cor(predictions_test,test.dat$price)^2
   train_rsq_values[i] = cor(predictions_train,train.dat$price)^2
 }
+
+# Find the maximum R-squared value
+max_rsq <- max(test_rsq_values)
+# Get the corresponding depth value
+best_depth <- depth_values[which.max(test_rsq_values)]
+
+cat("Best depth:", best_depth, "with R-squared:", max_rsq)
+
 ```
 
+### Optimized Regression Tree Visualization
 
+This subsection presents the visual depiction of the regression tree model at its calculated optimal complexity. By tuning the tree to the 'best_depth', we ensure the model is neither overfitting nor underfitting. The rpart.plot is customized to enhance interpretability, detailing split labels and the count of observations at each node, thereby providing a clear, scaled-up graphical representation of the decision-making process within the model.
 
-```{r}
+Now we use the rpart.plot function to create a detailed plot of the tree, incorporating the optimal tree depth previously determined (best_depth). The plot is configured to show a type 4 tree, which includes split labels, and extra = 1 to display the number of observations in each node. The main title of the plot reflects the chosen depth for easy reference.
 
-# Plot the results
-plot(depth_values, mse_values, type = "b", xlab = "Depth Value", ylab = "Root Mean Squared Error", main = "Regression Tree Cross Validation Test MSE (depth)")
-
-plot(depth_values, test_rsq_values, type="o", xlab = "Depth Value", ylab = "Test R-squared", main = "Regression Tree Cross Validation Test R-squared (depth)")
-text(depth_values,test_rsq_values,labels=round(test_rsq_values,4),pos=3,xpd=TRUE)
-```
-
-```{r}
+```{r Plot the Regression Tree with best depth}
 
 # Fitting decision tree with best depth
 dtm = rpart(price ~ ., 
               data = train.dat, 
               method = "anova",
-              control=rpart.control(maxdepth=5))
+              control=rpart.control(maxdepth=best_depth))
+
+# Plot the tree
+rpart.plot(dtm, main=paste("Regression Tree - Depth: ", best_depth), 
+           type = 4, extra = 1, tweak=1.6)
+
+```
+
+**Analysis:** The regression tree plot depicts a model of depth 6 (best_depth), indicating a sequence of decisions starting from the root node using features such as 'grade', 'lat', 'sqft_above', and others. Each node represents a condition that splits the data, leading to more homogenous subsets. The leaf nodes represent the predicted price, with the number in each leaf node showing the average price for the observations that follow the path to that node. The tree structure suggests that 'grade', 'sqft_living15', location ('waterfront', 'lat' & 'long'), and 'sqft_above' are important predictors, as they appear near the top and on many many different levels of the tree, indicating their significant role in splitting the data and hence in predicting house prices.
+
+
+### Assessing Regression Tree Model Complexity with RMSE
+
+Analysis of the regression tree model's accuracy across varying depths, utilizing Root Mean Squared Error (RMSE) as the key performance metric.
+
+```{r Plot the RMSE results}
+
+plot(depth_values, mse_values, type = "b", xlab = "Depth Value", ylab = "Root Mean Squared Error", main = "Regression Tree Cross Validation (RMSE vs depth)")
+
+```
+
+**Analysis:** The plot illustrates how RMSE changes as the depth of the regression tree increases. Initially, RMSE decreases significantly, suggesting improvements in model accuracy with added complexity. However, from a depth of 6 and beyond, the reduction in RMSE plateaus, indicating that increasing the tree depth further provides diminishing returns in terms of model accuracy. This visualization aids in selecting an appropriate model complexity to balance between underfitting and overfitting.
+
+### Regression Tree Model Fit Evaluation with R-squared
+
+Influence of tree depth on the regression tree model's explanatory power, as indicated by the R-squared values.
+
+```{r Plot the R-squared results}
+
+plot(depth_values, test_rsq_values, type="o", xlab = "Depth Value", ylab = "Test R-squared", main = "Regression Tree Cross Validation (R2 vs depth)")
+text(depth_values,test_rsq_values,labels=round(test_rsq_values,4),pos=3,xpd=TRUE)
+
+```
+
+**Analysis:** The plot illustrates the R-squared value at varying tree depths, showing a trend of increasing explanatory power as the depth increases from 2 to 5. The leveling off of R-squared values beyond a depth of 6 suggests that additional depth does not substantially improve the model's ability to explain the variance in the data, indicating an optimal depth for model complexity.
+
+### Prioritizing Features in the Regression Tree Model
+
+This subsection investigates the variable importance derived from the regression tree model, offering a clear depiction of which factors most heavily influence house pricing predictions. The measure of importance is calculated based on the reduction of prediction error attributed to each variable, providing insight into their relative predictive power within the model. This analysis is critical for understanding the key drivers of real estate values and can inform strategic decisions regarding property investments and market evaluations.
+
+```{r Find the Variable Importance using the regression tree}
 
 imp = dtm$variable.importance
 dt_test_pred <- predict(dtm, newdata=test.dat)
@@ -765,10 +806,16 @@ dt_train_results = postResample(pred = dt_train_pred, obs = train.dat$price)
 dt_test_sse = sum((dt_test_pred - test.dat$price)^2)
 
 # Variable importance may be more reliable if considering other values from cross validation
-barplot(imp,las=2,main="Variable importance in Decision Tree")
+blue_gradient <- colorRampPalette(c("blue", "white"))(length(imp))
+barplot(imp, las=2, main="Variable Importance in Decision Tree", 
+        col=blue_gradient, cex.names=0.8, cex.axis=0.7, cex.lab=0.7)
+
 ```
 
-```{r}
+**Analysis:** The bar plot indicates that 'grade' has the most significant impact on the model's decisions, followed by 'sqft_living15', and 'sqft_above'. Variables such as 'age', 'floors', and 'renovated' have minimal impact. This suggests that house quality and living area are the primary drivers of price according to the model, which aligns with real-world expectations of property valuation.
+
+
+```{r Appending Regression Tree Results}
 
 # Append results
 results.df = rbind(results.df,data.frame(model = "Decision Tree Regression",
@@ -961,12 +1008,12 @@ abline(0, 1, col = "red")
 
 
 \newpage
-# VI. Model Limitation and Assumptions (15 points)
+# VI. Model Limitation and Assumptions
 
 *Based on the performances on both train and test data sets, determine your primary (champion) model and the other model which would be your benchmark model. Validate your models using the test sample. Do the residuals look normal? Does it matter given your technique? How is the prediction performance using Pseudo R^2, SSE, RMSE?  Benchmark the model against alternatives. How good is the relative fit? Are there any serious violations of the model assumptions? Has the model had issues or limitations that the user must know? (Which assumptions are needed to support the Champion model?)* 
 
-```{r}
-# [Kaleo]
+```{r Printing all important results}
+
 # Results dataframe...We're supposed to use Pseudo R-squared, SSE, RMSE, as seen above. 
 # We'll have to look into 'Pseudo R-squared' most likely
 
@@ -974,21 +1021,44 @@ results.df
 ```
 
 \newpage
-# VII. Ongoing Model Monitoring Plan (5 points)
+# VII. Ongoing Model Monitoring Plan
 
 *How would you picture the model needing to be monitored, which quantitative thresholds and triggers would you set to decide when the model needs to be replaced? What are the assumptions that the model must comply with for its continuous use?*
 
 \newpage
-# VIII. Conclusion (5 points)
+# VIII. Conclusion
 
 *Summarize your results here. What is the best model for the data and why?*
 
-# Bibliography (7 points)
+# Bibliography
 
 *Please include all references, articles and papers in this section.*
 
-# Appendix (3 points)
+# Appendix
 
-*Please add any additional supporting graphs, plots and data analysis.*
+Supplementary Analyses and Visuals
+
+
+## Enhanced Model Visualizations
+
+### Regression Tree Depth Variations
+
+
+
+### Additional Predictive Accuracy Charts
+
+## Extended Data Analysis Support
+
+### Comprehensive Error Distribution Review
+
+### Full Model Performance Metrics
+
+
+
+
+
+
+
+## 
 
 
