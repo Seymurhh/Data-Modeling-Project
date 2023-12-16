@@ -820,11 +820,26 @@ results.df = rbind(results.df,data.frame(model = "Random Forest",
 
 ## Support Vector Machine (SVM) Model
 
-```{r}
+### SVM Model Construction
+
+This subsection discusses the creation of the Support Vector Machine model. It entails the training phase on the dataset, where the SVM algorithm learns to find the best hyperplane that categorizes the data points.
+
+```{r Build the SVM model}
 
 # Build the SVM model
 svm_model <- svm(price ~ ., data = train.dat)
 print(summary(svm_model))
+
+```
+
+**Analysis:** The SVM model summary indicates it's an epsilon-type regression with a radial basis function kernel. The cost parameter is set to 1, which controls the trade-off between allowing training errors and forcing rigid margins. Gamma, set at approximately 0.0588, defines the influence of a single training example, with lower values meaning ‘far’ and higher values meaning ‘close’. The epsilon of 0.1 specifies the epsilon-tube within which no penalty is associated in the training loss function with points predicted within a distance epsilon from the actual value. The model has a large number of support vectors, amounting to 9020, which could imply a complex model that may be at risk of overfitting.
+
+
+### SVM Model Evaluation
+
+In this part, we assess the performance of the SVM model using the test dataset. The Root Mean Square Error (RMSE) metric provides insight into the average deviation of the predicted house prices from the actual values.
+
+```{r SVM Prediction and Performance}
 
 # Prediction and Performance
 svm_predictions <- predict(svm_model, test.dat)
@@ -833,30 +848,76 @@ print(paste("SVM RMSE:", svm_rmse))
 
 ```
 
+**Analysis:** The reported RMSE value for the SVM model is $195,393.38, which suggests that on average, the model's price predictions deviate from the actual sale prices by this amount. Given the high value, this may indicate that the model is not predicting the prices with a high degree of accuracy. In the context of house prices, such a large RMSE could be considered substantial, and it suggests that model parameters may need tuning or the model itself may require a more in-depth evaluation to identify areas of improvement.
 
-## Neural Network - Seymur
 
-```{r prepare the NN data}
+### SVM Model Visualization
+
+This subsection is dedicated to the visual exploration of the Support Vector Machine model's predictive performance. Through graphical representations such as scatter plots of predicted versus actual values and histograms of prediction errors, we can intuitively assess the accuracy and distribution of the model's predictions, and identify patterns or anomalies in the data. These visual analyses are critical for conveying complex statistical results in a clear and actionable format.
+
+```{r SVM Scatter Plot of Actual vs. Predicted Prices}
+
+plot(test.dat$price, svm_predictions, main="SVM Actual vs. Predicted Prices", xlab="Actual Prices", ylab="Predicted Prices")
+abline(0, 1, col="red")
+
+```
+
+**Analysis:** The SVM Actual vs. Predicted Prices plot shows a positive correlation between the actual and predicted values, yet there is noticeable deviation from the line of perfect fit, especially at higher price points. This deviation contributes to the model's overall RMSE.
+
+
+```{r SVM Histogram of Prediction Errors}
+
+svm_errors <- test.dat$price - svm_predictions
+hist(svm_errors, main="SVM Prediction Error Distribution", xlab="Prediction Error")
+
+```
+
+**Analysis:** The SVM Prediction Error Distribution histogram reveals that most prediction errors cluster around a small range, indicating a concentration of errors close to zero. However, the presence of errors across the scale shows that the model has varying degrees of accuracy for different price levels.
+
+
+```{r SVM Plot of Residuals vs. Fitted Values}
+
+plot(svm_predictions, svm_errors, main="SVM Residuals vs. Predicted", xlab="Predicted Prices", ylab="Residuals")
+abline(h=0, col="blue")
+
+```
+
+**Analysis:** The SVM Residuals vs. Predicted plot shows that residuals are not randomly dispersed around the zero line, particularly for higher-priced houses where the model tends to underestimate prices, evident from the residuals' pattern. This suggests that the model might not capture all the nuances in the data, particularly for properties with higher actual prices.
+
+
+## Neural Network Model
+
+### Data Normalization for Neural Network
+
+Preparing the dataset for neural network analysis by normalizing the data. The normalize function adjusts each feature to a common scale, eliminating discrepancies due to different units or scales.
+
+```{r Prepare the NN data}
+
 normalize <- function(x) { return((x - min(x)) / (max(x) - min(x))) }
 
 train.dat.norm <- as.data.frame(lapply(train.dat, normalize))
 test.dat.norm <- as.data.frame(lapply(test.dat, normalize))
+
 ```
 
-```{r build the NN model}
+### Neural Network Construction and Architecture
+
+Here, we construct the neural network model using the normalized data and visualize its structure. The neuralnet package is utilized to build the model with a specified architecture and then plot it to understand its configuration.
+
+```{r Build and Plot the NN model}
+
 house_NN <- neuralnet(price ~ ., data = train.dat.norm, hidden = c(2, 2), linear.output = TRUE)
-print(house_NN)
-```
-
-```{r plot the NN model}
-
-# Network Architecture Visualization
-plot(house_NN)
-
+plot(house_NN, main="Neural Network Architecture Visualization")
 
 ```
 
-```{r evaluate performance}
+**Analysis:** The neural network diagram represents a model with inputs corresponding to features of the houses such as 'bedrooms', 'bathrooms', 'sqft_living15', etc. The two hidden layers with two neurons each suggest an attempt to capture non-linear complexities in the data. The weights, denoted by numbers along the connections, indicate how each input is considered in predicting the house price. Significant weights suggest features that more strongly influence price predictions. Conversely, smaller weights might indicate less influence. The final output is the 'price', representing the model's prediction based on the learned weights through the network's training.
+
+### Performance Analysis of Neural Network
+
+This final section evaluates the neural network's predictive performance. It involves computing predictions, calculating key performance metrics like RMSE, R-squared, and SSE, and visualizing prediction accuracy and error distribution.
+
+```{r Evaluate Performance}
 
 model_results <- compute(house_NN, test.dat.norm[1:(ncol(test.dat.norm) - 1)])
 predicted_price <- model_results$net.result
@@ -871,6 +932,33 @@ cat("SSE:", sse_value, "\n")
 
 ```
 
+**Analysis:** Given the RMSE of 0.04553926, the model’s predictions are relatively close to the actual prices, but there's room for improvement, especially considering the R-squared value of 0.3436959, which suggests that only about 34% of the variance in the house prices is being explained by the model. The SSE of 13.44667 further indicates a substantial sum of errors squared, calling for model refinement to better capture complex patterns in the data.
+
+
+### Neural Network Predictive Performance and Error Distribution
+
+A dual-faceted visual evaluation of the neural network model. The first plot highlights the spread and central tendency of predictive errors, revealing the model's precision range. The second plot maps predicted values against actual prices, offering a direct visual assessment of accuracy, with the proximity to the diagonal indicating the model's effectiveness in capturing the underlying price determinants. Together, these plots form a comprehensive view of the model's prediction capabilities and areas for improvement.
+
+
+```{r Error Distribution Plot}
+
+errors <- test.dat.norm$price - predicted_price
+hist(errors, main = "Distribution of Prediction Errors", xlab = "Error")
+
+```
+
+**Analysis:** The histogram of prediction errors displays a concentration around zero, indicating most predictions are close to the actual values, but the spread towards the right suggests a skew in overestimating house prices.
+
+
+```{r Prediction Accuracy Plot}
+
+plot(test.dat.norm$price, predicted_price, main = "Actual vs. Predicted Prices", xlab = "Actual Prices", ylab = "Predicted Prices")
+abline(0, 1, col = "red")
+
+```
+
+**Analysis:** The scatter plot of actual vs. predicted prices shows a cluster below the ideal 45-degree line, reinforcing that the model tends to underpredict the higher-valued houses.
+
 
 \newpage
 # VI. Model Limitation and Assumptions (15 points)
@@ -884,6 +972,7 @@ cat("SSE:", sse_value, "\n")
 
 results.df
 ```
+
 \newpage
 # VII. Ongoing Model Monitoring Plan (5 points)
 
