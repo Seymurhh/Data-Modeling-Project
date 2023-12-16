@@ -6,14 +6,14 @@ author:
  - Bethun Bhowmik, Mohanish Kashiwar, Seymur Hasanov
 tags: [House Price Prediction, Linear Regression, Neural Networks, Decision Trees, Support Vector Machines (SVM), Data Analysis, Model Selection, Statistical Testing, King County Real Estate, Predictive Analytics]
 abstract: 
- - This project, undertaken by a team of students at Harvard Extension School, focuses on developing a comprehensive predictive model for house prices in King County, USA, using the 'KC_House_Sales' dataset. The dataset provides a rich variety of house attributes, allowing for an in-depth analysis of factors influencing property values. The initial phase of the project involves data cleaning and transformation, including the removal of irrelevant variables and conversion of data types. The primary analytical approach combines traditional linear regression models with more complex methods such as neural networks, decision trees, and support vector machines (SVM). The models are trained on a 70% split of the dataset and validated on the remaining 30%, ensuring robustness and accuracy in predictions.
- - In the subsequent stages, the project delves into graphical analysis, revealing key correlations and trends in the data. Techniques such as box plots, scatter plots, and heatmaps provide insights into the relationships between house prices and attributes like square footage, number of bedrooms, and location. The project also explores the impact of categorical variables and property age on pricing. Model performance is thoroughly tested using various metrics, including MSE and R-squared values. The final selection of the primary model, referred to as the "champion" model, is based on its performance on both the training and testing datasets. The project concludes with a discussion on model limitations, assumptions, and an ongoing monitoring plan, ensuring the model's relevance and accuracy over time.
+  This project, undertaken by a team of students at Harvard Extension School, focuses on developing a comprehensive predictive model for house prices in King County, USA, using the 'KC_House_Sales' dataset. The dataset provides a rich variety of house attributes, allowing for an in-depth analysis of factors influencing property values. The initial phase of the project involves data cleaning and transformation, including the removal of irrelevant variables and conversion of data types. The primary analytical approach combines traditional linear regression models with more complex methods such as neural networks, decision trees, and support vector machines (SVM). The models are trained on a 70% split of the dataset and validated on the remaining 30%, ensuring robustness and accuracy in predictions. 
+
+  In the subsequent stages, the project delves into graphical analysis, revealing key correlations and trends in the data. Techniques such as box plots, scatter plots, and heatmaps provide insights into the relationships between house prices and attributes like square footage, number of bedrooms, and location. The project also explores the impact of categorical variables and property age on pricing. Model performance is thoroughly tested using various metrics, including MSE and R-squared values. The final selection of the primary model, referred to as the "champion" model, is based on its performance on both the training and testing datasets. The project concludes with a discussion on model limitations, assumptions, and an ongoing monitoring plan, ensuring the model's relevance and accuracy over time.
 date: "`r format(Sys.time(), '%d %B %Y')`"
 geometry: margin=1.3cm
 output:
   pdf_document:
-    toc: yes
-    toc_depth: 2
+    toc: no
   html_document:
     df_print: paged
 editor_options: 
@@ -24,32 +24,30 @@ editor_options:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-## Helper to display regression function with n coefficients
-dispRegFunc <- function(reg) {
-  coefs <- reg$coefficients
-  b0 = coefs[1]
-  n <- length(coefs)
-  my_formula <- paste0("Y = ", round(b0, digits = 6))
-  for (i in 2:n) {
-    my_formula <- paste0(my_formula, " + ", round(coefs[i],6), names(coefs)[i])
-  }
-  my_formula
-}
-
+# Load all libraries and aux functions
 source("libs_funcs.R")
 
-HouseSales<-read.csv("KC_House_Sales.csv")
 ```
 \newpage
+```{=latex}
+\setcounter{tocdepth}{3}
+\tableofcontents
+```
+\newpage
+
 # Executive Summary
 
-This section will describe the model usage, your conclusions and any regulatory and internal requirements. In a real world scenario, this section is for senior management who do not need to know the details. They need to know high level (the purpose of the model, limitations of the model and any issues).
+In this project, our team of data modeling students has meticulously developed a sophisticated model for predicting real estate prices in King County, USA, aiming to inform and guide high-level executives and investment leaders in their strategic decision-making. This model, built from a comprehensive dataset encompassing various property attributes, employs advanced techniques such as linear regression, regression trees, and neural networks, ensuring accuracy and versatility.
+
+The primary objective of the model is to serve as a pivotal tool for investment strategy, market analysis, and policy formulation. It is designed to align with regulatory standards and internal compliance requirements, ensuring ethical and responsible use of data. However, it's important to note that the model's applicability is specific to King County's real estate market, and its predictive accuracy is contingent upon the ongoing integration of current market data.
+
+While our model represents a significant advancement in data-driven real estate analysis, it is essential to recognize its limitations. These include potential biases in historical data and the model's limited generalizability beyond the regional context of King County. Regular updates and adaptations of the model are recommended to maintain its relevance and accuracy in a dynamic market environment.
+
+Overall, this model stands as a testament to the power of data science in enhancing market understanding and investment strategies, offering valuable insights for executive decision-making and organizational growth in the real estate sector.
 
 
 \newpage
-# I. Introduction (5 points)
-
-*This section needs to introduce the reader to the problem to be resolved, the purpose, and the scope of the statistical testing applied. What you are doing with your prediction? What is the purpose of the model? What methods were trained on the data, how large is the test sample, and how did you build the model?*
+# I. Introduction
 
 In the ever-evolving landscape of real estate, the ability to accurately predict house prices is invaluable. This project, undertaken by a dedicated team from Harvard Extension School, delves into this realm, focusing on King County, USA. The motivation behind our work is twofold: firstly, to provide a robust predictive tool for potential investors and market analysts, and secondly, to contribute to the academic understanding of real estate market dynamics.
 
@@ -68,18 +66,16 @@ In conclusion, this project represents a significant endeavor in the field of pr
 \newpage
 # II. Description of the data and quality (15 points)
 
-*Here you need to review your data, the statistical test applied to understand the predictors and the response and how are they correlated. Extensive graph analysis is recommended. Is the data continuous, or categorical, do any transformation needed? Do you need dummies? *
+In this section, we meticulously dissect the King County house sales dataset, a crucial foundation for our predictive modeling. This dataset is a rich amalgamation of diverse variables, ranging from basic house attributes like square footage and number of bedrooms, to more nuanced features such as the year of renovation and the presence of a waterfront. The quality of this dataset is paramount, as it directly influences the reliability and precision of our predictive models. We delve into a detailed assessment of the data quality, addressing aspects like completeness, consistency, and potential biases, ensuring that our analysis is built on a robust and accurate foundation.
 
 ## Data Overview
 
-
 The dataset presented for analysis encompasses a range of housing attributes for properties sold in King County, including the sale price, number of bedrooms and bathrooms, square footage of living and lot space, and other characteristics like the presence of a waterfront, views, and the condition and grade of the house. Each entry is timestamped, providing a date of sale, which can be instrumental in understanding market trends over time.
-
 
 ```{r Data Overview}
 
 df_house = read.csv("KC_House_Sales.csv")
-cat("Number of NA values in dataframe:",sum(is.na(df_house)))
+cat("Number of NA values in dataframe:", sum(is.na(df_house)))
 head(df_house)
 
 ```
@@ -91,7 +87,7 @@ Our dataset includes a blend of continuous and categorical data types. Notably, 
 The data cleaning process has involved removing non-informative variables such as IDs, correcting data types (e.g., transforming sale price to a numeric format and parsing dates into a usable format), and creating new variables that could reveal temporal trends (e.g., year, month, day of sale).
 
 ```{r Data types, Categories and Cleaning}
-# [Kaleo]
+
 #removing `id` column
 df_house = subset(df_house, select = -id)
 
@@ -115,7 +111,7 @@ head(df_house)
 
 A binary variable named 'renovated' was introduced to indicate whether a property has undergone renovation. This variable is set to 1 if the 'yr_renovated' field is not zero, signifying that the property has been renovated at least once. Otherwise, it is set to 0, indicating no renovation. This distinction provides a straightforward way to assess the impact of renovations on property values.
 
-```{r}
+```{r Renovation Indicator Variable}
 
 # Creating a new variable 'renovated' 
 # 1 if the property has been renovated (yr_renovated != 0), 0 otherwise
@@ -125,9 +121,9 @@ df_house$renovated = ifelse(df_house$yr_renovated != 0, 1, 0)
 
 ### Property Age Calculation
 
-This is a tentative way to consider "age since las renovation" and see if there's a correlation between the time a house was last built/renovated on its selling price. A new variable called 'age' was calculated to represent the current age of each property. If a property was renovated, its age is the difference between 2023 and the renovation year ('yr_renovated'). If not renovated, the age is the difference between 2023 and the year the house was built ('yr_built'). This variable helps in understanding the effect of property age and recent renovations on house prices.
+This is a tentative way to consider *"age since last renovation"* and see if there's a correlation between the time a house was last built/renovated on its selling price. A new variable called 'age' was calculated to represent the current age of each property. If a property was renovated, its age is the difference between 2023 and the renovation year ('yr_renovated'). If not renovated, the age is the difference between 2023 and the year the house was built ('yr_built'). This variable helps in understanding the effect of property age and recent renovations on house prices.
 
-```{r}
+```{r Property Age Calculation}
 
 # Creating 'age' column
 df_house$age = ifelse(df_house$renovated == 1, 2023 - df_house$yr_renovated, 2023 - df_house$yr_built)
@@ -135,21 +131,28 @@ df_house$age = ifelse(df_house$renovated == 1, 2023 - df_house$yr_renovated, 202
 head(df_house)
 
 ```
-```{r converting zipcode to character}
+
+### Reinterpreting Zipcode as a Categorical Variable
+
+Transformation of the 'zipcode' variable from numerical to categorical data. Typically, zip codes are mistakenly treated as numerical values in datasets. However, they are categorical by nature, representing distinct geographical areas rather than possessing any inherent numerical relationship. This conversion is crucial for our analysis, as it allows us to use the zip code as a qualitative variable in our models, acknowledging its role in distinguishing different regions and their unique characteristics in housing prices. The R code snippet demonstrates the simple yet essential process of converting 'zipcode' to a character type, ensuring it is correctly utilized in subsequent analyses.
+
+```{r Zipcode to Character}
 
 df_house$zipcode = as.character(df_house$zipcode)
 
 ```
 
 
-## Data Cleaning - handling unnecessary and highly correlated variables
+## Enhancing Data Integrity: Addressing Redundancies and Correlations
 
-## Correlation Analysis
+In this pivotal section, we undertake a rigorous data cleaning process, focusing on eliminating unnecessary variables and managing highly correlated variables. This step is vital for enhancing the integrity and validity of our dataset, ensuring that our predictive models are based on the most relevant and independent variables. By methodically addressing these aspects, we aim to create a more streamlined and efficient dataset, thereby laying a solid foundation for robust and accurate predictive modeling in our real estate analysis.
 
-**Analysis**: the heatmap shows the correlation between different variables. The heatmap indicates that 'sqft_living', 'grade', and 'sqft_above' are highly correlated with 'price'. This suggests that larger living spaces, higher house grades, and more above-ground square footage are associated with higher house prices. These variables could serve as key predictors in a pricing model. We will explore them further int he next model development process.
+### Correlation Analysis
+
+In the "Correlation Analysis" section, we delve into examining the relationships between various features of the dataset and the target variable, 'price'. This involves creating a correlation matrix and corresponding plots to visually and statistically identify how different variables are related to each other and to house prices.
 
 ```{r Correlation Matrix}
-# [Kaleo]
+
 #correlation matrix
 cor_matrix = cor(ndf_house)
 correlation_df = as.data.frame(cor_matrix)
@@ -167,6 +170,13 @@ pheatmap(cor_matrix,
          display_numbers = TRUE
 )
 ```
+
+**Analysis**: Following the generation of the correlation plot, a thorough analysis is vital. For example, high correlations between 'sqft_living', 'grade', 'sqft_above', and 'price' indicate a strong linear relationship, suggesting that larger homes, built with a high-quality level of construction and design, and more above-ground square footage, tend to be more expensive. These variables could serve as key predictors in a pricing model. We will explore them further int he next model development process. However, it's essential to note that correlation does not imply causation. Variables like 'zipcode', now treated as categorical, will not be represented in this correlation matrix, reminding us to consider geographical influences separately. Additionally, observing any potential multicollinearity between predictors is crucial, as it can affect the reliability of the regression model. Finally, interpreting these correlations within the context of the real estate market in King County provides insights into local housing trends and factors influencing house prices.
+
+
+### Unraveling High Correlation in Data Variables
+
+This section focuses on identifying highly correlated variables within the King County house sales dataset. Through an R script, we systematically extract numeric variables and construct a correlation matrix, applying a threshold to spotlight significant correlations. We aim to reveal pairs of variables with a correlation coefficient exceeding 0.8, signifying strong linear relationships. This analysis is crucial in understanding interdependencies among variables, guiding us in avoiding multicollinearity in our predictive models and ensuring their statistical integrity and interpretability.
 
 ```{r Identifying highly correlated variables}
 # [Seymur]
@@ -187,8 +197,11 @@ for (pair in 1:nrow(high_corr)) {
 
 ```
 
-```{r remove unnecessary variables}
-# [Seymur]
+### Streamlining the Dataset for Enhanced Analysis
+
+This section of the analysis is dedicated to refining the dataset by removing variables that are redundant or unnecessary for our modeling objectives. Specifically, we remove columns such as 'sqft_living', 'yr_renovated', 'yr_built', 'month', and 'day'. This pruning is an essential step in data preparation, ensuring that our dataset is lean and focused, which helps in improving the efficiency and accuracy of our predictive models. By eliminating these variables, we aim to enhance the clarity and relevancy of our data analysis.
+
+```{r Remove unnecessary variables}
 
 # Remove redundant, unnecessary columns from dataset. 
 df_house[c("sqft_living", "yr_renovated", "yr_built", "month", "day")] <- list(NULL)
@@ -680,13 +693,13 @@ metrics %>%
 ```
 
 
-```{r}
-# Best Subset Regression
+```{r Best Subset Regression}
 
-# This is not working
-k1<-ols_step_best_subset(house_lm1)
-k1
-plot(k1, guide="none")
+# This is not working - commenting out temporaryly to improve knit times
+#k1<-ols_step_best_subset(house_lm1)
+#k1
+#plot(k1, guide="none")
+
 ```
 
 \newpage
@@ -694,18 +707,17 @@ plot(k1, guide="none")
 
 *Build an alternative model based on one of the following approaches to predict price: regression tree, NN, or SVM. Explore using a logistic regression. Check the applicable model assumptions. Apply in-sample and out-of-sample testing, backtesting and review the comparative goodness of fit of the candidate models. Describe step by step your procedure to get to the best model and why you believe it is fit for purpose.*
 
-## Regression Trees (Kaleo)
+In this section, we explore alternative predictive models to challenge our primary regression model. This is crucial for ensuring our final model's robustness by comparing it against these 'challenger' models. Here, we experiment with different modeling techniques such as regression trees, neural networks, or SVMs, evaluating their performance and applicability. This comparative analysis helps in understanding the strengths and weaknesses of various approaches, guiding us to select the most effective model for predicting real estate prices in King County.
+
+## Regression Tree Models
 
 ```{r}
-# [Kaleo]
 
 depth_values <- c(2, 3, 4, 5, 6)
 
 mse_values = numeric(length(depth_values))
 test_rsq_values = numeric(length(depth_values))
 train_rsq_values = numeric(length(depth_values))
-
-# commented out cross validation to save computation time!!
 
 for (i in seq_along(depth_values)) {
   depth = depth_values[i]
@@ -717,14 +729,18 @@ for (i in seq_along(depth_values)) {
   predictions_test <- predict(model, newdata = test.dat)
   predictions_train <- predict(model, newdata = train.dat)
 
+  # Plot the tree
+  rpart.plot(model, main=paste("Regression Tree - Depth: ", depth), type = 4, extra = 1)
+  
   mse_values[i] <- mean((predictions_test - test.dat$price)^2)
   test_rsq_values[i] = cor(predictions_test,test.dat$price)^2
   train_rsq_values[i] = cor(predictions_train,train.dat$price)^2
 }
 ```
 
+
+
 ```{r}
-#[Kaleo]
 
 # Plot the results
 plot(depth_values, mse_values, type = "b", xlab = "Depth Value", ylab = "Root Mean Squared Error", main = "Regression Tree Cross Validation Test MSE (depth)")
@@ -732,10 +748,10 @@ plot(depth_values, mse_values, type = "b", xlab = "Depth Value", ylab = "Root Me
 plot(depth_values, test_rsq_values, type="o", xlab = "Depth Value", ylab = "Test R-squared", main = "Regression Tree Cross Validation Test R-squared (depth)")
 text(depth_values,test_rsq_values,labels=round(test_rsq_values,4),pos=3,xpd=TRUE)
 ```
-```{r}
-#[Kaleo]
-#fitting decision tree with best depth
 
+```{r}
+
+# Fitting decision tree with best depth
 dtm = rpart(price ~ ., 
               data = train.dat, 
               method = "anova",
@@ -748,23 +764,25 @@ dt_test_results = postResample(pred = dt_test_pred, obs = test.dat$price)
 dt_train_results = postResample(pred = dt_train_pred, obs = train.dat$price)
 dt_test_sse = sum((dt_test_pred - test.dat$price)^2)
 
-#variable importance may be more reliable if considering other values from cross validation...work in progress
+# Variable importance may be more reliable if considering other values from cross validation
 barplot(imp,las=2,main="Variable importance in Decision Tree")
 ```
+
 ```{r}
-# [Kaleo]
-#append results
+
+# Append results
 results.df = rbind(results.df,data.frame(model = "Decision Tree Regression",
                             R.Squared.Train = unname(dt_train_results[2]),
                             R.Squared.Test = unname(dt_test_results[2]),
                             RMSE.test = unname(dt_test_results[1]),
                             SSE.test = dt_test_sse))
+
 ```
 
 ## Random Forest Model
-```{r}
-# [Kaleo]
-# Fitting Random Forest model
+
+```{r Fitting Random Forest model}
+
 # Cross validate number of features!!...work in progress
 
 rf = randomForest(price ~ ., 
@@ -772,18 +790,16 @@ rf = randomForest(price ~ .,
               ntree = 500,
               importance=TRUE)
 ```
-```{r}
-# [Kaleo]
-#variable importance
+
+```{r RF variable importance}
+#
 randomForest::varImpPlot(rf)
 
 #fix permuation importance - better for mixed data (ordinal, categorical, quantitative,etc)
 # rfPermute(rf,train.dat,train.dat$price,na.action=na.omit,nrep = 100)
 ```
 
-```{r}
-#[Kaleo]
-# Random Forest Results
+```{r Random Forest Results}
 
 rf_train_pred = predict(rf, newdata = train.dat)
 rf_test_pred = predict(rf, newdata = test.dat)
@@ -799,47 +815,12 @@ results.df = rbind(results.df,data.frame(model = "Random Forest",
                             SSE.test = rf_test_sse))
 ```
 
-## Regression Tree Model
 
-```{r}
-# [Luciano]
-
-# Build the regression tree model
-tree_model <- rpart(price ~ ., data = train.dat, method = "anova")
-print(summary(tree_model))
-
-#rpart.plot(tree_model, main="Regression Tree", type = 4, extra = 1, under=TRUE, faclen=0, cex=0.75)
-rpart.plot(tree_model, main="Regression Tree", type = 4, extra = 1)
-
-# Prediction and Performance
-tree_predictions <- predict(tree_model, test.dat)
-tree_rmse <- sqrt(mean((tree_predictions - test.dat$price)^2))
-print(paste("Tree RMSE:", tree_rmse))
-
-```
-
-
-## Neural Network Model
-
-```{r}
-# [Luciano]
-
-# Build the neural network model
-nn_model <- nnet(price ~ ., data = train.dat, size = 5, linout = TRUE, trace = FALSE, MaxNWts = 5000)
-print(nn_model)
-
-# Prediction and Performance
-nn_predictions <- predict(nn_model, test.dat, type = "raw")
-nn_rmse <- sqrt(mean((nn_predictions - test.dat$price)^2))
-print(paste("NN RMSE:", nn_rmse))
-
-```
 
 
 ## Support Vector Machine (SVM) Model
 
 ```{r}
-# [Luciano]
 
 # Build the SVM model
 svm_model <- svm(price ~ ., data = train.dat)
@@ -864,6 +845,15 @@ test.dat.norm <- as.data.frame(lapply(test.dat, normalize))
 
 ```{r build the NN model}
 house_NN <- neuralnet(price ~ ., data = train.dat.norm, hidden = c(2, 2), linear.output = TRUE)
+print(house_NN)
+```
+
+```{r plot the NN model}
+
+# Network Architecture Visualization
+plot(house_NN)
+
+
 ```
 
 ```{r evaluate performance}

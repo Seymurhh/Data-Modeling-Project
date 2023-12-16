@@ -47,7 +47,6 @@ library(Metrics)
 # Functions 
 
 # Function to load or download libraries
-
 loadLib = function(libName)
 { 
   if(require(libName, character.only=TRUE))
@@ -66,7 +65,6 @@ loadLib = function(libName)
 }
 
 # Helper to display regression function with n coefficients
-
 dispRegFunc <- function(reg) {
   coefs <- reg$coefficients
   b0 = coefs[1]
@@ -78,16 +76,17 @@ dispRegFunc <- function(reg) {
   my_formula
 }
 
-
-
+# Function to calculate SSE
 sse <- function(predicted, actual) {
   sum((predicted - actual)^2)
 }
 
+# Function to calculate RMSE
 rmse <- function(predicted, actual) {
   sqrt(mean((predicted - actual) ^ 2))
 }
 
+# Function to calculate R2
 r_squared <- function(predicted, actual) {
   correlation <- cor(predicted, actual)
   r_squared_value <- correlation^2
