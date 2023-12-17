@@ -155,7 +155,7 @@ In the "Correlation Analysis" section, we delve into examining the relationships
 
 ```{r Correlation Matrix}
 
-# Correlation Matrix
+# Create a correlation Matrix
 cor_matrix = cor(ndf_house)
 correlation_df = as.data.frame(cor_matrix)
 
@@ -165,8 +165,9 @@ x_high = subset(ndf_house,
                            sqft_living15, sqft_above, grade, bathrooms, 
                            bedrooms, floors, lat))
 
+# Create a Heatmap 
 pheatmap(cor_matrix,
-         color = colorRampPalette(c("blue", "white", "red"))(20),
+         color = colorRampPalette(c("#6baed6", "white", "pink"))(20),
          main = "Correlation Matrix Heatmap",
          fontsize = 8,
          cellwidth = 15,
@@ -185,6 +186,9 @@ This section focuses on identifying highly correlated variables within the King 
 
 ```{r Identifying highly correlated variables}
 
+# Identifying highly correlated variables
+
+# Retain only the numeric columns in the dataset
 df_house <- df_house[sapply(df_house, is.numeric)]
 
 # use 'complete.obs' to handle missing values
@@ -194,6 +198,7 @@ threshold <- 0.8
 high_corr <- which(abs(corr_matrix) > threshold, arr.ind = TRUE)
 high_corr <- high_corr[high_corr[, 1] < high_corr[, 2], ]
 
+# Find highly correlated predictors
 for (pair in 1:nrow(high_corr)) {
     row <- high_corr[pair, "row"]
     col <- high_corr[pair, "col"]
@@ -256,8 +261,9 @@ ggpairs(ndf_house,
 
 # Histogram of house prices
 ggplot(df_house, aes(x = price)) +
-  geom_histogram(bins = 30, fill = "blue", color = "black") +
-  labs(title = "Histogram of House Prices", x = "Price", y = "Count")
+  geom_histogram(bins = 30, fill = "#6baed6", color = "black") +
+  labs(title = "Histogram of House Prices", x = "Price", y = "Count") +
+  theme_minimal()
 
 ```
 **Analysis**: The first boxplot shows that house prices generally increase with the number of bedrooms, but vary widely, especially for homes with more bedrooms. The second boxplot indicates that house prices rise with better house grades, with greater price variability at higher grades.Both plots demonstrate that while there is a general trend of increasing price with more bedrooms and higher grades, there is also a considerable variation within these categories. The presence of outliers suggests that factors other than the number of bedrooms and house grade can significantly influence house prices.
@@ -266,15 +272,21 @@ ggplot(df_house, aes(x = price)) +
 
 # Boxplot for price by number of bedrooms
 ggplot(df_house, aes(x = factor(bedrooms), y = price)) + 
-  geom_boxplot() +
+  geom_boxplot(fill = "#6baed6", color = "black") +
   labs(title = "Boxplot of Prices by Number of Bedrooms", 
-       x = "Number of Bedrooms", y = "Price")
+       x = "Number of Bedrooms", y = "Price") +
+  theme_minimal()
 
-# Boxplot for price by house grade
+```
+
+```{r Outlier analysis using Boxplots 2}
+
+# Boxplot for price by construction grade
 ggplot(df_house, aes(x = factor(grade), y = price)) + 
-  geom_boxplot() +
-  labs(title = "Boxplot of Prices by House Grade", 
-       x = "Grade", y = "Price")
+  geom_boxplot(fill = "#6baed6", color = "black") +
+  labs(title = "Boxplot of Prices by Construction Grade", 
+       x = "Grade", y = "Price") +
+  theme_minimal()
 
 ```
 **Analysis**: the average price tends to increase with the number of bedrooms up to a certain point, but then the trend is less consistent. For instance, homes with 6 bedrooms have a higher average price than those with 7 or 8 bedrooms, and the average price for homes with 11 bedrooms is lower than for those with fewer bedrooms. There is a notable outlier at 33 bedrooms with a relatively low average price, which could indicate an atypical property or data error.
@@ -284,7 +296,7 @@ ggplot(df_house, aes(x = factor(grade), y = price)) +
 # Average Price analysis
 average_prices <- aggregate(price ~ bedrooms, data = ndf_house, FUN = mean)
 ggplot(average_prices, aes(x = factor(bedrooms), y = price)) +
-  geom_bar(stat = "identity", fill = "skyblue") +
+  geom_bar(stat = "identity", fill = "#6baed6", color = "black") +
   labs(title = "Average Price by Number of Bedrooms",
        x = "Number of Bedrooms",
        y = "Average Price") +
@@ -297,8 +309,10 @@ ggplot(average_prices, aes(x = factor(bedrooms), y = price)) +
 ```{r Outlier analysis for Waterfront vs Mountain view}
 
 ggplot(df_house, aes(x = factor(waterfront), y = price)) +
-  geom_boxplot() +
-  labs(title = "Boxplot of House Prices by Waterfront", x = "Waterfront", y = "Price")
+  geom_boxplot(fill = "#6baed6", color = "black") +
+  labs(title = "Boxplot of House Prices by Waterfront", 
+       x = "Waterfront", y = "Price") +
+  theme_minimal()
 
 ```
 
@@ -311,7 +325,7 @@ The map clearly shows a correlation between location and property value per squa
 # Scatter plot of properties
 ggplot(data = ndf_house, aes(x = long, y = lat, color = price)) +
   geom_point(alpha = 0.5) +
-  scale_color_gradient(low = "blue", high = "red") +
+  scale_color_gradient(low = "#6baed6", high = "red") +
   labs(title = "Geographical Distribution of House Prices in King County",
        x = "Longitude", y = "Latitude", color = "Price") +
   theme_minimal()
@@ -594,17 +608,17 @@ par(mfrow=c(2,3))
 
 # Call the plot function for each plot individually with modified parameters
 plot(stepwise_model$rsquare, 
-     xlab=NA, ylab="R-Square", pch=20, col="blue", type="b")
+     xlab=NA, ylab="R-Square", pch=20, col="#6baed6", type="b")
 plot(stepwise_model$aic, 
-     xlab=NA, ylab="AIC", pch=20, col="blue", type="b")
+     xlab=NA, ylab="AIC", pch=20, col="#6baed6", type="b")
 plot(stepwise_model$sbc, 
-     xlab=NA, ylab="SBC", pch=20, col="blue", type="b")
+     xlab=NA, ylab="SBC", pch=20, col="#6baed6", type="b")
 plot(stepwise_model$adjr, 
-     xlab=NA, ylab="Adj. R-Square", pch=20, col="blue", type="b")
+     xlab=NA, ylab="Adj. R-Square", pch=20, col="#6baed6", type="b")
 plot(stepwise_model$mallows_cp, 
-     xlab=NA, ylab="Mallows Cp", pch=20, col="blue", type="b")
+     xlab=NA, ylab="Mallows Cp", pch=20, col="#6baed6", type="b")
 plot(stepwise_model$sbic, 
-     xlab=NA, ylab="SBIC", pch=20, col="blue", type="b")
+     xlab=NA, ylab="SBIC", pch=20, col="#6baed6", type="b")
 
 ```
 
@@ -875,9 +889,16 @@ Analysis of the regression tree model's accuracy across varying depths, utilizin
 
 ```{r Plot the RMSE results}
 
-plot(depth_values, mse_values, type = "b", 
-     xlab = "Depth Value", ylab = "Root Mean Squared Error", 
-     main = "Regression Tree Cross Validation (RMSE vs depth)")
+# Data frame for plotting RMSE results
+plot_data <- data.frame(Depth=depth_values, RMSE=mse_values)
+
+# Plot RMSE results vs Depth of the Tree
+ggplot(plot_data, aes(x=Depth, y=RMSE)) +
+  geom_point(color = "#6baed6") +  # Add points
+  geom_line(color = "#6baed6") +   # Connect points with a line
+  labs(x = "Depth Value", y = "Root Mean Squared Error", 
+       title = "Regression Tree Cross Validation (RMSE vs depth)") +
+  theme_minimal()  # Use a minimal theme for a clean look
 
 ```
 
@@ -889,11 +910,17 @@ Influence of tree depth on the regression tree model's explanatory power, as ind
 
 ```{r Plot the R-squared results}
 
-plot(depth_values, test_rsq_values, type="o", 
-     xlab = "Depth Value", ylab = "Test R-squared", 
-     main = "Regression Tree Cross Validation (R2 vs depth)")
-text(depth_values, test_rsq_values, 
-     labels=round(test_rsq_values,4), pos=3, xpd=TRUE)
+# Data frame for plotting R-squared results
+plot_data <- data.frame(Depth=depth_values, TestR2=test_rsq_values)
+
+# Plot R-squared vs Depth of the Tree
+ggplot(plot_data, aes(x=Depth, y=TestR2)) +
+  geom_point(color="#6baed6") +  # Add points with color
+  geom_line(color="#6baed6") +   # Connect points with a line of the same color
+  geom_text(aes(label=round(TestR2, 4)), vjust=-0.5, color="black") + # Add text labels
+  labs(x = "Depth Value", y = "Test R-squared", 
+       title = "Regression Tree Cross Validation (R2 vs depth)") +
+  theme_minimal()  # Use a minimal theme for a clean look
 
 ```
 
@@ -914,7 +941,7 @@ dt_test_sse = sum((dt_test_pred - test.dat$price)^2)
 
 # Variable importance may be more reliable 
 # if considering other values from cross validation
-blue_gradient <- colorRampPalette(c("blue", "white"))(length(imp))
+blue_gradient <- colorRampPalette(c("#6baed6", "white"))(length(imp))
 barplot(imp, las=2, main="Variable Importance in Decision Tree", 
         col=blue_gradient, cex.names=0.8, cex.axis=0.7, cex.lab=0.7)
 
@@ -1168,14 +1195,33 @@ The model must comply with various assumptions for regression model to hold such
 
 # Appendix
 
-Supplementary Analyses and Visuals
-
+The Appendix provides additional detailed analyses and visual representations that complement the main body of the report. This section includes further explorations of model variations, extended error assessments, and a complete overview of performance metrics, enriching the reader's comprehension of the research findings.
 
 ## Enhanced Model Visualizations
 
 ### Regression Tree Depth Variations
 
+Supplementary plots showcasing regression trees of various depths that were not included in the main analysis. These visualizations represent alternative models with simplified complexities, providing a broader understanding of the model's behavior with less granular splitting. They serve as a reference for how the model's structure changes with depth, offering additional context to the primary findings presented in the report.
 
+```{r Plot extra Regression Trees }
+
+# Plot the least significant trees from the regresssion tree model
+depth_values <- c(2, 3, 4, 5)
+
+for (i in seq_along(depth_values)) {
+  depth = depth_values[i]
+
+  tree_model = rpart(price ~ ., 
+                     data = train.dat, 
+                     method = "anova", 
+                     control=rpart.control(maxdepth=depth))
+  
+  # Less significant trees that were not plotted in the model analysis
+  rpart.plot(tree_model, main=paste("Regression Tree - Depth: ", depth), 
+             type = 4, extra = 1, tweak=1.6)
+}
+
+```
 
 ### Additional Predictive Accuracy Charts
 
