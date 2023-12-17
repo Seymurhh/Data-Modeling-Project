@@ -19,6 +19,8 @@ output:
 editor_options: 
   markdown: 
     wrap: 72
+
+bibliography: references.bib
 ---
 \newpage
 ```{r setup, include=FALSE}
@@ -387,7 +389,7 @@ In Section II, we dove into the analytical scrutiny of King County's house sales
 
 In this crucial phase of the model development process, we strategically divide our dataset into separate subsets for training and validation purposes. Establishing a 70-30 split, we allocate the majority for model training, ensuring ample data for learning, while reserving 30% for testing, which will serve as a litmus test for our model's predictive power in real-world scenarios.
 
-```{r}
+```{r splitting the data into train and test}
 set.seed(1023)
 n<-dim(df_house)[1]
 IND<-sample(c(1:n),round(n*0.7))
@@ -405,7 +407,7 @@ dim(test.dat)
 
 In this step, we meticulously construct a linear regression model, leveraging the training dataset to ascertain how well our predictors explain the variability in house prices. The initial model fitting is a critical juncture where we assess the significance of each predictor and the overall strength of the model.
 
-```{r Model fitting}
+```{r Regression model fitting}
 
 # Fit a linear regression model based on the training dataset
 house_lm<-lm(price ~.,data=train.dat)
@@ -452,7 +454,7 @@ These observations suggest that the model may benefit from transformations or ro
 
 ## Variable Inflation Factor (VIF) Analysis
 
-The Variable Inflation Factor (VIF) analysis is conducted to assess multicollinearity among predictors in the regression model. VIF quantifies how much the variance of an estimated regression coefficient increases if your predictors are correlated. A VIF above 5 suggests a problematic level of multicollinearity.
+The Variable Inflation Factor (VIF) analysis is conducted to assess multicollinearity among predictors in the regression model. VIF quantifies how much the variance of an estimated regression coefficient increases if your predictors are correlated. A VIF above 5 suggests a problematic level of multicollinearity. 
 
 
 ```{r Calculate VIF}
@@ -691,9 +693,10 @@ bptest(house_lm, studentize = FALSE)
 **Analysis:** The results of the Breusch-Pagan test show a BP statistic of 65708 with 82 degrees of freedom, and the p-value is less than 2.2e-16. This extremely low p-value indicates strong evidence against the null hypothesis of homoskedasticity (constant error variance). Thus, we reject the null hypothesis in favor of the alternative, which is that heteroskedasticity is present in the model. The presence of heteroskedasticity suggests that the error variance changes with the level of the independent variables, which may imply that the model could be improved. For instance, this could be addressed by transforming variables, adding variables to the model that capture the effect on variance, or using heteroskedasticity-consistent standard error estimators. In practical terms, this test suggests that the model's predictive performance may vary across different values of the predictors, and care should be taken when interpreting the results, especially concerning the significance of the predictors and the prediction intervals for the house prices. Further investigation and potential model adjustments are warranted to address this issue.
 
 
+
 ## Box-Cox Transformation
 
-The Box-Cox transformation is a statistical technique used to stabilize variance and make the data more closely adhere to the assumption of normality, which is a key consideration in linear regression modeling. This section of the analysis focuses on determining the optimal lambda parameter for the Box-Cox transformation of the response variable, which in this context is the house price. By conducting an initial wide search followed by a refined search for lambda, we aim to identify the value that maximizes the log-likelihood of our model, thereby indicating the most appropriate transformation for our dataset.
+The Box-Cox transformation[@libretexts_boxcox] is a statistical technique used to stabilize variance and make the data more closely adhere to the assumption of normality, which is a key consideration in linear regression modeling. This section of the analysis focuses on determining the optimal lambda parameter for the Box-Cox transformation of the response variable, which in this context is the house price. By conducting an initial wide search followed by a refined search for lambda, we aim to identify the value that maximizes the log-likelihood of our model, thereby indicating the most appropriate transformation for our dataset.
 
 
 ```{r Box-Cox Initial wide search}
@@ -791,6 +794,12 @@ cat(paste(strwrap(output, width=80), collapse="\n"))
 ## Predictions on Test Data and Model Comparison
 
 This section is designed to evaluate how well the Box-Cox transformed model performs on unseen data and to compare this performance with the original model.
+
+```{r}
+PredictedTest<-exp(predict(house_lm1,test.dat))
+ModelTest<-data.frame(obs = test.dat$price, pred=PredictedTest)
+round(defaultSummary(ModelTest),3)
+```
 
 ```{r Test BoxCox model predictions}
 
@@ -1118,8 +1127,9 @@ ols_plot_resid_lev(house_lm_c1)
 
 # Deleted Studentized Residuals vs Fitted Values Plot
 ols_plot_resid_stud_fit(house_lm_c1)
-```
 
+```
+ 
 ```{r}
 cbind(house_lm_c$coefficients,house_lm_huber$coefficients)
 ```
@@ -1619,6 +1629,8 @@ The model must comply with various assumptions for regression model to hold such
 # Bibliography
 
 *Please include all references, articles and papers in this section.*
+
+
 
 # Appendix
 
