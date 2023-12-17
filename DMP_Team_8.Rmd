@@ -136,6 +136,7 @@ df_house$age = ifelse(df_house$renovated == 1,
 
 head(df_house)
 
+df_house_original <- df_house
 ```
 
 ### Reinterpreting Zipcode as a Categorical Variable
@@ -147,8 +148,9 @@ Transformation of the 'zipcode' variable from numerical to categorical data. Typ
 # Convert Zipcode to a Categorical variable (char) instead of number
 df_house$zipcode = as.character(df_house$zipcode)
 
-```
+head(df_house)
 
+```
 
 ## Enhancing Data Integrity: Addressing Redundancies and Correlations
 
@@ -194,10 +196,10 @@ This section focuses on identifying highly correlated variables within the King 
 # Identifying highly correlated variables
 
 # Retain only the numeric columns in the dataset
-df_house <- df_house[sapply(df_house, is.numeric)]
+df_house_cor <- df_house[sapply(df_house, is.numeric)]
 
 # use 'complete.obs' to handle missing values
-corr_matrix <- cor(df_house, use = "complete.obs")
+corr_matrix <- cor(df_house_cor, use = "complete.obs")
 
 threshold <- 0.8
 high_corr <- which(abs(corr_matrix) > threshold, arr.ind = TRUE)
@@ -207,10 +209,9 @@ high_corr <- high_corr[high_corr[, 1] < high_corr[, 2], ]
 for (pair in 1:nrow(high_corr)) {
     row <- high_corr[pair, "row"]
     col <- high_corr[pair, "col"]
-    cat(names(df_house)[row], "and", names(df_house)[col], 
+    cat(names(df_house_cor)[row], "and", names(df_house_cor)[col], 
         "have a correlation of", corr_matrix[row, col], "\n")
 }
-
 ```
 
 ### Streamlining the Dataset for Enhanced Analysis
@@ -250,7 +251,7 @@ summary(df_house$price)
 
 This subsection is dedicated to exploring the relationships between house prices and other key variables using pairwise scatter plots. These visualizations aim to unearth correlations that could indicate influential factors in housing prices within King County. By examining these relationships, we can hypothesize which features may drive property values and warrant further investigation in our predictive modeling.
 
-The Pairwise scatter plot below shows the correlation between highly correlated variables extracted from heatmap correlation matrix.
+The Pairwise scatter plot below shows the correlation between highly correlated variables between price and other independent variables extracted from heatmap correlation matrix.
 
 ```{r Pairwise scatter plot}
 
@@ -386,7 +387,6 @@ In Section II, we dove into the analytical scrutiny of King County's house sales
 The KC House sales dataset is split into train(70%) and test(30%) datasets, with 15129 observations in the train dataset and 6484 observations in the test dataset.
 
 ```{r}
-
 set.seed(1023)
 n<-dim(df_house)[1]
 IND<-sample(c(1:n),round(n*0.7))
