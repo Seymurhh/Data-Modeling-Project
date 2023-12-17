@@ -441,9 +441,10 @@ plot(house_lm)
 ```
 
 **Analysis:** The diagnostic plots from the model indicate potential issues with the regression model. We observe the following:
-  - LINEARITY ASSUMPTION: The Residuals vs Fitted plot shows a non-random pattern, suggesting that linearity assumptions may be violated. There's a cone shape along the line, which is mostly horizontal along 0.
-  - NORMALITY ASSUMPTION: The Q-Q plot of residuals reveals deviations from normality, particularly in the tails. The residuals do not meet the normality assumption.
-  - CONSTANT VARIANCE ASSUMPTION: The Scale-Location plot indicates heteroscedasticity, implying that the variance of residuals is not constant. The HOMOSCEDASTICITY ASSUMPTION is violated. Moreover the line is curvilinear.
+  - *LINEARITY ASSUMPTION:* The Residuals vs Fitted plot shows a non-random pattern, suggesting that linearity assumptions may be violated. There's a cone shape along the line, which is mostly horizontal along 0.
+  - *NORMALITY ASSUMPTION:* The Q-Q plot of residuals reveals deviations from normality, particularly in the tails. The residuals do not meet the normality assumption.
+  - *CONSTANT VARIANCE ASSUMPTION:* The Scale-Location plot indicates heteroscedasticity, implying that the variance of residuals is not constant. 
+  - The *HOMOSCEDASTICITY ASSUMPTION* is violated. Moreover the line is curvilinear.
   - Lastly, the Residuals vs Leverage plot flags several potential outliers and influential points that could unduly affect the model’s predictions. 
   
 These observations suggest that the model may benefit from transformations or robust regression techniques to meet the necessary assumptions.
@@ -474,6 +475,8 @@ Removing 'zipcode' actually reduces the model predictability from 80% to about 6
 
 # Remove redundant, unnecessary columns from dataset. 
 df_house[c("lat", "long")] <- list(NULL)
+train.dat[c("lat", "long")] <- list(NULL)
+test.dat[c("lat", "long")] <- list(NULL)
 
 set.seed(1023)
 n<-dim(df_house)[1]
@@ -483,6 +486,7 @@ test.dat<-df_house[-c(IND),]
 
 dim(train.dat)
 dim(test.dat)
+
 ```
 
 ```{r refitting the model after removing lat and long}
@@ -491,6 +495,7 @@ dim(test.dat)
 house_lm<-lm(price ~.,data=train.dat)
 summary(house_lm)
 
+# Variable Inflation Factor of the adjusted Model 
 vif(house_lm)
 
 ```
@@ -545,26 +550,51 @@ updated <- as.formula(
 house_lm <- update(house_lm, updated)
 summary(house_lm)
 
-# Display the Regression function of Y = Price
-dispRegFunc(house_lm)
+# Display the Regression function of Price
+output <- capture.output(dispRegFunc(house_lm))
+
+# Print the output of dispRegFunc wrapped in max 80 char width
+cat(paste(strwrap(output, width=80), collapse="\n"))
 
 ```
 
 **Analysis:** Post removal of predictors deemed insignificant (p-value > 0.05), the model's R-squared decreased insignificantly, indicating a negligible loss in explanatory power. This reduction is counterbalanced by the benefits of a more parsimonious model, which can lead to better generalization on unseen data. The remaining predictors continue to display strong significance levels (p < 0.05), assuring their relevance in price prediction. The residual standard error remains relatively stable, further affirming the refined model's validity.
 
 
+## Diagnostic Plotting for Residual Analysis
 
+This section is dedicated to visually diagnosing the regression model's fit using residual plots. These plots are essential tools for detecting issues with model assumptions such as linearity, normality, and homoscedasticity.
 
-**Analysis:**
+### Boxplot of Residuals
 
-On plotting the boxplot of residuals, we observe multiple outliers on both ends of the whiskers. Moreover, when we plot the residuals against the fitted values, we observe that the residuals spread out with increase in fitted values along x-axis.
+The boxplot provides a visual summary of the residuals' distribution, offering insights into potential outliers and the central tendency of the model's errors.
 
-```{r}
+```{r Boxplot of Residuals}
 
 ei <- house_lm$residuals
+ei_df <- data.frame(residuals = ei)
 
-boxplot(ei, horizontal=TRUE, 
-        staplewex=0.5, col=2, xlab="House Price Regression Residuals")
+ggplot(ei_df, aes(y = residuals)) +
+  geom_boxplot(fill = "#6baed6", color = "black") +
+  coord_flip() +  # To make the boxplot horizontal
+  labs(title = "House Price Regression Residuals", x = "") +
+  theme_minimal() +
+  theme(
+    axis.title.y = element_blank(),  
+    axis.text.y = element_blank(), 
+  )
+
+```
+
+**Analysis:** There are individual points far from the central box, which are potential outliers. These points suggest instances where the model predictions were significantly off from the actual house prices. The presence of these outliers could be due to unusual or extreme values within the dataset that the model could not accurately predict, or they could indicate potential leverage points that are influencing the model fit. While the residuals being centered around zero is a good sign, the significant outliers indicate that there might be instances where the model fails to capture the underlying pattern. These could be due to the model not accounting for non-linear relationships or interactions between predictors, or they could be a result of data issues such as incorrect entries, extreme values, or influential points that have a disproportionate effect on the model. In summary, the boxplot suggests that while the model is generally good at predicting house prices, there are a few cases where it performs poorly. The reasons for these poor predictions should be explored further. This could include looking into the data points corresponding to the outliers to understand what might be causing these large residuals and considering model improvements or data transformations if necessary.
+
+
+### Residuals vs. Fitted Values Plot
+
+This plot examines the relationship between residuals and predicted values, crucial for identifying non-linear patterns that a linear model may not capture.
+
+```{r Fitted vs residuals}
+
 
 plot(house_lm$fitted.values, ei, 
      xlab="Fitted Values House Linear Model", 
@@ -573,25 +603,37 @@ plot(house_lm$fitted.values, ei,
 ```
 
 
+**Analysis:** This plot suggests that while the model may be suitable for a range of predictions, there are certain areas, especially at the higher end of the price spectrum, where the model's assumptions do not hold, and its predictive accuracy is compromised. Further investigation and possible model refinement are warranted.
 
 
-**Analysis:**
-Predictors with low p-values of < 2.2e-16 (e.g. bedrooms, bathrooms, sqft_living, etc.) are statistically significant and are important in predicting price. Some predictors that have a have higher p-value (e.g. floors, zipcode, month, day) may not be statistically significant in predicting price.
+## Analysis of Variance (ANOVA) for Model Comparison
 
-```{r}
+The ANOVA test has been conducted to compare the variance explained by each predictor variable in the linear regression model to the overall variance of the response variable, house prices. The F-statistic is used to test the null hypothesis that a predictor's group means are equal (i.e., the variable has no effect) against the alternative hypothesis that at least one group mean is different.
 
+```{r Run ANOVA}
+
+# Run Analysis of Variance on the current model
 anova(house_lm)
 
 ```
 
+**Analysis:** The ANOVA indicates that most of the variables included in the model are significant predictors of house prices. However, the significance of floors is not established, and the high residual sum of squares suggests room for model improvement, possibly by including additional predictors or refining existing ones. Some details:
+  - *Significant Predictors:* Almost all variables, except floors, have a highly significant p-value (less than 0.05), indicated by "< 2.2e-16", which means these variables contribute significantly to the model and have a strong association with the house price.
+  - *Floors Variable:* The floors variable, however, has a p-value of 0.229, which is greater than the typical alpha level of 0.05, suggesting that this predictor does not have a statistically significant effect on the house price within the model.
+  - *Effect Sizes:* The Sum Sq column represents the total variance explained by each variable. For example, bathrooms, with the highest Sum Sq value, contribute a large effect to the price, indicating that as the number of bathrooms in a house increases, the price is significantly affected.
+  - *Predictor Importance:* The F-value column gives a sense of the relative importance of each predictor. Higher values indicate a greater impact on the response variable. Here, bathrooms and grade have the highest F values, suggesting they are key predictors of house prices in the model.
+  - *Model Adequacy:* The Residuals row shows the variance that is not explained by the model. A large Sum Sq for residuals suggests that there might be other factors affecting house prices that are not included in the model.
 
 
-**Analysis:**
 
-A two sides t statistical test is used for testing individual coefficients and their significance. The critical t -value applicable given alpha=0.01 and n-2 degrees of freedom is 2.576.
-H0: intercept =0, HA: intercept is not 0
-H0: slope= 0    , HA: slope is not 0
-Decision rule: when t > t critical reject null
+## Statistical Tests for Individual Coefficients
+
+Individual coefficient significance testing within a regression model is crucial to identify which predictors have a statistically significant impact on the response variable. In this case, a two-tailed t-test is employed for each predictor to test the null hypothesis ($H_0$) that the coefficient is equal to zero (no effect) against the alternative hypothesis (HA) that the coefficient is not equal to zero (significant effect). The critical t-value is determined based on the alpha level ($\alpha=0.01$) and the degrees of freedom associated with the model.
+
+A two sides t statistical test is used for testing individual coefficients and their significance. The critical t -value applicable given $\alpha=0.01$ and n-2 degrees of freedom is 2.576.
+$H_0$: intercept = 0, $H_a$: intercept is not 0
+$H_0$: slope = 0    , $H_a$: slope is not 0
+Decision rule: when t > t critical reject null hypothesis
 
 The model, as indicated by the significant coefficients, suggests that features such as the number of bedrooms, bathrooms, square footage of living space, waterfront status, view, grade, etc, play a statistically significant role in predicting the house price.
 
@@ -619,72 +661,140 @@ my_estimates <- matrix_coef[ , 1]
 
 ```
 
+**Analysis:** It indicates that many predictors have t-values significantly larger than the critical t-value of 2.576, suggesting that these variables have coefficients significantly different from zero. For instance, predictors such as bedrooms, bathrooms, and waterfront status exhibit large t-values and very small p-values, far below the 0.01 significance level, confirming their strong influence on house prices.
 
 $H_o$: Error variances are constant
 $H_a$: Error variances are not constant
 Decision Rule is if statistic> critical reject the null
-or if p-value < alpha (0.01) reject the hull
+or if p-value < $\alpha$ (0.01) reject the hull
 
-P value is < 2.2e-16. So we reject $H_o$, Error variances are not constant.
+P value is < 2.2e-16. So we reject $H_0$, Error variances are not constant.
 
-**Analysis:**
+The intercept, despite its negative coefficient, is significantly different from zero, which suggests that the base price for the model (the price when all other predictors are zero) is a meaningful value in the context of the dataset.
 
-```{r}
+The analysis also highlights the complexity and the nuanced nature of real estate pricing, where a multitude of factors must be considered to accurately predict prices. The significant predictors identified through these t-tests can provide actionable insights for real estate valuation and investment strategies.
 
+In summary, most predictors in the model contribute significantly to predicting house prices, with a few exceptions. These insights can guide future model refinement and the selection of variables for more robust predictive analytics.
+
+
+## Breusch-Pagan Test for Heteroskedasticity
+
+The Breusch-Pagan test is a statistical test used to detect the presence of heteroskedasticity in a regression model. Heteroskedasticity occurs when the variance of the errors is not constant across all levels of the independent variables. When heteroskedasticity is present, it can lead to inefficiency of the estimates and can affect the validity of some statistical tests.
+
+```{r Run BP test}
+
+# Test the model for Heteroskedasticity
 bptest(house_lm, studentize = FALSE)
 
 ```
 
-**Analysis:**
-For Boxcox transormation, the optimal lambda is -0.04 with 95% confidence interval range which is close to zero. Although, we can estimate lambda to be zero and apply logarithmic transformation of the data, we have done the boxcox transformation with exact optimal lambda value for better accuracy.
+**Analysis:** The results of the Breusch-Pagan test show a BP statistic of 65708 with 82 degrees of freedom, and the p-value is less than 2.2e-16. This extremely low p-value indicates strong evidence against the null hypothesis of homoskedasticity (constant error variance). Thus, we reject the null hypothesis in favor of the alternative, which is that heteroskedasticity is present in the model. The presence of heteroskedasticity suggests that the error variance changes with the level of the independent variables, which may imply that the model could be improved. For instance, this could be addressed by transforming variables, adding variables to the model that capture the effect on variance, or using heteroskedasticity-consistent standard error estimators. In practical terms, this test suggests that the model's predictive performance may vary across different values of the predictors, and care should be taken when interpreting the results, especially concerning the significance of the predictors and the prediction intervals for the house prices. Further investigation and potential model adjustments are warranted to address this issue.
 
-```{r}
 
-bc <- boxcox(house_lm, lambda=seq(-4, 4, by=0.1))
-lambda <- bc$x[which.max(bc$y)]
-cat("The optimal lambda is:", lambda, "\n")
+## Box-Cox Transformation
+
+The Box-Cox transformation is a statistical technique used to stabilize variance and make the data more closely adhere to the assumption of normality, which is a key consideration in linear regression modeling. This section of the analysis focuses on determining the optimal lambda parameter for the Box-Cox transformation of the response variable, which in this context is the house price. By conducting an initial wide search followed by a refined search for lambda, we aim to identify the value that maximizes the log-likelihood of our model, thereby indicating the most appropriate transformation for our dataset.
+
+
+```{r Box-Cox Initial wide search}
+
+# Initial wide search for a Lambda value
+bc_initial <- boxcox(house_lm, lambda=seq(-4, 4, by=0.1))
+lambda_initial <- bc_initial$x[which.max(bc_initial$y)]
+cat("The initial optimal lambda is:", lambda_initial, "\n")
 
 ```
 
-**Analysis:** After boxcox transformation, we observe that:
-- Residual Standard Error has reduced significantly to 0.004981 from 193,600
-- Multiple R-square has increased to 84.03% from 71.38%
-- p-value remains same at < 2.2e-16
+**Analysis:** The initial search for the optimal lambda within the range of -4 to 4 suggested a lambda of approximately 0.1212, indicating that a transformation is indeed necessary. To hone in on the most suitable value, a refined will be conducted next in search for a more refined value of lambda.
 
-Overall, the model appears to be a much better fit that before. From the model plot we observe the following:
-- LINEARITY ASSUMPTION: The Residuals vs Fitted plot looks better than before and confirms that a linear regression model is appropriate
-- NORMALITY ASSUMPTION: The points are much better aligned along the diagonal in the Q-Q Residuals plot, however some tails remain
-- CONSTANT VARIANCE ASSUMPTION: The Scale Location plot points to constant variance
-- There are still some outlier observations which may be to be impactful as seen from the the Residual vs. Leverage graph
 
-```{r}
+```{r Box-Cox refined lambda}
 
+# Narrow down search based on initial results
+lower_bound <- max(-4, lambda_initial - 0.5)
+upper_bound <- min(4, lambda_initial + 0.5)
+
+# More precise search around the initial estimate
+bc_refined <- boxcox(house_lm, lambda=seq(lower_bound, upper_bound, by=0.01))
+lambda_refined <- bc_refined$x[which.max(bc_refined$y)]
+cat("The refined optimal lambda is:", lambda_refined, "\n")
+
+# Apply refined value to the variable to be used on the transformation
+lambda <- lambda_refined
+
+```
+
+**Analysis:** The proximity of the optimal lambda to zero hints at the potential efficacy of a logarithmic transformation to improve model assumptions. However, the best lambda identified through the Box-Cox method is not exactly zero, suggesting that a Box-Cox transformation with this specific lambda may offer a better model fit than a straightforward logarithmic transformation. Applying this transformation to the house price is expected to yield residuals with more constant variance and a distribution that more closely approximates normality. These improvements are crucial for enhancing the reliability of the model's predictions and the validity of its inferential statistics. The refined Box-Cox transformation with a lambda of 0.0912 should now be applied to the house price data, and the resulting model should be evaluated against the original model. 
+
+
+## Final Model Evaluation
+
+After applying the Box-Cox transformation to the dataset, a final model evaluation is essential to determine the impact of the transformation on the model's performance. This evaluation will assess how the transformation has potentially improved the model's adherence to the assumptions of linear regression, including linearity, normality of errors, homoscedasticity, and the absence of influential outliers. These characteristics are critical for the validity of the model's statistical inferences and its predictive capabilities.
+
+
+### Summary of Transformed Model
+
+This subsection provides a summary of the linear regression model fitted to the transformed response variable. The summary includes key metrics such as the coefficients, their standard errors, t-values, and significance levels. These metrics offer insight into the relationship between the predictors and the transformed house prices, highlighting which variables have a significant effect on the outcome. This summary is pivotal in understanding the dynamics of the real estate market as captured by the model.
+
+```{r Reffit the Box-Cox transformed model}
+
+# Reffit the Box-Cox transformed model
 house_lm1<-lm(price^lambda~.,data=train.dat)
 summary(house_lm1)
 
 ```
 
-```{r}
+**Analysis:** The transformed model exhibits a significant reduction in the residuals' magnitude, with the majority now lying closer to zero, which suggests an improved fit of the model. The coefficients for bathrooms, sqft_lot, waterfront, view, condition, grade, sqft_above, and sqft_basement remain significant, indicating a consistent impact on the transformed house prices. The substantial F-statistic and near-zero p-value confirm the model's overall statistical significance. However, the bedrooms variable has become insignificant, implying that its effect on the transformed price is minimal. The multiple R-squared of 0.8845 is quite high, signifying that the transformed model explains a large portion of the variance in the data. Overall, the Box-Cox transformation appears to have enhanced the model's explanatory power.
 
-# Plot
+
+### Diagnostic Plots of Transformed Model
+
+Diagnostic plots are instrumental in visually assessing the model's compliance with regression assumptions. This subsection will exhibit a series of plots, including Residuals vs. Fitted, Normal Q-Q, Scale-Location, and Residuals vs. Leverage. Each plot serves a distinct purpose, from detecting non-linearity and outliers to checking for equal variance and the influence of individual data points. A close examination of these plots will reveal any remaining anomalies post-transformation and guide any further refinement needed for the model.
+
+```{r Plot the BoxCox Transformed Model}
+
+# Plot the BoxCox Transformed Model
 par(mfrow=c(2,2))
 plot(house_lm1)
 
 ```
 
+**Analysis:** The diagnostic plots suggest that while the Box-Cox transformation has likely improved the model fit, there are still some areas where the model does not perfectly meet the assumptions of linear regression. There may be potential outliers or influential points that need to be investigated further. Additionally, the presence of heteroscedasticity might be addressed with additional transformations or by considering a different type of model, such as generalized least squares. It would also be prudent to examine the leverage points more closely to determine if any action, such as exclusion or weighting, is necessary.
+
+After boxcox transformation, we observe that:
+  - Residual Standard Error has reduced significantly to 0.1072 from 160,300 
+  - Multiple R-square has increased to 88.5% from 80.45%
+  - p-value remains same at < 2.2e-16
+
+Overall, the model appears to be a much better fit that before. From the model plot we observe the following:
+  - *LINEARITY ASSUMPTION:* The Residuals vs Fitted plot looks better than before and confirms that a linear regression model is appropriate.
+  - *NORMALITY ASSUMPTION:* The points are much better aligned along the diagonal in the Q-Q Residuals plot, however some heavy tails remain on both ends.
+  - *CONSTANT VARIANCE ASSUMPTION:* The Scale Location plot points to constant variance
+  - There are still some outlier observations which may be to be impactful as seen from the the Residual vs. Leverage graph
+
+
+### Display of Transformed Regression Equation
+
+The transformation's efficacy is encapsulated in the regression equation of the transformed model. This subsection will present the regression function, explicitly showing the transformed relationship between the predictors and the outcome. By interpreting this function, we can understand how the Box-Cox transformation affects the scale and interactions of the variables within the model, thus providing a comprehensive view of the model's structure after the transformation.
+
 ```{r}
 
-# Print the output of dispRegFunc wrapped in max 90 char width
+# Display the Regression function of Price^Lambda
 output <- capture.output(dispRegFunc(house_lm1))
+
+# Print the output of dispRegFunc wrapped in max 80 char width
 cat(paste(strwrap(output, width=80), collapse="\n"))
 
 ```
 
-**Analysis:** On predicting the values of the Boxcox transformed model on the test dataset, we observe a R-square test of 75.79% compared to R-square train of 84.03%, from which we conclude that the transformed model generalizes well to new data.
 
-```{r}
+## Predictions on Test Data and Model Comparison
 
-# Test data Predictions
+This section is designed to evaluate how well the Box-Cox transformed model performs on unseen data and to compare this performance with the original model.
+
+```{r Test BoxCox model predictions}
+
+# Test BoxCox model predictions
 pred <- predict(house_lm1,test.dat)^(1/lambda)
 act <- test.dat$price
 
@@ -694,7 +804,7 @@ house_lm1_test_residuals <- act - pred
 house_lm1_test_rsq <- 1 - var(house_lm1_test_residuals) / var(act)
 house_lm1_test_sse <- sum((act - pred)^2)
 
-# Append results
+# Append results 
 results.df = rbind(results.df, 
                    data.frame(model = "Linear Regression Test after Boxcox",
                               R.Squared.Train = summary(house_lm1)$r.square,
@@ -705,6 +815,9 @@ results.df = rbind(results.df,
 print(results.df)
 
 ```
+
+**Analysis:** The output indicates an improvement in the model's performance on the test data after applying the Box-Cox transformation. The R-squared value for the test data increased from 0.8124474 to 0.8401063, indicating a better fit to the test data. Similarly, the RMSE decreased from 164370.3 to 151941.1, suggesting more accurate predictions from the transformed model. The SSE also decreased, further confirming the enhanced predictive performance post-transformation. Overall, the Box-Cox transformation has led to a model that explains a greater proportion of variance in house prices and predicts them with higher accuracy, as evidenced by the improved R-squared and lower RMSE and SSE values. This demonstrates the effectiveness of the transformation in stabilizing variance and improving model fit for the data at hand.
+
 
 \newpage
 # IV. Model Performance Testing
