@@ -64,7 +64,7 @@ As we progressed, the need for a rigorous evaluation framework became apparent. 
 In conclusion, this project represents a significant endeavor in the field of predictive analytics for real estate. Through a blend of traditional statistical methods and advanced machine learning techniques, we have developed a model that not only predicts house prices in King County with a high degree of accuracy but also offers insights into the factors that drive these prices. As we move forward, our focus will be on refining the model, exploring new data sources, and adapting to the changing dynamics of the real estate market.
 
 \newpage
-# II. Description of the data and quality (15 points)
+# II. Description of the data and quality
 
 In this section, we meticulously dissect the King County house sales dataset, a crucial foundation for our predictive modeling. This dataset is a rich amalgamation of diverse variables, ranging from basic house attributes like square footage and number of bedrooms, to more nuanced features such as the year of renovation and the presence of a waterfront. The quality of this dataset is paramount, as it directly influences the reliability and precision of our predictive models. We delve into a detailed assessment of the data quality, addressing aspects like completeness, consistency, and potential biases, ensuring that our analysis is built on a robust and accurate foundation.
 
@@ -74,6 +74,7 @@ The dataset presented for analysis encompasses a range of housing attributes for
 
 ```{r Data Overview}
 
+# Overview of the King County House Sales Dataset
 df_house = read.csv("KC_House_Sales.csv")
 cat("Number of NA values in dataframe:", sum(is.na(df_house)))
 head(df_house)
@@ -88,21 +89,24 @@ The data cleaning process has involved removing non-informative variables such a
 
 ```{r Data types, Categories and Cleaning}
 
-#removing `id` column
+# The "id" column must be removed
 df_house = subset(df_house, select = -id)
 
-#converting `price` to numeric
+# The data in the column "price" must be converted to numeric
 df_house$price <- as.numeric(gsub("[\\$,]", "", df_house$price))
 
-##cleaning `date` and adding `year`,`month`,`day` columns
+# Cleanup of "date" and creation of "year", "month", and "day" columns
 df_house$date <- as.POSIXct(df_house$date, format = "%Y%m%d")
 df_house$year <- as.numeric(format(df_house$date, "%Y"))
 df_house$month <- as.numeric(format(df_house$date, "%m"))
 df_house$day <- as.numeric(format(df_house$date, "%d"))
 
+# Collect columns that are numeric only
 ndf_house = df_house[sapply(df_house, is.numeric)]
+# This action ends up the column "date" from the dataset
 
 head(df_house)
+
 ```
 
 ## Categorical Variables and Age Analysis
@@ -140,6 +144,7 @@ Transformation of the 'zipcode' variable from numerical to categorical data. Typ
 
 ```{r Zipcode to Character}
 
+# Convert Zipcode to a Categorical variable (char) instead of number
 df_house$zipcode = as.character(df_house$zipcode)
 
 ```
@@ -167,7 +172,7 @@ x_high = subset(ndf_house,
 
 # Create a Heatmap 
 pheatmap(cor_matrix,
-         color = colorRampPalette(c("#6baed6", "white", "pink"))(20),
+         color = colorRampPalette(c("#6baed6", "white", "#ff3366"))(20),
          main = "Correlation Matrix Heatmap",
          fontsize = 8,
          cellwidth = 15,
@@ -177,7 +182,7 @@ pheatmap(cor_matrix,
 
 ```
 
-**Analysis**: Following the generation of the correlation plot, a thorough analysis is vital. For example, high correlations between 'sqft_living', 'grade', 'sqft_above', and 'price' indicate a strong linear relationship, suggesting that larger homes, built with a high-quality level of construction and design, and more above-ground square footage, tend to be more expensive. These variables could serve as key predictors in a pricing model. We will explore them further int he next model development process. However, it's essential to note that correlation does not imply causation. Variables like 'zipcode', now treated as categorical, will not be represented in this correlation matrix, reminding us to consider geographical influences separately. Additionally, observing any potential multicollinearity between predictors is crucial, as it can affect the reliability of the regression model. Finally, interpreting these correlations within the context of the real estate market in King County provides insights into local housing trends and factors influencing house prices.
+**Analysis:** Following the generation of the correlation plot, a thorough analysis is vital. For example, high correlations between 'sqft_living', 'grade', 'sqft_above', and 'price' indicate a strong linear relationship, suggesting that larger homes, built with a high-quality level of construction and design, and more above-ground square footage, tend to be more expensive. These variables could serve as key predictors in a pricing model. We will explore them further int he next model development process. However, it's essential to note that correlation does not imply causation. Variables like 'zipcode', now treated as categorical, will not be represented in this correlation matrix, reminding us to consider geographical influences separately. Additionally, observing any potential multicollinearity between predictors is crucial, as it can affect the reliability of the regression model. Finally, interpreting these correlations within the context of the real estate market in King County provides insights into local housing trends and factors influencing house prices.
 
 
 ### Unraveling High Correlation in Data Variables
@@ -240,11 +245,12 @@ summary(df_house$price)
 
 ## Graphical Analysis
 
-The pairwise scatter plot shows the correlation between highly correlated variables extracted from heatmap correlation matrix.
 
-- there is a strong correlation between sqft_living and price, indicated that as the living area increases, so does the house price increase.
-- A strong positive correlation with grade, implying that higher-quality houses tend to be more expensive.
-- Each variable's distribution is shown on the diagonal, with price notably skewed towards lower values, indicating most homes are on the more affordable end of the spectrum with fewer high-priced outliers.
+### Exploratory Analysis through Pairwise Scatter Plots
+
+This subsection is dedicated to exploring the relationships between house prices and other key variables using pairwise scatter plots. These visualizations aim to unearth correlations that could indicate influential factors in housing prices within King County. By examining these relationships, we can hypothesize which features may drive property values and warrant further investigation in our predictive modeling.
+
+The Pairwise scatter plot below shows the correlation between highly correlated variables extracted from heatmap correlation matrix.
 
 ```{r Pairwise scatter plot}
 
@@ -255,18 +261,29 @@ ggpairs(ndf_house,
 
 ```
 
-**Analysis**: The histogram below shows the distribution of house prices, revealing that most houses are in the lower price range with a significant decrease in the number of houses as the price increases, indicating a right-skewed distribution with relatively few high-priced houses.
+**Analysis:** The pairwise scatter plots reveal varying degrees of correlation between house prices and selected features. Notably, the square footage of living space (sqft_living) and construction grade (grade) show substantial positive correlations with price, indicating that larger, higher-quality homes tend to command higher prices. Conversely, the number of bedrooms shows a weaker correlation, suggesting that while size matters, the mere number of bedrooms is less predictive of price. These insights are critical for focusing our modeling efforts on the most impactful predictors. Also, notice that each variable's distribution is shown on the diagonal, with price notably skewed towards lower values, indicating most homes are on the more affordable end of the spectrum with fewer high-priced outliers.
+
+
+### Distribution of Sales Prices
+
+This subsection aims to analyze the distribution of sales prices across the dataset. The histogram provides visual insight into the range and frequency of house prices, highlighting the market's tendencies.
 
 ```{r Histogram of prices}
 
-# Histogram of house prices
+# Plot a Histogram of house sales prices
 ggplot(df_house, aes(x = price)) +
   geom_histogram(bins = 30, fill = "#6baed6", color = "black") +
   labs(title = "Histogram of House Prices", x = "Price", y = "Count") +
   theme_minimal()
 
 ```
-**Analysis**: The first boxplot shows that house prices generally increase with the number of bedrooms, but vary widely, especially for homes with more bedrooms. The second boxplot indicates that house prices rise with better house grades, with greater price variability at higher grades.Both plots demonstrate that while there is a general trend of increasing price with more bedrooms and higher grades, there is also a considerable variation within these categories. The presence of outliers suggests that factors other than the number of bedrooms and house grade can significantly influence house prices.
+
+**Analysis:** The histogram below shows the distribution of house prices, revealing that most houses are in the lower price range with a significant decrease in the number of houses as the price increases, indicating a right-skewed distribution with relatively few high-priced houses. This skewness suggests that while the majority of the market consists of moderately priced homes, luxury properties significantly drive up the average price.
+
+
+### Variability of Housing Prices Across Bedroom Counts
+
+This subsection will analyze the relationship between the number of bedrooms in a property and its market price. By employing a boxplot, we can visually discern the central tendency and dispersion of house prices within each bedroom category, revealing insights into how additional bedrooms could potentially affect property values.
 
 ```{r Outlier analysis using Boxplots}
 
@@ -279,6 +296,13 @@ ggplot(df_house, aes(x = factor(bedrooms), y = price)) +
 
 ```
 
+**Analysis:** The provided boxplot depicts the distribution of house prices with respect to the number of bedrooms. It shows a general increase in median price as the number of bedrooms increases up to a certain point, after which the median price plateaus and then fluctuates. Notably, homes with an exceptionally high number of bedrooms (e.g., 11, 33) exhibit significant price variability and outlier presence. This suggests a more complex relationship where factors beyond mere bedroom count may influence the higher pricing tiers. The presence of outliers, especially in categories with fewer bedrooms, indicates exceptions to general trends, possibly due to location, property condition, or other value-adding features. 
+
+
+### Price Variability by Construction Grade
+
+This subsection explores the relationship between house prices and construction grades. Construction grade is an indicator of the quality and design of a building, which can significantly impact its market value. The boxplot visualizes the distribution of house prices within each grade category, revealing how price variability and central tendencies change with the grade.
+
 ```{r Outlier analysis using Boxplots 2}
 
 # Boxplot for price by construction grade
@@ -289,7 +313,13 @@ ggplot(df_house, aes(x = factor(grade), y = price)) +
   theme_minimal()
 
 ```
-**Analysis**: the average price tends to increase with the number of bedrooms up to a certain point, but then the trend is less consistent. For instance, homes with 6 bedrooms have a higher average price than those with 7 or 8 bedrooms, and the average price for homes with 11 bedrooms is lower than for those with fewer bedrooms. There is a notable outlier at 33 bedrooms with a relatively low average price, which could indicate an atypical property or data error.
+
+**Analysis:** The boxplot of house prices by construction grade shows that higher-grade homes tend to have a higher median price, indicating a positive correlation between construction quality and house value. Notably, the spread and range of prices increase with the grade, suggesting greater diversity in the higher-end market. Outliers are present across all grades, but are especially pronounced at higher grades, which may indicate a niche market for luxury homes with exceptional features not captured by the grade alone.
+
+
+### Average Price by Number of Bedrooms
+
+In this subsection, the analysis aims to uncover how the number of bedrooms influences the average house price. This investigation will reveal market trends and preferences, offering insights into the most sought-after property types.
 
 ```{r Average Price analysis}
 
@@ -304,10 +334,16 @@ ggplot(average_prices, aes(x = factor(bedrooms), y = price)) +
 
 ```
 
-**Analysis**: the spread of prices for waterfront homes is wider, indicating more variability in price. Notably, waterfront properties have more high-priced outliers, suggesting that while many waterfront homes are priced higher, a few are exceptionally expensive. Non-waterfront homes have a more compact price distribution but also feature outliers, indicating some are priced significantly above the median.
+**Analysis:** The bar chart depicting "Average Price by Number of Bedrooms" reveals a nuanced view of the housing market. Unlike the variability presented in the "Boxplot of Prices by Number of Bedrooms," which shows a broad price range across different bedroom counts, the bar chart focuses on average values, smoothing out extreme data points. It highlights a peak in average prices for mid-range bedroom counts, suggesting a higher market value for these properties. This pattern may reflect a balance between affordability and space that appeals to a wider demographic, contrasting with the outliers seen in the boxplot. There is a notable outlier at 33 bedrooms with a relatively low average price, which could indicate an atypical property or data error.
+
+
+### House Prices by Waterfront Presence
+
+Here the analysis examines the impact of a waterfront location on house prices. This visual comparison aims to highlight any premium attached to waterfront properties, which is a common factor in real estate valuation.
 
 ```{r Outlier analysis for Waterfront vs Mountain view}
 
+# Boxplot for Outlier analysis of Waterfront vs Mountain view
 ggplot(df_house, aes(x = factor(waterfront), y = price)) +
   geom_boxplot(fill = "#6baed6", color = "black") +
   labs(title = "Boxplot of House Prices by Waterfront", 
@@ -316,15 +352,18 @@ ggplot(df_house, aes(x = factor(waterfront), y = price)) +
 
 ```
 
-**Analysis**: From geographical map, it is evident that properties situated around the latitude line of 47.6 and longitude between -122.25 and -122.00, which corresponds to the central and northern parts of Seattle, command higher prices per square foot. The relatively lower-priced properties per square foot, shown in orange, are more dispersed and located primarily south of central Seattle, extending towards Tacoma, as well as in the outlying suburban areas.It is also noticeable that along the latitudinal line around 47.4, there are pockets of high-priced properties per square foot, potentially indicating affluent neighborhoods or areas with high-value real estate.
+**Analysis:** The boxplot illustrates a significant difference in the distribution of house prices based on the presence of a waterfront. Non-waterfront properties (denoted by 0) show a dense clustering of prices with fewer outliers, suggesting a more uniform pricing structure within this category. On the other hand, waterfront properties (denoted by 1) exhibit a higher median price and a much wider spread, indicating a greater variance in how much buyers are willing to pay for this luxury feature. The presence of outliers in the waterfront category also suggests that certain premium properties command exceptional prices, which are not as prevalent in non-waterfront real estate. This analysis underscores the value added by waterfront locations, which can significantly increase property values and attract a niche market willing to invest in these desirable features.
 
-The map clearly shows a correlation between location and property value per square foot, with central urban areas exhibiting the highest values. This pattern is typical for urban centers where proximity to amenities, employment opportunities, and other socioeconomic factors drive up real estate prices.
+
+### Mapping Price Hotspots: Geospatial Analysis of King County's Real Estate
+
+This geospatial visualization maps the distribution of house prices across King County. By plotting price data against longitude and latitude, we aim to identify regional price trends and potential hotspots of high-value properties. This analysis provides insights into how location within the county correlates with housing prices, supporting a comprehensive understanding of the real estate market dynamics.
 
 ```{r Geo dist of house prices in King County}
 
-# Scatter plot of properties
-ggplot(data = ndf_house, aes(x = long, y = lat, color = price)) +
-  geom_point(alpha = 0.5) +
+# Scatter plot of properties with mid-point transition color
+ggplot(data = df_house, aes(x = long, y = lat, color = price)) +
+  geom_point(alpha = 10) +
   scale_color_gradient(low = "#6baed6", high = "red") +
   labs(title = "Geographical Distribution of House Prices in King County",
        x = "Longitude", y = "Latitude", color = "Price") +
@@ -332,9 +371,12 @@ ggplot(data = ndf_house, aes(x = long, y = lat, color = price)) +
 
 ```
 
-## Summary of the section II
+**Analysis:** The geographical map scatter plot reveals a concentration of higher-priced properties (indicated by warmer colors) along specific geographic corridors, more specifically situated around the latitude line of 47.6 and longitude between -122.25 and -122.00, which corresponds to the central and northern parts of Seattle, suggesting that certain areas command premium prices. Notably, waterfront locations and urban centers show elevated price levels. The relatively lower-priced properties per square foot, shown in colder colors, are more dispersed and located primarily south of central Seattle, extending towards Tacoma, as well as in the outlying suburban areas. It is also noticeable that along the latitudinal line around 47.4, there are pockets of high-priced properties per square foot, potentially indicating affluent neighborhoods or areas with high-value real estate. This spatial pattern underscores the importance of location in property valuation and can guide potential investments and urban development strategies. The map clearly shows a correlation between location and property value per square foot, with central urban areas exhibiting the highest values. This pattern is typical for urban centers where proximity to amenities, employment opportunities, and other socioeconomic factors drive up real estate prices. The visual representation also highlights outliers, which could be subject to further investigation to understand the factors driving their exceptional market value.
 
-In Section II, we thoroughly explored the King County house sales dataset, examining both continuous and categorical variables through statistical tests and extensive graphical analysis. We highlighted the strong correlations between variables like 'sqft_living', 'grade', 'sqft_above', and 'price'. Transformations and dummy variable creation were crucial in preparing data for modeling. The section concluded with the development of new variables to encapsulate the age and renovation status of properties, offering deeper insights for our predictive models.
+## Summary: Comprehensive Data Assessment and Visual Exploration
+
+In Section II, we dove into the analytical scrutiny of King County's house sales dataset and thoroughly explored it, examining both continuous and categorical variables through statistical tests and extensive graphical analysis, vital for the predictive modeling accuracy. We highlighted the strong correlations between variables like 'sqft_living', 'grade', 'sqft_above', and 'price'. The section progresses through statistical examinations, categorical conversions, and novel variable formulations, all while maintaining a critical eye on data integrity. Extensive graphical analyses elucidate underlying trends, from scatter plots to geospatial mappings, provided nuanced insights into the factors influencing house prices, setting the stage for advanced predictive modeling in subsequent sections, and painting a vivid landscape of the market's intricacies. This foundational work paves the way for sophisticated modeling techniques, poised to capture the essence of the county's real estate dynamics.
+
 
 \newpage
 # III. Model Development Process
@@ -550,7 +592,7 @@ cat(paste(strwrap(output, width=80), collapse="\n"))
 
 ```
 
-**Analysis**: On predicting the values of the Boxcox transformed model on the test dataset, we observe a R-square test of 75.79% compared to R-square train of 84.03%, from which we conclude that the transformed model generalizes well to new data.
+**Analysis:** On predicting the values of the Boxcox transformed model on the test dataset, we observe a R-square test of 75.79% compared to R-square train of 84.03%, from which we conclude that the transformed model generalizes well to new data.
 
 ```{r}
 
