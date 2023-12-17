@@ -461,13 +461,19 @@ vif(house_lm)
 
 ```
 
-**Analysis:** The VIF results show that most variables have a VIF value below 5, indicating acceptable levels of multicollinearity. However, 'sqft_above' and 'zipcode' exhibit higher VIF values, with 'sqft_above' surpassing the critical value of 5 and 'zipcode' being significantly high due to the large number of dummy variables it represents. This suggests that 'sqft_above' and the high dimensionality of 'zipcode' may be causing multicollinearity issues, which could inflate the variances of the parameter estimates and may warrant further investigation or remedial measures such as dimensionality reduction techniques.
+**Analysis:** The VIF statistics indicate that 'sqft_above' and 'zipcode' display significant multicollinearity, with 'zipcode' showing an exceptionally high VIF due to numerous dummy variables. Additionally, 'lat' and 'long' have high VIF values, suggesting that geographical variables are interrelated. These high VIF values suggest a need to consider reducing multicollinearity, possibly by combining related variables, removing some predictors, or applying regularization techniques to improve the model's predictive performance and interpretability.
 
+
+## Refinement of Predictive Model Post-VIF Analysis
+
+The process of refining a predictive model often involves the elimination of variables that cause multicollinearity. This subsection illustrates how the identification of high VIF scores led to the removal of the 'lat' and 'long' variables, which are likely to be interdependent, and the subsequent reevaluation of the model.
+
+Removing 'zipcode' actually reduces the model predictability from 80% to about 65%, we're keep it as is and will work on some transformation later on.
 
 ```{r Remove highly correlated variables ccording to VIF analysis}
 
 # Remove redundant, unnecessary columns from dataset. 
-df_house[c("lat","long")] <- list(NULL)
+df_house[c("lat", "long")] <- list(NULL)
 
 set.seed(1023)
 n<-dim(df_house)[1]
@@ -479,9 +485,6 @@ dim(train.dat)
 dim(test.dat)
 ```
 
-
-
-
 ```{r refitting the model after removing lat and long}
 
 # Refitting the Model after removing Latitude and Longitude
@@ -492,7 +495,12 @@ vif(house_lm)
 
 ```
 
-**Analysis:** The R-square values on both training and test data are quite close - 71.38% and 70.86% respectively. This suggests that the model generalizes well to new data, maintaining a similar level of explanatory power. The RMSE of 204,868.3 indicates the average magnitude of errors in predicting house prices on the test data. The SSE of 2.721402e+14 represents the sum of squared differences between predicted and observed values on the test data. A lower RMSE and SSE indicates better model fit, and we will explore furher on how these values can be lowered.
+**Analysis:** After removing the 'lat' and 'long' variables to address multicollinearity, the model was re-fitted, resulting in an unchanged R-squared value of approximately 80.65%. This indicates that the removal of these variables did not significantly affect the model's explanatory power. The residual standard error remains around 159,600, and the p-value is still less than 2.2e-16, suggesting that the model remains statistically significant. The GVIF values post-refinement show that while multicollinearity may still be present, its severity has decreased, pointing towards an improved model fit and predictive capability.
+
+
+## Evaluating Model Efficacy with Test Data
+
+This subsection assesses the linear regression model's performance on the test data. By applying the model to unseen data, we measure its predictive accuracy and generalizability beyond the training dataset.
 
 ```{r}
 
@@ -516,14 +524,18 @@ print(results.df)
 
 ```
 
-**Analysis:**
-The insignificant predictor sqft_lot is dropped and the model is refitted. We observe that the Multiple R-square value remains unchanged at 71.38%. The model is as follows:
+**Analysis:** The model demonstrates robust predictive performance with an R-squared of 0.8124 on the test data, indicating that about 81.24% of the variability in the test price data is explained by the model. This is a slight increase from the training R-squared of 80.65%, suggesting good model generalization. The RMSE of 164,370.3 quantifies the average deviation between the predicted and actual prices, and the SSE of 1.75182e+14 represents the total deviation squared, both of which are metrics used to gauge the model’s accuracy and precision on new data.
 
-Price = -74344803.92767 + -34633.405255bedrooms + 32821.338262bathrooms + 143.671881sqft_living + 8767.015515floors + 531351.549043waterfront + 52065.87946view + 24875.912771condition + 82737.693562grade + 22.301049sqft_above + -896.223982yr_built + 4065.130653yr_renovated + -507.797776zipcode + 473638.095898lat + -206204.537141long + 21.65297sqft_living15 + -0.25171sqft_lot15 + 38482.930296year + 1380.790546month + -331.741298day + -7982223.272107renovated + 1440.530732age + 101303.883852price_binary
+
+## Enhancing Model Accuracy by Dropping Insignificant Predictors
+
+This segment of the analysis concentrates on refining the model by discarding predictors that do not contribute significantly to the prediction of house prices. This is achieved by examining the p-values of the predictors and eliminating those that surpass a chosen significance level, thereby simplifying the model without notably affecting its explanatory power.
+
+The columns 'sqft_lot15' and 'year' are being dropped for having a p-value > 0.05, subsequently 'year' and 'month' are also being dropped because of their similarity to the calculated column 'age' that takes year built or renovated to determine how modern the construction might be.
 
 ```{r}
 
-predictors_to_drop <- c("sqft_lot")
+predictors_to_drop <- c("sqft_lot15", "year", "month", "day")
 
 # Update the model by excluding the specified predictors
 updated <- as.formula(
@@ -532,9 +544,16 @@ updated <- as.formula(
 
 house_lm <- update(house_lm, updated)
 summary(house_lm)
+
+# Display the Regression function of Y = Price
 dispRegFunc(house_lm)
 
 ```
+
+**Analysis:** Post removal of predictors deemed insignificant (p-value > 0.05), the model's R-squared decreased insignificantly, indicating a negligible loss in explanatory power. This reduction is counterbalanced by the benefits of a more parsimonious model, which can lead to better generalization on unseen data. The remaining predictors continue to display strong significance levels (p < 0.05), assuring their relevance in price prediction. The residual standard error remains relatively stable, further affirming the refined model's validity.
+
+
+
 
 **Analysis:**
 
@@ -553,6 +572,9 @@ plot(house_lm$fitted.values, ei,
 
 ```
 
+
+
+
 **Analysis:**
 Predictors with low p-values of < 2.2e-16 (e.g. bedrooms, bathrooms, sqft_living, etc.) are statistically significant and are important in predicting price. Some predictors that have a have higher p-value (e.g. floors, zipcode, month, day) may not be statistically significant in predicting price.
 
@@ -561,6 +583,8 @@ Predictors with low p-values of < 2.2e-16 (e.g. bedrooms, bathrooms, sqft_living
 anova(house_lm)
 
 ```
+
+
 
 **Analysis:**
 
