@@ -135,8 +135,6 @@ df_house$age = ifelse(df_house$renovated == 1,
                       2023 - df_house$yr_built)
 
 head(df_house)
-
-df_house_original <- df_house
 ```
 
 ### Reinterpreting Zipcode as a Categorical Variable
@@ -150,6 +148,8 @@ df_house$zipcode = as.character(df_house$zipcode)
 
 head(df_house)
 
+df_house_original <- df_house
+df_house_original[c("date")] <- list(NULL)
 ```
 
 ## Enhancing Data Integrity: Addressing Redundancies and Correlations
@@ -216,13 +216,13 @@ for (pair in 1:nrow(high_corr)) {
 
 ### Streamlining the Dataset for Enhanced Analysis
 
-This section of the analysis is dedicated to refining the dataset by removing variables that are redundant or unnecessary for our modeling objectives. Specifically, we remove columns such as 'sqft_living', 'yr_renovated', 'yr_built', 'month', and 'day'. This pruning is an essential step in data preparation, ensuring that our dataset is lean and focused, which helps in improving the efficiency and accuracy of our predictive models. By eliminating these variables, we aim to enhance the clarity and relevancy of our data analysis.
+This section of the analysis is dedicated to refining the dataset by removing variables that are redundant or unnecessary for our modeling objectives. Specifically, we remove columns such as 'sqft_living', 'yr_renovated', 'yr_built'. This pruning is an essential step in data preparation, ensuring that our dataset is lean and focused, which helps in improving the efficiency and accuracy of our predictive models. By eliminating these variables, we aim to enhance the clarity and relevancy of our data analysis.
 
 ```{r Remove unnecessary variables}
 
 # Remove redundant, unnecessary columns from dataset. 
-df_house[c("sqft_living", "yr_renovated", 
-           "yr_built", "month", "day")] <- list(NULL)
+df_house[c("date","sqft_living", "yr_renovated", 
+           "yr_built")] <- list(NULL)
 
 ```
 
@@ -417,13 +417,40 @@ From the model plot we observe the following:
 
 house_lm<-lm(price ~.,data=train.dat)
 summary(house_lm)
+
+```
+```{r plotting the Reg model - house_lm}
 par(mfrow=c(2,2))
 plot(house_lm)
 MSE <- summary(house_lm)$sigma^2
 print(MSE)
-
 ```
+
+
 ```{r}
+vif(house_lm)
+```
+
+```{r Remove highly correlated variables ccording to VIF analysis}
+
+# Remove redundant, unnecessary columns from dataset. 
+df_house[c("lat","long")] <- list(NULL)
+
+set.seed(1023)
+n<-dim(df_house)[1]
+IND<-sample(c(1:n),round(n*0.7))
+train.dat<-df_house[IND,]
+test.dat<-df_house[-c(IND),]
+
+dim(train.dat)
+dim(test.dat)
+```
+
+```{r refitting the model after removing lat and long}
+
+house_lm<-lm(price ~.,data=train.dat)
+summary(house_lm)
+
 vif(house_lm)
 ```
 
@@ -583,7 +610,6 @@ plot(house_lm1)
 
 ```
 
-
 ```{r}
 
 # Print the output of dispRegFunc wrapped in max 90 char width
@@ -642,9 +668,22 @@ stepwise_model <- ols_step_both_p(house_lm1, penter = 0.05, premove = 0.05)
 
 sw_model <- lm(formula = stepwise_model$model, data = train.dat)
 summary(sw_model)
+```
+```{r plotting stepwise model}
 par(mfrow=c(2,2))
 plot(sw_model)
+```
 
+```{r stepwise regression with AIC criterion}
+library(olsrr)
+library(datasets)
+
+k <- ols_step_forward_aic(house_lm1)
+k
+
+#plot(k)
+#k1<-ols_step_best_subset(exp)
+#plot(k1)
 ```
 
 **Analysis:*
@@ -696,12 +735,24 @@ vif(house_lm1)
 **Analysis:**
 The Ridge regression generates a lambda value of 24125.359. The model performs well with a r-squared value of 0.69. The mean squared error is high with a value of 39,928,261,630. 
 
+```{r df for ridge}
+set.seed(1023)
+n<-dim(df_house_original)[1]
+IND<-sample(c(1:n),round(n*0.7))
+train.dat.o<-df_house_original[IND,]
+test.dat.o<-df_house_original[-c(IND),]
+
+dim(train.dat.o)
+dim(test.dat.o)
+```
+
+
 ```{r - Ridge Regression}
 # [Ibrahim]
 # Ridge Regression
 
 # Extract 'x' and 'y'
-x <- data.matrix(dplyr::select(train.dat, -price))
+x <- data.matrix(dplyr::select(train.dat.o, -price))
 y <- train.dat$price
 
 # Perform ridge regression
@@ -712,11 +763,11 @@ plot(house_lm_ridge)
 print(paste0("Ridge best lambda of ", round(best.lambda.ridge, digits = 3)))
 
 # Generating the results of the model
-price.predictors.train <- colnames(dplyr::select(train.dat, -price))
+price.predictors.train <- colnames(dplyr::select(train.dat.o, -price))
 
 ridge_results <- data.frame(
-  price.train = train.dat$price,
-  price.ridge.train = predict(house_lm_ridge, s = best.lambda.ridge, newx = data.matrix(train.dat[price.predictors.train]))
+  price.train = train.dat.o$price,
+  price.ridge.train = predict(house_lm_ridge, s = best.lambda.ridge, newx = data.matrix(train.dat.o[price.predictors.train]))
 )
 
 calc_metrics <- function(actual, predicted) {
@@ -754,8 +805,8 @@ print(paste0("Lasso best lambda of ", round(best.lambda.lasso, digits = 3)))
 
 # Generating the results of the model
 lasso_results <- data.frame(
-  price.train = train.dat$price,
-  price.lasso.train = predict(house_lm_lasso, s = best.lambda.lasso, newx = data.matrix(train.dat[price.predictors.train]))
+  price.train = train.dat.o$price,
+  price.lasso.train = predict(house_lm_lasso, s = best.lambda.lasso, newx = data.matrix(train.dat.o[price.predictors.train]))
 )
 
 calc_metrics <- function(actual, predicted) {
@@ -793,8 +844,8 @@ print(paste0("ElasticNet best lambda of ", round(best.lambda.enet, digits = 3)))
 
 # Generating the results of the model
 enet_results <- data.frame(
-  price.train = train.dat$price,
-  price.enet.train = predict(house_lm_enet, s = best.lambda.enet, newx = data.matrix(train.dat[price.predictors.train]))
+  price.train = train.dat.o$price,
+  price.enet.train = predict(house_lm_enet, s = best.lambda.enet, newx = data.matrix(train.dat.o[price.predictors.train]))
 )
 
 calc_metrics <- function(actual, predicted) {
@@ -852,7 +903,7 @@ par(mfrow=c(2,2))
 plot(house_lm_huber)
 ```
 
-```{r}
+```{r remove imfluential outliers based on huber weights criteria}
 # Taking a quick look at the Huber weights
 huber_weights <- data.frame(Observation = 1:nrow(train.dat), Residual = house_lm_huber$resid, Weight = house_lm_huber$w)
 
@@ -861,6 +912,41 @@ a <- huber_weights[order(house_lm_huber$w), ]
 head10 <- head(a$Observation,10)
 head10
 
+dim(train.dat)
+
+# weight threshold for outliers
+weight_threshold <- 0.25
+outlier_indices <- which(house_lm_huber$w < weight_threshold)
+train.dat.cleaned <- train.dat[-outlier_indices, ]
+
+house_lm_c <- lm(price ~ ., data = train.dat.cleaned)
+summary(house_lm_c)
+
+bcc <- boxcox(house_lm_c, lambda=seq(-4, 4, by=0.1))
+lambda_c <- bcc$x[which.max(bcc$y)]
+#cat("The optimal lambda is:", lambda, "\n")
+```
+```{r transforming the cleaned data model house_lm_c}
+house_lm_c1 <- lm(log(price) ~ ., data = train.dat.cleaned)
+summary(house_lm_c1)
+
+dim(train.dat.cleaned)
+
+par(mfrow = c(2,2))
+plot(house_lm_c1)
+
+# Looking at the residuals using the Cook's distance chart
+ols_plot_cooksd_chart(house_lm_c1)
+
+# Studentized Residuals vs Leverage Plot
+ols_plot_resid_lev(house_lm_c1)
+
+# Deleted Studentized Residuals vs Fitted Values Plot
+ols_plot_resid_stud_fit(house_lm_c1)
+```
+
+```{r}
+cbind(house_lm_c$coefficients,house_lm_huber$coefficients)
 ```
 
 
