@@ -382,7 +382,8 @@ In Section II, we dove into the analytical scrutiny of King County's house sales
 \newpage
 # III. Model Development Process
 
-*Build a regression model to predict price.  And of course,  create the train data set which contains 70% of the data and use set.seed (1023). The remaining 30% will be your test data set. Investigate the data and combine the level of categorical variables if needed and drop variables. For example, you can drop id, Latitude, Longitude, etc. *
+
+## Data Partitioning
 
 The KC House sales dataset is split into train(70%) and test(30%) datasets, with 15129 observations in the train dataset and 6484 observations in the test dataset.
 
@@ -397,7 +398,9 @@ dim(train.dat)
 dim(test.dat)
 ```
 
-**Analysis**:
+
+
+**Analysis:**
 The house_lm model to predict price has:
 - Residual Standard Error of 193,600
 - Multiple R-square of 71.38%
@@ -431,6 +434,7 @@ print(MSE)
 vif(house_lm)
 ```
 
+<<<<<<< HEAD
 ```{r Remove highly correlated variables ccording to VIF analysis}
 
 # Remove redundant, unnecessary columns from dataset. 
@@ -455,6 +459,11 @@ vif(house_lm)
 ```
 
 **Analysis**:
+=======
+
+
+**Analysis:**
+>>>>>>> d54ea266edace5adac2e16617c148eae0bac8d29
 The R-square values on both training and test data are quite close - 71.38% and 70.86% respectively. This suggests that the model generalizes well to new data, maintaining a similar level of explanatory power. The RMSE of 204,868.3 indicates the average magnitude of errors in predicting house prices on the test data. The SSE of 2.721402e+14 represents the sum of squared differences between predicted and observed values on the test data. A lower RMSE and SSE indicates better model fit, and we will explore furher on how these values can be lowered.
 
 ```{r}
@@ -479,7 +488,7 @@ print(results.df)
 
 ```
 
-**Analysis**:
+**Analysis:**
 The insignificant predictor sqft_lot is dropped and the model is refitted. We observe that the Multiple R-square value remains unchanged at 71.38%. The model is as follows:
 
 Price = -74344803.92767 + -34633.405255bedrooms + 32821.338262bathrooms + 143.671881sqft_living + 8767.015515floors + 531351.549043waterfront + 52065.87946view + 24875.912771condition + 82737.693562grade + 22.301049sqft_above + -896.223982yr_built + 4065.130653yr_renovated + -507.797776zipcode + 473638.095898lat + -206204.537141long + 21.65297sqft_living15 + -0.25171sqft_lot15 + 38482.930296year + 1380.790546month + -331.741298day + -7982223.272107renovated + 1440.530732age + 101303.883852price_binary
@@ -499,7 +508,7 @@ dispRegFunc(house_lm)
 
 ```
 
-**Analysis**:
+**Analysis:**
 
 On plotting the boxplot of residuals, we observe multiple outliers on both ends of the whiskers. Moreover, when we plot the residuals against the fitted values, we observe that the residuals spread out with increase in fitted values along x-axis.
 
@@ -516,7 +525,7 @@ plot(house_lm$fitted.values, ei,
 
 ```
 
-**Analysis**:
+**Analysis:**
 Predictors with low p-values of < 2.2e-16 (e.g. bedrooms, bathrooms, sqft_living, etc.) are statistically significant and are important in predicting price. Some predictors that have a have higher p-value (e.g. floors, zipcode, month, day) may not be statistically significant in predicting price.
 
 ```{r}
@@ -525,7 +534,7 @@ anova(house_lm)
 
 ```
 
-**Analysis**:
+**Analysis:**
 
 A two sides t statistical test is used for testing individual coefficients and their significance. The critical t -value applicable given alpha=0.01 and n-2 degrees of freedom is 2.576.
 H0: intercept =0, HA: intercept is not 0
@@ -566,14 +575,14 @@ or if p-value < alpha (0.01) reject the hull
 
 P value is < 2.2e-16. So we reject $H_o$, Error variances are not constant.
 
-**Analysis**:
+**Analysis:**
 
 ```{r}
 
 bptest(house_lm, studentize = FALSE)
 
 ```
-**Analysis**:
+**Analysis:**
 For Boxcox transormation, the optimal lambda is -0.04 with 95% confidence interval range which is close to zero. Although, we can estimate lambda to be zero and apply logarithmic transformation of the data, we have done the boxcox transformation with exact optimal lambda value for better accuracy.
 
 ```{r}
