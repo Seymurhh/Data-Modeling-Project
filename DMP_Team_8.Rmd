@@ -386,7 +386,7 @@ In Section II, we dove into the analytical scrutiny of King County's house sales
 
 ## Data Partitioning
 
-The KC House sales dataset is split into train(70%) and test(30%) datasets, with 15129 observations in the train dataset and 6484 observations in the test dataset.
+In this crucial phase of the model development process, we strategically divide our dataset into separate subsets for training and validation purposes. Establishing a 70-30 split, we allocate the majority for model training, ensuring ample data for learning, while reserving 30% for testing, which will serve as a litmus test for our model's predictive power in real-world scenarios.
 
 ```{r}
 set.seed(1023)
@@ -399,43 +399,72 @@ dim(train.dat)
 dim(test.dat)
 ```
 
+**Analysis:** The partitioning results in 15,129 cases for model training, providing a comprehensive learning set that encompasses a wide spectrum of the data's variability. The test set, with 6,484 cases, is sufficiently large to evaluate model performance and guard against overfitting. This balanced approach to data division equips us with the necessary framework to rigorously train and objectively assess our predictive model, setting a strong foundation for robust statistical analysis.
 
 
-**Analysis:**
-The house_lm model to predict price has:
-- Residual Standard Error of 193,600
-- Multiple R-square of 71.38%
-- p-value of < 2.2e-16
-- MSE of 37,494,980,807
+## Model Fitting and Initial Evaluation
 
-Overall, the model appears to be statistically significant overall given the low p-value for the F-statistic. The multiple R-square suggests that 71.38% of the variability in price is explained by the model.
-Moreover, all most predictors (except sqft_lot) have a statistically significant impact on the house price. Predictions on the test dataset should be done to further validate model usefulness.
+In this step, we meticulously construct a linear regression model, leveraging the training dataset to ascertain how well our predictors explain the variability in house prices. The initial model fitting is a critical juncture where we assess the significance of each predictor and the overall strength of the model.
 
-From the model plot we observe the following:
-- LINEARITY ASSUMPTION: From the Residuals vs Fitted plot, as the residuals seem to be randomly dispersed around the horizontal axis and the line is horizontal, a linear regression model may be appropriate, however we may need to transforming the response variable.
-- NORMALITY ASSUMPTION: From the Q-Q Residuals plot, as the points are out of the diagonal line on either ends, the residuals do not meet the normality assumption.
-- CONSTANT VARIANCE ASSUMPTION: The scale location plot points to non constant variance. The HOMOSCEDASTICITY ASSUMPTION is violated. Moreover the line is curvilinear.
-- The impact of bad data like influential and outlier observations seems to be impactful when inspecting the Residual vs. Leverage graph
+```{r Model fitting}
 
-```{r}
-
+# Fit a linear regression model based on the training dataset
 house_lm<-lm(price ~.,data=train.dat)
 summary(house_lm)
 
-```
-```{r plotting the Reg model - house_lm}
-par(mfrow=c(2,2))
-plot(house_lm)
+# Calculate the Mean Standard Error
 MSE <- summary(house_lm)$sigma^2
 print(MSE)
+
 ```
 
+**Analysis:** The preliminary output indicates a robust model with an R-squared value of 80.66%, signifying that approximately 80% of the variability in house prices can be explained by the predictors in the model. The significant p-values across most variables confirm their relevance in predicting house prices. However, the substantial Residual Standard Error suggests room for improvement in model accuracy. The residual diagnostics will need to be carefully examined to identify potential violations of model assumptions and to strategize on improvements.
 
-```{r}
+The house_lm model to predict price has:
+  - Residual Standard Error of 159,500 on 15040 degrees of freedom
+  - Adjusted R-squared of 80.55%
+  - p-value is practically near 0
+  - Mean Standard Error is 25,460,114,812
+
+Overall, the model appears to be statistically significant overall given the low p-value for the F-statistic. Most predictors (except sqft_lot15) have a statistically significant impact on the house price. Predictions on the test dataset should be done to further validate model usefulness.
+
+
+## Assumptions Testing 
+
+This section is devoted to examining the assumptions inherent in linear regression analysis. By evaluating the residuals from the fitted model, we can assess whether the assumptions of linearity, normality, homoscedasticity, and the absence of influential outliers are met. These diagnostics are crucial to ensure the validity of the model's inferences.
+
+```{r plotting the Reg model - house_lm}
+
+# Plotting the Regular Model
+par(mfrow=c(2,2))
+plot(house_lm)
+
+```
+
+**Analysis:** The diagnostic plots from the model indicate potential issues with the regression model. We observe the following:
+  - LINEARITY ASSUMPTION: The Residuals vs Fitted plot shows a non-random pattern, suggesting that linearity assumptions may be violated. There's a cone shape along the line, which is mostly horizontal along 0.
+  - NORMALITY ASSUMPTION: The Q-Q plot of residuals reveals deviations from normality, particularly in the tails. The residuals do not meet the normality assumption.
+  - CONSTANT VARIANCE ASSUMPTION: The Scale-Location plot indicates heteroscedasticity, implying that the variance of residuals is not constant. The HOMOSCEDASTICITY ASSUMPTION is violated. Moreover the line is curvilinear.
+  - Lastly, the Residuals vs Leverage plot flags several potential outliers and influential points that could unduly affect the model’s predictions. 
+  
+These observations suggest that the model may benefit from transformations or robust regression techniques to meet the necessary assumptions.
+
+
+## Variable Inflation Factor (VIF) Analysis
+
+The Variable Inflation Factor (VIF) analysis is conducted to assess multicollinearity among predictors in the regression model. VIF quantifies how much the variance of an estimated regression coefficient increases if your predictors are correlated. A VIF above 5 suggests a problematic level of multicollinearity.
+
+
+```{r Calculate VIF}
+
+# Variable Inflation Factor
 vif(house_lm)
+
 ```
 
-<<<<<<< HEAD
+**Analysis:** The VIF results show that most variables have a VIF value below 5, indicating acceptable levels of multicollinearity. However, 'sqft_above' and 'zipcode' exhibit higher VIF values, with 'sqft_above' surpassing the critical value of 5 and 'zipcode' being significantly high due to the large number of dummy variables it represents. This suggests that 'sqft_above' and the high dimensionality of 'zipcode' may be causing multicollinearity issues, which could inflate the variances of the parameter estimates and may warrant further investigation or remedial measures such as dimensionality reduction techniques.
+
+
 ```{r Remove highly correlated variables ccording to VIF analysis}
 
 # Remove redundant, unnecessary columns from dataset. 
@@ -451,21 +480,20 @@ dim(train.dat)
 dim(test.dat)
 ```
 
+
+
+
 ```{r refitting the model after removing lat and long}
 
+# Refitting the Model after removing Latitude and Longitude
 house_lm<-lm(price ~.,data=train.dat)
 summary(house_lm)
 
 vif(house_lm)
+
 ```
 
-**Analysis**:
-=======
-
-
-**Analysis:**
->>>>>>> d54ea266edace5adac2e16617c148eae0bac8d29
-The R-square values on both training and test data are quite close - 71.38% and 70.86% respectively. This suggests that the model generalizes well to new data, maintaining a similar level of explanatory power. The RMSE of 204,868.3 indicates the average magnitude of errors in predicting house prices on the test data. The SSE of 2.721402e+14 represents the sum of squared differences between predicted and observed values on the test data. A lower RMSE and SSE indicates better model fit, and we will explore furher on how these values can be lowered.
+**Analysis:** The R-square values on both training and test data are quite close - 71.38% and 70.86% respectively. This suggests that the model generalizes well to new data, maintaining a similar level of explanatory power. The RMSE of 204,868.3 indicates the average magnitude of errors in predicting house prices on the test data. The SSE of 2.721402e+14 represents the sum of squared differences between predicted and observed values on the test data. A lower RMSE and SSE indicates better model fit, and we will explore furher on how these values can be lowered.
 
 ```{r}
 
@@ -583,6 +611,7 @@ P value is < 2.2e-16. So we reject $H_o$, Error variances are not constant.
 bptest(house_lm, studentize = FALSE)
 
 ```
+
 **Analysis:**
 For Boxcox transormation[@libretexts_boxcox], the optimal lambda is -0.04 with 95% confidence interval range which is close to zero. Although, we can estimate lambda to be zero and apply logarithmic transformation of the data, we have done the boxcox transformation with exact optimal lambda value for better accuracy.
 
@@ -592,8 +621,8 @@ bc <- boxcox(house_lm, lambda=seq(-4, 4, by=0.1))
 lambda <- bc$x[which.max(bc$y)]
 cat("The optimal lambda is:", lambda, "\n")
 
-
 ```
+
 **Analysis:** After boxcox transformation, we observe that:
 - Residual Standard Error has reduced significantly to 0.004981 from 193,600
 - Multiple R-square has increased to 84.03% from 71.38%
@@ -1323,10 +1352,22 @@ Preparing the dataset for neural network analysis by normalizing the data. The n
 
 ```{r Prepare the NN data}
 
-normalize <- function(x) { return((x - min(x)) / (max(x) - min(x))) }
+# Data must be normalized for the Neural Network
+normalize <- function(x) {
+  # Only normalize if x is numeric
+  if (is.numeric(x)) {
+    return((x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE)))
+  } else {
+    return(x)
+  }
+}
 
-train.dat.norm <- as.data.frame(lapply(train.dat, normalize))
-test.dat.norm <- as.data.frame(lapply(test.dat, normalize))
+# Identify numeric columns
+numeric_cols <- sapply(train.dat, is.numeric)
+
+# Apply normalization only to numeric columns
+train.dat.norm <- as.data.frame(lapply(train.dat[, numeric_cols], normalize))
+test.dat.norm <- as.data.frame(lapply(test.dat[, numeric_cols], normalize))
 
 ```
 
