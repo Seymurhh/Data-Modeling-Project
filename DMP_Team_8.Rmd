@@ -1,6 +1,7 @@
 ---
 title: "HARVARD EXTENSION SCHOOL"
 subtitle: "CSCI E-106 - Data Modeling - Final Project"
+bibliography: references.bib
 author: 
  - Kaleo Mungin, Luciano Carvalho, Ibrahim Hashim, 
  - Bethun Bhowmik, Mohanish Kashiwar, Seymur Hasanov
@@ -583,7 +584,7 @@ bptest(house_lm, studentize = FALSE)
 
 ```
 **Analysis:**
-For Boxcox transormation, the optimal lambda is -0.04 with 95% confidence interval range which is close to zero. Although, we can estimate lambda to be zero and apply logarithmic transformation of the data, we have done the boxcox transformation with exact optimal lambda value for better accuracy.
+For Boxcox transormation[@libretexts_boxcox], the optimal lambda is -0.04 with 95% confidence interval range which is close to zero. Although, we can estimate lambda to be zero and apply logarithmic transformation of the data, we have done the boxcox transformation with exact optimal lambda value for better accuracy.
 
 ```{r}
 
@@ -953,7 +954,7 @@ ols_plot_resid_lev(house_lm_c1)
 # Deleted Studentized Residuals vs Fitted Values Plot
 ols_plot_resid_stud_fit(house_lm_c1)
 ```
-
+ 
 ```{r}
 cbind(house_lm_c$coefficients,house_lm_huber$coefficients)
 ```
@@ -1441,6 +1442,8 @@ The model must comply with various assumptions for regression model to hold such
 # Bibliography
 
 *Please include all references, articles and papers in this section.*
+
+
 
 # Appendix
 
