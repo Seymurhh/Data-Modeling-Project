@@ -1,7 +1,6 @@
 ---
 title: "HARVARD EXTENSION SCHOOL"
 subtitle: "CSCI E-106 - Data Modeling - Final Project"
-bibliography: references.bib
 author: 
  - Kaleo Mungin, Luciano Carvalho, Ibrahim Hashim, 
  - Bethun Bhowmik, Mohanish Kashiwar, Seymur Hasanov
@@ -20,6 +19,8 @@ output:
 editor_options: 
   markdown: 
     wrap: 72
+
+bibliography: references.bib
 ---
 \newpage
 ```{r setup, include=FALSE}
@@ -388,7 +389,7 @@ In Section II, we dove into the analytical scrutiny of King County's house sales
 
 In this crucial phase of the model development process, we strategically divide our dataset into separate subsets for training and validation purposes. Establishing a 70-30 split, we allocate the majority for model training, ensuring ample data for learning, while reserving 30% for testing, which will serve as a litmus test for our model's predictive power in real-world scenarios.
 
-```{r}
+```{r splitting the data into train and test}
 set.seed(1023)
 n<-dim(df_house)[1]
 IND<-sample(c(1:n),round(n*0.7))
@@ -406,7 +407,7 @@ dim(test.dat)
 
 In this step, we meticulously construct a linear regression model, leveraging the training dataset to ascertain how well our predictors explain the variability in house prices. The initial model fitting is a critical juncture where we assess the significance of each predictor and the overall strength of the model.
 
-```{r Model fitting}
+```{r Regression model fitting}
 
 # Fit a linear regression model based on the training dataset
 house_lm<-lm(price ~.,data=train.dat)
@@ -452,7 +453,7 @@ These observations suggest that the model may benefit from transformations or ro
 
 ## Variable Inflation Factor (VIF) Analysis
 
-The Variable Inflation Factor (VIF) analysis is conducted to assess multicollinearity among predictors in the regression model. VIF quantifies how much the variance of an estimated regression coefficient increases if your predictors are correlated. A VIF above 5 suggests a problematic level of multicollinearity.
+The Variable Inflation Factor (VIF) analysis is conducted to assess multicollinearity among predictors in the regression model. VIF quantifies how much the variance of an estimated regression coefficient increases if your predictors are correlated. A VIF above 5 suggests a problematic level of multicollinearity. 
 
 
 ```{r Calculate VIF}
@@ -479,9 +480,6 @@ test.dat<-df_house[-c(IND),]
 dim(train.dat)
 dim(test.dat)
 ```
-
-
-
 
 ```{r refitting the model after removing lat and long}
 
@@ -658,6 +656,13 @@ cat(paste(strwrap(output, width=80), collapse="\n"))
 ```
 
 **Analysis:** On predicting the values of the Boxcox transformed model on the test dataset, we observe a R-square test of 75.79% compared to R-square train of 84.03%, from which we conclude that the transformed model generalizes well to new data.
+
+```{r}
+PredictedTest<-exp(predict(house_lm1,test.dat))
+ModelTest<-data.frame(obs = test.dat$price, pred=PredictedTest)
+round(defaultSummary(ModelTest),3)
+```
+
 
 ```{r}
 
@@ -982,6 +987,7 @@ ols_plot_resid_lev(house_lm_c1)
 
 # Deleted Studentized Residuals vs Fitted Values Plot
 ols_plot_resid_stud_fit(house_lm_c1)
+
 ```
  
 ```{r}
