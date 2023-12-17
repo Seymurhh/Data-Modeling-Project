@@ -416,7 +416,6 @@ dispRegFunc(house_lm)
 
 ```
 
-
 **Analysis**:
 
 On plotting the boxplot of residuals, we observe multiple outliers on both ends of the whiskers. Moreover, when we plot the residuals against the fitted values, we observe that the residuals spread out with increase in fitted values along x-axis.
@@ -492,18 +491,17 @@ bptest(house_lm, studentize = FALSE)
 
 ```
 **Analysis**:
-For Boxcox transormation, the optimal lambda is -0.1 with 95% confidence interval range which is close to zero. Although, we can estimate lambda to be zero and apply logarithmic transformation of the data, we have done the boxcox transformation with exact optimal lambda value for better accuracy.
+For Boxcox transormation, the optimal lambda is -0.04 with 95% confidence interval range which is close to zero. Although, we can estimate lambda to be zero and apply logarithmic transformation of the data, we have done the boxcox transformation with exact optimal lambda value for better accuracy.
 
 ```{r}
 
-bc <- boxcox(house_lm, lambda=seq(-10, 10, by=1))
-optimal_lambda <- bc$x[which.max(bc$y)]
-cat("The optimal lambda is:", optimal_lambda, "\n")
+bc <- boxcox(house_lm, lambda=seq(-4, 4, by=0.1))
+lambda <- bc$x[which.max(bc$y)]
+cat("The optimal lambda is:", lambda, "\n")
 
 
 ```
-**Analysis**:
-After boxcox transformation, we observe that
+**Analysis:** After boxcox transformation, we observe that:
 - Residual Standard Error has reduced significantly to 0.004981 from 193,600
 - Multiple R-square has increased to 84.03% from 71.38%
 - p-value remains same at < 2.2e-16
@@ -516,21 +514,35 @@ Overall, the model appears to be a much better fit that before. From the model p
 
 ```{r}
 
-house_lm1<-lm(price^optimal_lambda~.,data=train.dat)
+house_lm1<-lm(price^lambda~.,data=train.dat)
 summary(house_lm1)
-par(mfrow=c(2,2))
-plot(house_lm1)
-dispRegFunc(house_lm1)
 
 ```
-**Analysis**:
-On predicting the values of the Boxcox transformed model on the test dataset, we observe a R-square test of 75.79% compared to R-square train of 84.03%, from which we conclude that the transformed model generalizes well to new data.
+
+```{r}
+
+# Plot
+par(mfrow=c(2,2))
+plot(house_lm1)
+
+```
+
+
+```{r}
+
+# Print the output of dispRegFunc wrapped in max 90 char width
+output <- capture.output(dispRegFunc(house_lm1))
+cat(paste(strwrap(output, width=80), collapse="\n"))
+
+```
+
+**Analysis**: On predicting the values of the Boxcox transformed model on the test dataset, we observe a R-square test of 75.79% compared to R-square train of 84.03%, from which we conclude that the transformed model generalizes well to new data.
 
 ```{r}
 
 # Test data Predictions
-pred<- predict(house_lm1,test.dat)^(1/optimal_lambda)
-act<-test.dat$price
+pred <- predict(house_lm1,test.dat)^(1/lambda)
+act <- test.dat$price
 
 house_lm1_test_mse <- mean((pred - act)^2)
 house_lm1_test_rmse <- sqrt(house_lm1_test_mse)
