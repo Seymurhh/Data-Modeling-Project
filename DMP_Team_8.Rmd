@@ -136,6 +136,7 @@ df_house$age = ifelse(df_house$renovated == 1,
 
 head(df_house)
 
+df_house_original <- df_house
 ```
 
 ### Reinterpreting Zipcode as a Categorical Variable
@@ -147,8 +148,9 @@ Transformation of the 'zipcode' variable from numerical to categorical data. Typ
 # Convert Zipcode to a Categorical variable (char) instead of number
 df_house$zipcode = as.character(df_house$zipcode)
 
-```
+head(df_house)
 
+```
 
 ## Enhancing Data Integrity: Addressing Redundancies and Correlations
 
@@ -194,10 +196,10 @@ This section focuses on identifying highly correlated variables within the King 
 # Identifying highly correlated variables
 
 # Retain only the numeric columns in the dataset
-df_house <- df_house[sapply(df_house, is.numeric)]
+df_house_cor <- df_house[sapply(df_house, is.numeric)]
 
 # use 'complete.obs' to handle missing values
-corr_matrix <- cor(df_house, use = "complete.obs")
+corr_matrix <- cor(df_house_cor, use = "complete.obs")
 
 threshold <- 0.8
 high_corr <- which(abs(corr_matrix) > threshold, arr.ind = TRUE)
@@ -207,10 +209,9 @@ high_corr <- high_corr[high_corr[, 1] < high_corr[, 2], ]
 for (pair in 1:nrow(high_corr)) {
     row <- high_corr[pair, "row"]
     col <- high_corr[pair, "col"]
-    cat(names(df_house)[row], "and", names(df_house)[col], 
+    cat(names(df_house_cor)[row], "and", names(df_house_cor)[col], 
         "have a correlation of", corr_matrix[row, col], "\n")
 }
-
 ```
 
 ### Streamlining the Dataset for Enhanced Analysis
@@ -250,7 +251,7 @@ summary(df_house$price)
 
 This subsection is dedicated to exploring the relationships between house prices and other key variables using pairwise scatter plots. These visualizations aim to unearth correlations that could indicate influential factors in housing prices within King County. By examining these relationships, we can hypothesize which features may drive property values and warrant further investigation in our predictive modeling.
 
-The Pairwise scatter plot below shows the correlation between highly correlated variables extracted from heatmap correlation matrix.
+The Pairwise scatter plot below shows the correlation between highly correlated variables between price and other independent variables extracted from heatmap correlation matrix.
 
 ```{r Pairwise scatter plot}
 
@@ -387,7 +388,6 @@ In Section II, we dove into the analytical scrutiny of King County's house sales
 The KC House sales dataset is split into train(70%) and test(30%) datasets, with 15129 observations in the train dataset and 6484 observations in the test dataset.
 
 ```{r}
-
 set.seed(1023)
 n<-dim(df_house)[1]
 IND<-sample(c(1:n),round(n*0.7))
@@ -628,55 +628,47 @@ print(results.df)
 
 *Use the test data set to assess the model performances. Here, build the best multiple linear models by using the stepwise both ways selection method. Compare the performance of the best two linear models. Make sure that model assumption(s) are checked for the final linear model. Apply remedy measures (transformation, etc.) that helps satisfy the assumptions. In particular you must deeply investigate unequal variances and multicollinearity. If necessary, apply remedial methods (WLS, Ridge, Elastic Net, Lasso, etc.). *
 
-**Analysis:** - add here the analysis of the stepwise model summary outcome. 
+**Analysis:**
+
+The stepwise method yields a similar model with the elimination of sqft_lot15 being the only difference. This variable was insignificant in the Boxcox transformed model. The r-squared value remains nearly the same at 0.77 with all the predictor variables being significant at 0.001. 
 
 Graph 1 (Residuals vs Fitted): (linearity assumption) A linear relationship seems appropriate. (The average mean error equal to zero assumption) The average mean seems to be equal to zero.
 
 Graph 2 (Q-Q Residuals): (normality assumption) There is minor departure from a normal distribution at the tails.
 
-Graph 3 (Scale-Location): (constant variance assumption) The residuals do not seem to be equally distributed throughout. (homoscedasticity assumption) The variances do not appear constant and the Breush-Pagan test indicates this with the p-value being lower than alpha.
+Graph 3 (Scale-Location): (constant variance assumption) The residuals do not seem to be equally distributed throughout. (homoscedasticity assumption) The variances do not appear constant and this indicated through the Breush-Pagan.
 
 Graph 4 (Residuals vs Leverage): There are no influential outliers.
 
 ```{r}
+# [Ibrahim]
 
-initial_model <- house_lm1
+stepwise_model <- ols_step_both_p(house_lm1, penter = 0.05, premove = 0.05)
 
-stepwise_model <- ols_step_both_p(initial_model, penter = 0.05, premove = 0.05)
-
-final_model <- lm(formula = stepwise_model$model, data = train.dat)
-summary(final_model)
-
-```
-
-```{r}
-
-par(mfrow=c(2,3))
-
-# Call the plot function for each plot individually with modified parameters
-plot(stepwise_model$rsquare, 
-     xlab=NA, ylab="R-Square", pch=20, col="#6baed6", type="b")
-plot(stepwise_model$aic, 
-     xlab=NA, ylab="AIC", pch=20, col="#6baed6", type="b")
-plot(stepwise_model$sbc, 
-     xlab=NA, ylab="SBC", pch=20, col="#6baed6", type="b")
-plot(stepwise_model$adjr, 
-     xlab=NA, ylab="Adj. R-Square", pch=20, col="#6baed6", type="b")
-plot(stepwise_model$mallows_cp, 
-     xlab=NA, ylab="Mallows Cp", pch=20, col="#6baed6", type="b")
-plot(stepwise_model$sbic, 
-     xlab=NA, ylab="SBIC", pch=20, col="#6baed6", type="b")
+sw_model <- lm(formula = stepwise_model$model, data = train.dat)
+summary(sw_model)
+par(mfrow=c(2,2))
+plot(sw_model)
 
 ```
 
+**Analysis:*
 
-**Analysis:** - Please add here your analysis.
+The WLS regression model makes the error variances more equally distributed throughout. The adjusted r-squared value increased to 0.79 with almost all of the independent variables being significant.
+
+Graph 1 (Residuals vs Fitted): (linearity assumption) A linear relationship seems appropriate. (The average mean error equal to zero assumption) The average mean seems to be equal to zero.
+
+Graph 2 (Q-Q Residuals): (normality assumption) There is minor departure from a normal distribution at the tails.
+
+Graph 3 (Scale-Location): (constant variance assumption) The residuals seem to be more equally distributed throughout compared to the stepwise model. (homoscedasticity assumption) The variances appear to be slightly more constant.
+
+Graph 4 (Residuals vs Leverage): There now appears to be several influential outliers beyond the Cook's distance line.
+
 
 ```{r WLS regression}
-
+# [Ibrahim]
 # Weighted Least Squares Regression
-# We notice from the scale-location graph of the main model 
-# that the error variances are unequal.
+# We notice from the scale-location graph of the main model that the error variances are unequal.
 
 # Calculating the weights for the model
 ei <- house_lm$residuals
@@ -691,79 +683,157 @@ wi = 1/(s^2)
 house_lm_wls <- lm(price ~ ., weights = wi, data = train.dat)
 
 summary(house_lm_wls)
-
-```
-
-```{r Plot the WLS Regression}
-
 par(mfrow=c(2,2))
-suppressWarnings(plot(house_lm_wls))
+plot(house_lm_wls)
 
 ```
 
-**Analysis:** As of now, there is no multicollinearity issues in the train data set since we have handled the highly correlated variables at the initial section.
+**Analysis:** 
+Before performing Ridge, Lasso, and ElasticNet regression methods, we will assess the multicollinearity in the model.
+There are no multicollinearity issues in the train data set since we have handled the highly correlated variables during the data preparation process.
 
-```{r }
-
+```{r}
+# [Ibrahim]
 # Testing the main (boxcox) model for multicollinearity
 vif(house_lm1)
-
 ```
 
-**Analysis:** - please add here the analysis of the outcome
+**Analysis:**
+The Ridge regression generates a lambda value of 24125.359. The model performs well with a r-squared value of 0.69. The mean squared error is high with a value of 39,928,261,630. 
 
-
-```{r Ridge Regression}
+```{r - Ridge Regression}
+# [Ibrahim]
+# Ridge Regression
 
 # Extract 'x' and 'y'
 x <- data.matrix(dplyr::select(train.dat, -price))
 y <- train.dat$price
 
 # Perform ridge regression
-house_lm_ridge <- glmnet::cv.glmnet(x, y, alpha = 0, 
-                                    nlambda = 100, 
-                                    lambda.min.ratio = 0.0001)
-
+house_lm_ridge <- glmnet::cv.glmnet(x, y, alpha = 0, nlambda = 100, lambda.min.ratio = 0.0001)
 best.lambda.ridge <- house_lm_ridge$lambda.min
 plot(house_lm_ridge)
 
 print(paste0("Ridge best lambda of ", round(best.lambda.ridge, digits = 3)))
 
+# Generating the results of the model
+price.predictors.train <- colnames(dplyr::select(train.dat, -price))
+
+ridge_results <- data.frame(
+  price.train = train.dat$price,
+  price.ridge.train = predict(house_lm_ridge, s = best.lambda.ridge, newx = data.matrix(train.dat[price.predictors.train]))
+)
+
+calc_metrics <- function(actual, predicted) {
+  sse <- sum((actual - predicted) ^ 2)
+  mse <- sse / length(actual)
+  rmse <- sqrt(mse) # Calculate RMSE
+  sst <- sum((actual - mean(actual)) ^ 2)
+  r2 <- 1 - sse / sst
+  return(c(SST = sst, SSE = sse, MSE = mse, RMSE = rmse, R2 = r2))
+}
+
+# function to each set of predictions
+ridge_metrics <- data.frame(
+  Model = c("Ridge"),
+  do.call(rbind, lapply(2:ncol(ridge_results), function(i) calc_metrics(ridge_results$price.train, ridge_results[,i])))
+)
+
+# Display the metrics table with RMSE
+ridge_metrics %>%
+  dplyr::arrange(desc(R2)) %>%
+  knitr::kable(caption = "SST, SSE, MSE, RMSE, and R2 of the Model")
+
 ```
-**Analysis:** - please add here the analysis of the outcome
+**Analysis:**
+The Lasso regression generates a lambda value of 393.183. The r-squared value of 0.69 is indicative of the model's considerable strength. Out of the three models used for dealing with multicollinearity, this one had the lowest RMSE value at 199,084.7.
 
-```{r Lasso Regression}
-
-house_lm_lasso <- glmnet::cv.glmnet(x, y, 
-                                    alpha = 1, 
-                                    nlambda = 100, 
-                                    lambda.min.ratio = 0.0001)
-
+```{r}
+# [Ibrahim]
+# Lasso Regression
+house_lm_lasso <- glmnet::cv.glmnet(x, y, alpha = 1, nlambda = 100, lambda.min.ratio = 0.0001)
 best.lambda.lasso <- house_lm_lasso$lambda.min
 plot(house_lm_lasso)
 
 print(paste0("Lasso best lambda of ", round(best.lambda.lasso, digits = 3)))
 
+# Generating the results of the model
+lasso_results <- data.frame(
+  price.train = train.dat$price,
+  price.lasso.train = predict(house_lm_lasso, s = best.lambda.lasso, newx = data.matrix(train.dat[price.predictors.train]))
+)
+
+calc_metrics <- function(actual, predicted) {
+  sse <- sum((actual - predicted) ^ 2)
+  mse <- sse / length(actual)
+  rmse <- sqrt(mse) # Calculate RMSE
+  sst <- sum((actual - mean(actual)) ^ 2)
+  r2 <- 1 - sse / sst
+  return(c(SST = sst, SSE = sse, MSE = mse, RMSE = rmse, R2 = r2))
+}
+
+# function to each set of predictions
+lasso_metrics <- data.frame(
+  Model = c("Lasso"),
+  do.call(rbind, lapply(2:ncol(lasso_results), function(i) calc_metrics(lasso_results$price.train, lasso_results[,i])))
+)
+
+# Display the metrics table with RMSE
+lasso_metrics %>%
+  dplyr::arrange(desc(R2)) %>%
+  knitr::kable(caption = "SST, SSE, MSE, RMSE, and R2 of the Model")
 ```
 
-**Analysis:** - please add here the analysis of the outcome
-
-```{r Elastic Net Regression}
-
-house_lm_enet <- glmnet::cv.glmnet(
-  x, y, alpha = 0.5, nlambda = 100, lambda.min.ratio = 0.0001)
-
-plot(house_lm_enet)
-
-best.lambda.enet <- house_lm_enet$lambda.min
-print(paste0("ElasticNet best lambda of ", 
-             round(best.lambda.enet, digits = 3)))
-
-```
-
-**Analysis:** - please add here the analysis of the outcome
+**Analysis:**
+The ElasticNet regression generates a lambda value of 786.366. Similar to the Ridge and Lasso Regression models, the r-squared value of this model is 0.69. Again, the MSE and RMSE are quite high. This remedial measure may help generalize the model for higher applicability.
 
 ```{r}
+# [Ibrahim]
+# Elastic Net Regression
+house_lm_enet <- glmnet::cv.glmnet(x, y, alpha = 0.5, nlambda = 100, lambda.min.ratio = 0.0001)
+plot(house_lm_enet)
+best.lambda.enet <- house_lm_enet$lambda.min
+
+print(paste0("ElasticNet best lambda of ", round(best.lambda.enet, digits = 3)))
+
+# Generating the results of the model
+enet_results <- data.frame(
+  price.train = train.dat$price,
+  price.enet.train = predict(house_lm_enet, s = best.lambda.enet, newx = data.matrix(train.dat[price.predictors.train]))
+)
+
+calc_metrics <- function(actual, predicted) {
+  sse <- sum((actual - predicted) ^ 2)
+  mse <- sse / length(actual)
+  rmse <- sqrt(mse) # Calculate RMSE
+  sst <- sum((actual - mean(actual)) ^ 2)
+  r2 <- 1 - sse / sst
+  return(c(SST = sst, SSE = sse, MSE = mse, RMSE = rmse, R2 = r2))
+}
+
+# function to each set of predictions
+enet_metrics <- data.frame(
+  Model = c("ElasticNet"),
+  do.call(rbind, lapply(2:ncol(enet_results), function(i) calc_metrics(enet_results$price.train, enet_results[,i])))
+)
+
+# Display the metrics table with RMSE
+enet_metrics %>%
+  dplyr::arrange(desc(R2)) %>%
+  knitr::kable(caption = "SST, SSE, MSE, RMSE, and R2 of the Model")
+```
+
+**Analysis:**
+Before the Robust regression method using Huber and Bisquare weights, we will assess the severity of the outliers.
+
+The Cook's D chart shows two observations that could have a substantial level of influence on the model. 
+
+The Outlier and Leverage Diagnostics for price^lambda plot illustrates numerous leverage, outlier, and outlier and leverage values. These outlying values could be having a large effect on the performance of the model. The model results, consequently, may suffer from reliability in their interpretation.
+
+The Deleted Studentized Residual vs Predicted Values plot depicts considerable portions of data outlying the thresholds.
+
+```{r}
+# [Ibrahim]
 # Looking at the residuals using the Cook's distance chart
 ols_plot_cooksd_chart(house_lm1)
 
@@ -774,21 +844,22 @@ ols_plot_resid_lev(house_lm1)
 ols_plot_resid_stud_fit(house_lm1)
 ```
 
-**Analysis:** - please add here the analysis of the outcome
+**Analysis:**
+The Robust Regression model with the Huber weights results in a residual standard error of 112700. This is because Huber weights have difficulties with severe outliers which we can notice from the plots above. After performing the Robust regression however, we can notice that there are no influential outliers based on the Residuals vs Leverage plot. This ensures that the interpretation of the model's results will be reliable.
 
 ```{r}
+# [Ibrahim]
 # Robust Regression using Huber weights 
 # There are influential points (see plots above)
 house_lm_huber <- MASS::rlm(price ~ ., psi = psi.huber, data = train.dat)
 summary(house_lm_huber)
+par(mfrow=c(2,2))
 plot(house_lm_huber)
 ```
 
 ```{r}
-
-huber_weights <- data.frame(Observation = 1:nrow(train.dat), 
-                            Residual = house_lm_huber$resid, 
-                            Weight = house_lm_huber$w)
+# Taking a quick look at the Huber weights
+huber_weights <- data.frame(Observation = 1:nrow(train.dat), Residual = house_lm_huber$resid, Weight = house_lm_huber$w)
 
 a <- huber_weights[order(house_lm_huber$w), ]
 
@@ -798,9 +869,11 @@ head10
 ```
 
 
-**Analysis:** - please add here the analysis of the outcome
+**Analysis:**
+The Robust regression with the bisquare weights has a lower residual standard error compared to the Huber weights. 
 
 ```{r}
+# [Ibrahim]
 # Robust Regression using bisquare weights 
 
 house_lm_bisquare <- MASS::rlm(price ~ ., psi = psi.bisquare, data = train.dat)
@@ -808,23 +881,23 @@ summary(house_lm_bisquare)
 
 ```
 
-**Analysis:** - please add here the analysis of the outcome
+**Analysis:**
+Both the linear and stepwise model are most the effective at predicting the price when using the test data. Both have r-squared values of 0.77. The Lasso regression model performs the best out of the remedial models. It produces an r-squared value of 0.69. ElasticNet and Ridge regression perform just as well. Robust regression with the Huber weights has an r-squared value of 0.65, not far off from the top three models. Robust regression with the Bisquare weights is where we see a dip in performance with an r-squared value of 0.59. The Weighted Least Squares regression performs the worst with a r-squared value of 0.41.
 
 ```{r}
+# Evaluating the performance of the models using the test data set
 
-price.predictors <- colnames(dplyr::select(df_house, -price))
+price.predictors <- colnames(dplyr::select(test.dat, -price))
 
 # Predictions for each model using the test dataset
 predictions <- data.frame(
   price = test.dat$price,
   price.lm = predict(house_lm1, test.dat),
-  price.sw.lm = predict(final_model, test.dat), # Stepwise model = final_model
-  price.ridge = predict(house_lm_ridge, s = best.lambda.ridge, 
-                        newx = data.matrix(test.dat[price.predictors])),
-  price.lasso = predict(house_lm_lasso, s = best.lambda.lasso, 
-                        newx = data.matrix(test.dat[price.predictors])),
-  price.en = predict(house_lm_enet, s = best.lambda.enet, 
-                     newx = data.matrix(test.dat[price.predictors])),
+  price.sw.lm = predict(sw_model, test.dat),
+  price.wls = predict(house_lm_wls, test.dat),
+  price.ridge = predict(house_lm_ridge, s = best.lambda.ridge, newx = data.matrix(test.dat[price.predictors])),
+  price.lasso = predict(house_lm_lasso, s = best.lambda.lasso, newx = data.matrix(test.dat[price.predictors])),
+  price.en = predict(house_lm_enet, s = best.lambda.enet, newx = data.matrix(test.dat[price.predictors])),
   price.huber = predict(house_lm_huber, test.dat),
   price.bisquare = predict(house_lm_bisquare, test.dat)
 )
@@ -836,26 +909,21 @@ calc_metrics <- function(actual, predicted) {
   rmse <- sqrt(mse) # Calculate RMSE
   sst <- sum((actual - mean(actual)) ^ 2)
   r2 <- 1 - sse / sst
-  #return(c(RMSE = rmse, R2 = r2))
   return(c(SST = sst, SSE = sse, MSE = mse, RMSE = rmse, R2 = r2))
 }
 
 # function to each set of predictions
 metrics <- data.frame(
-  Model = c("Linear", "Stepwise", "Ridge", "Lasso", 
-            "Elastic Net", "Huber", "Bisquare"),
-  do.call(rbind, 
-          lapply(2:ncol(predictions), 
-                 function(i) calc_metrics(predictions$price, predictions[,i])))
+  Model = c("Linear", "Stepwise", "Weighted Least Squares", "Ridge", "Lasso", "Elastic Net", "Huber", "Bisquare"),
+  do.call(rbind, lapply(2:ncol(predictions), function(i) calc_metrics(predictions$price, predictions[,i])))
 )
 
 # Display the metrics table with RMSE
 metrics %>%
   dplyr::arrange(desc(R2)) %>%
-  knitr::kable(caption = "R2, MSE, and RMSE of Different Models")
+  knitr::kable(caption = "SST, SSE, MSE, RMSE, and R2 of the Different Models")
 
 ```
-
 
 ```{r Best Subset Regression}
 
