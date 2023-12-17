@@ -1232,10 +1232,22 @@ Preparing the dataset for neural network analysis by normalizing the data. The n
 
 ```{r Prepare the NN data}
 
-normalize <- function(x) { return((x - min(x)) / (max(x) - min(x))) }
+# Data must be normalized for the Neural Network
+normalize <- function(x) {
+  # Only normalize if x is numeric
+  if (is.numeric(x)) {
+    return((x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE)))
+  } else {
+    return(x)
+  }
+}
 
-train.dat.norm <- as.data.frame(lapply(train.dat, normalize))
-test.dat.norm <- as.data.frame(lapply(test.dat, normalize))
+# Identify numeric columns
+numeric_cols <- sapply(train.dat, is.numeric)
+
+# Apply normalization only to numeric columns
+train.dat.norm <- as.data.frame(lapply(train.dat[, numeric_cols], normalize))
+test.dat.norm <- as.data.frame(lapply(test.dat[, numeric_cols], normalize))
 
 ```
 
