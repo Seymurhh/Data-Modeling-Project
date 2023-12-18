@@ -60,7 +60,7 @@ The structure of our project involved splitting the dataset into two parts: 70% 
 
 Our exploratory data analysis revealed several key insights. We observed that certain features, such as square footage and location, had a significant impact on house prices. This initial observation guided our feature selection and engineering process, where we developed new variables that could potentially enhance the model's performance.
 
-As we progressed, the need for a rigorous evaluation framework became apparent. To this end, we employed various metrics such as MSE, R-squared and Pseudo-R squared values. These metrics were instrumental in assessing the performance of our models, both on the training and validation sets. The final selection of our primary model, which we refer to as the "champion" model, was based on a comprehensive evaluation of these metrics.
+As we progressed, the need for a rigorous evaluation framework became apparent. To this end, we employed various metrics such as MSE, R-squared and SSE values. These metrics were instrumental in assessing the performance of our models, both on the training and validation sets. The final selection of our primary model, which we refer to as the "champion" model, was based on a comprehensive evaluation of these metrics.
  
 In conclusion, this project represents a significant endeavor in the field of predictive analytics for real estate. Through a blend of traditional statistical methods and advanced machine learning techniques, we have developed a model that not only predicts house prices in King County with a high degree of accuracy but also offers insights into the factors that drive these prices. As we move forward, our focus will be on refining the model, exploring new data sources, and adapting to the changing dynamics of the real estate market.
 
@@ -1842,6 +1842,22 @@ print(paste("SVM RMSE:", svm_rmse))
 
 **Analysis:** The reported RMSE value for the SVM model is $195,393.38, which suggests that on average, the model's price predictions deviate from the actual sale prices by this amount. Given the high value, this may indicate that the model is not predicting the prices with a high degree of accuracy. In the context of house prices, such a large RMSE could be considered substantial, and it suggests that model parameters may need tuning or the model itself may require a more in-depth evaluation to identify areas of improvement.
 
+```{r Append SVM model to results}
+svm_train_pred = predict(svm_model,train.dat)
+svm_test_pred =  predict(svm_model,test.dat)
+
+svm_train_results = postResample(pred = svm_train_pred, obs = train.dat$price)
+svm_test_results = postResample(pred = svm_test_pred, obs = test.dat$price)
+svm_test_sse = sum((svm_test_pred - test.dat$price)^2)
+
+# Append to the Results Data Frame
+results.df = rbind(results.df,data.frame(model = "SVM Regression",
+            R.Squared.Train = unname(svm_train_results[2]),
+            R.Squared.Test = unname(svm_test_results[2]),
+            RMSE.test = unname(svm_test_results[1]),
+            SSE.test = svm_test_sse)
+)
+```
 
 ### SVM Model Visualization
 
@@ -2028,12 +2044,14 @@ abline(0, 1, col = "red")
 ```{r Printing all important results}
 
 # Results dataframe
-
+options(max.print = 20)
 # We're supposed to use Pseudo R-squared, SSE, RMSE, as seen above. 
 # We'll have to look into 'Pseudo R-squared' most likely
 
-results.df
+results.df.asc = results.df[order(results.df$RMSE.test),]
+print(results.df.asc)
 
+options(max.print = 10)
 ```
 
 \newpage
@@ -2061,6 +2079,7 @@ The model must comply with various assumptions for regression model to hold such
 
 <div id="refs"></div>
 
+\newpage
 # Appendix
 
 The Appendix provides additional detailed analyses and visual representations that complement the main body of the report. This section includes further explorations of model variations, extended error assessments, and a complete overview of performance metrics, enriching the reader's comprehension of the research findings.
