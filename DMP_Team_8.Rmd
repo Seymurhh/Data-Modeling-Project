@@ -100,7 +100,7 @@ df_house$price <- as.numeric(gsub("[\\$,]", "", df_house$price))
 # Cleanup of "date" and creation of "year", "month", and "day" columns
 df_house$date <- as.POSIXct(df_house$date, format = "%Y%m%d")
 df_house$year <- as.numeric(format(df_house$date, "%Y"))
-df_house$month <- as.numeric(format(df_house$date, "%m"))
+df_house$month <- as.character(format(df_house$date, "%m"))
 df_house$day <- as.numeric(format(df_house$date, "%d"))
 
 # Collect columns that are numeric only
@@ -1174,7 +1174,7 @@ Both the linear and stepwise model are most the effective at predicting the pric
 ```{r}
 # Evaluating the performance of the models using the test data set
 
-price.predictors <- colnames(dplyr::select(test.dat, -price))
+price.predictors <- colnames(dplyr::select(test.dat.o, -price))
 
 # Predictions for each model using the test dataset
 predictions <- data.frame(
@@ -1182,9 +1182,9 @@ predictions <- data.frame(
   price.lm = predict(house_lm1, test.dat)^(1/lambda),
   price.sw.lm = predict(sw_model, test.dat)^(1/lambda),
   price.wls = predict(house_lm_wls, test.dat),
-  price.ridge = predict(house_lm_ridge, s = best.lambda.ridge, newx = data.matrix(test.dat[price.predictors])),
-  price.lasso = predict(house_lm_lasso, s = best.lambda.lasso, newx = data.matrix(test.dat[price.predictors])),
-  price.en = predict(house_lm_enet, s = best.lambda.enet, newx = data.matrix(test.dat[price.predictors])),
+  price.ridge = predict(house_lm_ridge, s = best.lambda.ridge, newx = data.matrix(test.dat.o[price.predictors])),
+  price.lasso = predict(house_lm_lasso, s = best.lambda.lasso, newx = data.matrix(test.dat.o[price.predictors])),
+  price.en = predict(house_lm_enet, s = best.lambda.enet, newx = data.matrix(test.dat.o[price.predictors])),
   price.huber = predict(house_lm_huber, test.dat),
   price.bisquare = predict(house_lm_bisquare, test.dat)
 )
@@ -1201,8 +1201,7 @@ calc_metrics <- function(actual, predicted) {
 
 # function to each set of predictions
 metrics <- data.frame(
-  Model = c("Linear", "Stepwise", "Weighted Least Squares", "Ridge", "Lasso", "Elastic Net", "Huber", "Bisquare"),
-  #Model = c("Linear", "Stepwise", "Weighted Least Squares", "Huber", "Bisquare"),
+  Model = c("Linear after BoxCox", "Stepwise", "Weighted Least Squares", "Ridge", "Lasso", "Elastic Net", "Huber", "Bisquare"),
   do.call(rbind, lapply(2:ncol(predictions), function(i) calc_metrics(predictions$price, predictions[,i])))
 )
 
