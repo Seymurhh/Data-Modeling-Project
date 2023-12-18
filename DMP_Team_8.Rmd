@@ -1110,7 +1110,7 @@ par(mfrow=c(2,2))
 plot(house_lm_huber)
 ```
 
-```{r remove imfluential outliers based on huber weights criteria}
+```{r remove influential outliers based on huber weights criteria}
 # Taking a quick look at the Huber weights
 huber_weights <- data.frame(Observation = 1:nrow(train.dat), Residual = house_lm_huber$resid, Weight = house_lm_huber$w)
 
@@ -1126,6 +1126,8 @@ weight_threshold <- 0.1
 outlier_indices <- which(house_lm_huber$w < weight_threshold)
 train.dat.cleaned <- train.dat[-outlier_indices, ]
 
+# c(7469,14108,455,14106,14105,14104)
+
 house_lm_c <- lm(price ~ ., data = train.dat.cleaned)
 summary(house_lm_c)
 
@@ -1140,6 +1142,7 @@ house_lm_c1 <- lm(log(price) ~ ., data = train.dat.cleaned)
 summary(house_lm_c1)
 
 dim(train.dat.cleaned)
+dim(train.dat)
 
 par(mfrow = c(2,2))
 plot(house_lm_c1)
@@ -1156,7 +1159,7 @@ ols_plot_resid_stud_fit(house_lm_c1)
 ```
  
 ```{r}
-cbind(house_lm_c$coefficients,house_lm_huber$coefficients)
+cbind(house_lm1$coefficients,house_lm_huber$coefficients)
 ```
 
 
