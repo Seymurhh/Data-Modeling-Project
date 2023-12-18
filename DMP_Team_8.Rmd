@@ -1700,7 +1700,7 @@ cat("SSE:", sse_value, "\n")
 ```{r checking the correlation between predicted price and test price.}
 model_results <- compute(house_NN, test.dat.norm[-1])
 predicted_price <- model_results$net.result
-cor(predicted_price, test.dat.nn$price)
+cor(predicted_price, test.dat$price)
 ```
 
 **Analysis:** The histogram of prediction errors displays a concentration around zero, indicating most predictions are close to the actual values, but the spread towards the right suggests a skew in overestimating house prices.
