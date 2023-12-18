@@ -1,0 +1,1826 @@
+---
+title: "HARVARD EXTENSION SCHOOL"
+subtitle: "CSCI E-106 - Data Modeling - Final Project"
+author: 
+ - Kaleo Mungin, Luciano Carvalho, Ibrahim Hashim, 
+ - Bethun Bhowmik, Mohanish Kashiwar, Seymur Hasanov
+tags: [House Price Prediction, Linear Regression, Neural Networks, Decision Trees, Support Vector Machines (SVM), Data Analysis, Model Selection, Statistical Testing, King County Real Estate, Predictive Analytics]
+abstract: 
+  This project, undertaken by a team of students at Harvard Extension School, focuses on developing a comprehensive predictive model for house prices in King County, USA, using the 'KC_House_Sales' dataset. The dataset provides a rich variety of house attributes, allowing for an in-depth analysis of factors influencing property values. The initial phase of the project involves data cleaning and transformation, including the removal of irrelevant variables and conversion of data types. The primary analytical approach combines traditional linear regression models with more complex methods such as neural networks, decision trees, and support vector machines (SVM). The models are trained on a 70% split of the dataset and validated on the remaining 30%, ensuring robustness and accuracy in predictions. 
+
+  In the subsequent stages, the project delves into graphical analysis, revealing key correlations and trends in the data. Techniques such as box plots, scatter plots, and heatmaps provide insights into the relationships between house prices and attributes like square footage, number of bedrooms, and location. The project also explores the impact of categorical variables and property age on pricing. Model performance is thoroughly tested using various metrics, including MSE and R-squared values. The final selection of the primary model, referred to as the "champion" model, is based on its performance on both the training and testing datasets. The project concludes with a discussion on model limitations, assumptions, and an ongoing monitoring plan, ensuring the model's relevance and accuracy over time.
+date: "`r format(Sys.time(), '%d %B %Y')`"
+geometry: margin=2.54cm
+output:
+  pdf_document:
+    toc: no
+  html_document:
+    df_print: paged
+editor_options: 
+  markdown: 
+    wrap: 72
+
+Bibliography: Bibliography.bib
+---
+\newpage
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warnings = FALSE)
+
+# Load all libraries and aux functions
+source("libs_funcs.R")
+
+```
+\newpage
+```{=latex}
+\setcounter{tocdepth}{3}
+\tableofcontents
+```
+\newpage
+
+# Executive Summary
+
+In this project, our team of data modeling students has meticulously developed a sophisticated model for predicting real estate prices in King County, USA, aiming to inform and guide high-level executives and investment leaders in their strategic decision-making. This model, built from a comprehensive dataset encompassing various property attributes, employs advanced techniques such as linear regression, regression trees, and neural networks, ensuring accuracy and versatility.
+
+The primary objective of the model is to serve as a pivotal tool for investment strategy, market analysis, and policy formulation. It is designed to align with regulatory standards and internal compliance requirements, ensuring ethical and responsible use of data. However, it's important to note that the model's applicability is specific to King County's real estate market, and its predictive accuracy is contingent upon the ongoing integration of current market data.
+
+While our model represents a significant advancement in data-driven real estate analysis, it is essential to recognize its limitations. These include potential biases in historical data and the model's limited generalizability beyond the regional context of King County. Regular updates and adaptations of the model are recommended to maintain its relevance and accuracy in a dynamic market environment.
+
+Overall, this model stands as a testament to the power of data science in enhancing market understanding and investment strategies, offering valuable insights for executive decision-making and organizational growth in the real estate sector.
+
+
+\newpage
+# I. Introduction
+
+In the ever-evolving landscape of real estate, the ability to accurately predict house prices is invaluable. This project, undertaken by a dedicated team from Harvard Extension School, delves into this realm, focusing on King County, USA. The motivation behind our work is twofold: firstly, to provide a robust predictive tool for potential investors and market analysts, and secondly, to contribute to the academic understanding of real estate market dynamics.
+
+Our approach is grounded in the analysis of the 'KC_House_Sales' dataset, a comprehensive collection of house attributes within King County. The dataset, rich in detail, includes features such as square footage, the number of bedrooms, and geographical location, etc., all of which are pivotal in determining house prices. The initial phase of our project involved a thorough data cleaning process. This step was crucial in ensuring the integrity of our analysis, involving the removal of irrelevant variables, handling missing values, and converting data types for consistency.
+
+Once the data was prepared, we embarked on a methodological journey, exploring various statistical and machine learning techniques. Our primary method, linear regression, served as a foundation model, offering insights into the direct relationships between house features and their prices. However, recognizing the complexity of the real estate market, we expanded our toolkit to include more advanced models like neural networks, decision trees, and support vector machines (SVM). Each of these methods brought a unique perspective and depth to our analysis, enabling us to capture non-linear relationships and complex interactions between variables.
+
+The structure of our project involved splitting the dataset into two parts: 70% for training and 30% for validation. This split was strategically chosen to ensure the robustness of our models against unseen data, a critical aspect of predictive modeling. The training phase was an iterative process, where each model was refined through a series of evaluations and adjustments. In doing so, we aimed to strike a balance between model complexity and predictive accuracy.
+
+Our exploratory data analysis revealed several key insights. We observed that certain features, such as square footage and location, had a significant impact on house prices. This initial observation guided our feature selection and engineering process, where we developed new variables that could potentially enhance the model's performance.
+
+As we progressed, the need for a rigorous evaluation framework became apparent. To this end, we employed various metrics such as MSE, R-squared and Pseudo-R squared values. These metrics were instrumental in assessing the performance of our models, both on the training and validation sets. The final selection of our primary model, which we refer to as the "champion" model, was based on a comprehensive evaluation of these metrics.
+ 
+In conclusion, this project represents a significant endeavor in the field of predictive analytics for real estate. Through a blend of traditional statistical methods and advanced machine learning techniques, we have developed a model that not only predicts house prices in King County with a high degree of accuracy but also offers insights into the factors that drive these prices. As we move forward, our focus will be on refining the model, exploring new data sources, and adapting to the changing dynamics of the real estate market.
+
+\newpage
+# II. Description of the data and quality
+
+In this section, we meticulously dissect the King County house sales dataset, a crucial foundation for our predictive modeling. This dataset is a rich amalgamation of diverse variables, ranging from basic house attributes like square footage and number of bedrooms, to more nuanced features such as the year of renovation and the presence of a waterfront. The quality of this dataset is paramount, as it directly influences the reliability and precision of our predictive models. We delve into a detailed assessment of the data quality, addressing aspects like completeness, consistency, and potential biases, ensuring that our analysis is built on a robust and accurate foundation.
+
+## Data Overview
+
+The dataset presented for analysis encompasses a range of housing attributes for properties sold in King County, including the sale price, number of bedrooms and bathrooms, square footage of living and lot space, and other characteristics like the presence of a waterfront, views, and the condition and grade of the house. Each entry is timestamped, providing a date of sale, which can be instrumental in understanding market trends over time.
+
+```{r Data Overview}
+
+# Overview of the King County House Sales Dataset
+df_house = read.csv("KC_House_Sales.csv")
+cat("Number of NA values in dataframe:", sum(is.na(df_house)))
+head(df_house)
+
+```
+
+## Data Types, Categories and Cleaning
+
+Our dataset includes a blend of continuous and categorical data types. Notably, the 'zipcode' and 'waterfront' variables are categorical despite their numeric appearance. 'Zipcode' represents different regions, and 'waterfront' is a binary indicator, thus requiring special attention during preprocessing. These variables, along with others like 'view' and 'condition', will be transformed into dummy variables to facilitate their use in our regression models.
+ 
+The data cleaning process has involved removing non-informative variables such as IDs, correcting data types (e.g., transforming sale price to a numeric format and parsing dates into a usable format), and creating new variables that could reveal temporal trends (e.g., year, month, day of sale).
+
+```{r Data types, Categories and Cleaning}
+
+# The "id" column must be removed
+df_house = subset(df_house, select = -id)
+
+# The data in the column "price" must be converted to numeric
+df_house$price <- as.numeric(gsub("[\\$,]", "", df_house$price))
+
+# Cleanup of "date" and creation of "year", "month", and "day" columns
+df_house$date <- as.POSIXct(df_house$date, format = "%Y%m%d")
+df_house$year <- as.numeric(format(df_house$date, "%Y"))
+df_house$month <- as.character(format(df_house$date, "%m"))
+df_house$day <- as.numeric(format(df_house$date, "%d"))
+
+# Collect columns that are numeric only
+ndf_house = df_house[sapply(df_house, is.numeric)]
+# This action ends up the column "date" from the dataset
+
+head(df_house)
+
+```
+
+## Categorical Variables and Age Analysis
+
+### Renovation Indicator Variable
+
+A binary variable named 'renovated' was introduced to indicate whether a property has undergone renovation. This variable is set to 1 if the 'yr_renovated' field is not zero, signifying that the property has been renovated at least once. Otherwise, it is set to 0, indicating no renovation. This distinction provides a straightforward way to assess the impact of renovations on property values.
+
+```{r Renovation Indicator Variable}
+
+# Creating a new variable 'renovated' 
+# 1 if the property has been renovated (yr_renovated != 0), 0 otherwise
+df_house$renovated = ifelse(df_house$yr_renovated != 0, 1, 0)
+
+```
+
+### Property Age Calculation
+
+This is a tentative way to consider *"age since last renovation"* and see if there's a correlation between the time a house was last built/renovated on its selling price. A new variable called 'age' was calculated to represent the current age of each property. If a property was renovated, its age is the difference between 2023 and the renovation year ('yr_renovated'). If not renovated, the age is the difference between 2023 and the year the house was built ('yr_built'). This variable helps in understanding the effect of property age and recent renovations on house prices.
+
+```{r Property Age Calculation}
+
+# Creating 'age' column
+df_house$age = ifelse(df_house$renovated == 1, 
+                      2023 - df_house$yr_renovated, 
+                      2023 - df_house$yr_built)
+
+head(df_house)
+```
+
+### Reinterpreting Zipcode as a Categorical Variable
+
+Transformation of the 'zipcode' variable from numerical to categorical data. Typically, zip codes are mistakenly treated as numerical values in datasets. However, they are categorical by nature, representing distinct geographical areas rather than possessing any inherent numerical relationship. This conversion is crucial for our analysis, as it allows us to use the zip code as a qualitative variable in our models, acknowledging its role in distinguishing different regions and their unique characteristics in housing prices. The R code snippet demonstrates the simple yet essential process of converting 'zipcode' to a character type, ensuring it is correctly utilized in subsequent analyses.
+
+```{r Zipcode to Character}
+
+# Convert Zipcode to a Categorical variable (char) instead of number
+df_house$zipcode = as.character(df_house$zipcode)
+
+head(df_house)
+
+df_house_original <- df_house
+df_house_original[c("date")] <- list(NULL)
+```
+
+## Enhancing Data Integrity: Addressing Redundancies and Correlations
+
+In this pivotal section, we undertake a rigorous data cleaning process, focusing on eliminating unnecessary variables and managing highly correlated variables. This step is vital for enhancing the integrity and validity of our dataset, ensuring that our predictive models are based on the most relevant and independent variables. By methodically addressing these aspects, we aim to create a more streamlined and efficient dataset, thereby laying a solid foundation for robust and accurate predictive modeling in our real estate analysis.
+
+### Correlation Analysis
+
+In the "Correlation Analysis" section, we delve into examining the relationships between various features of the dataset and the target variable, 'price'. This involves creating a correlation matrix and corresponding plots to visually and statistically identify how different variables are related to each other and to house prices.
+
+```{r Correlation Matrix}
+
+# Create a correlation Matrix
+cor_matrix = cor(ndf_house)
+correlation_df = as.data.frame(cor_matrix)
+
+# New dataframe with variables 'highly' (>0.2) correlated with price
+x_high = subset(ndf_house, 
+                select = c(view, waterfront, sqft_basement, sqft_living, 
+                           sqft_living15, sqft_above, grade, bathrooms, 
+                           bedrooms, floors, lat))
+
+# Create a Heatmap 
+pheatmap(cor_matrix,
+         color = colorRampPalette(c("#6baed6", "white", "#ff3366"))(20),
+         main = "Correlation Matrix Heatmap",
+         fontsize = 8,
+         cellwidth = 15,
+         cellheight = 11,
+         display_numbers = TRUE
+)
+
+```
+
+**Analysis:** Following the generation of the correlation plot, a thorough analysis is vital. For example, high correlations between 'sqft_living', 'grade', 'sqft_above', and 'price' indicate a strong linear relationship, suggesting that larger homes, built with a high-quality level of construction and design, and more above-ground square footage, tend to be more expensive. These variables could serve as key predictors in a pricing model. We will explore them further int he next model development process. However, it's essential to note that correlation does not imply causation. Variables like 'zipcode', now treated as categorical, will not be represented in this correlation matrix, reminding us to consider geographical influences separately. Additionally, observing any potential multicollinearity between predictors is crucial, as it can affect the reliability of the regression model. Finally, interpreting these correlations within the context of the real estate market in King County provides insights into local housing trends and factors influencing house prices.
+
+
+### Unraveling High Correlation in Data Variables
+
+This section focuses on identifying highly correlated variables within the King County house sales dataset. Through an R script, we systematically extract numeric variables and construct a correlation matrix, applying a threshold to spotlight significant correlations. We aim to reveal pairs of variables with a correlation coefficient exceeding 0.8, signifying strong linear relationships. This analysis is crucial in understanding interdependencies among variables, guiding us in avoiding multicollinearity in our predictive models and ensuring their statistical integrity and interpretability.
+
+```{r Identifying highly correlated variables}
+
+# Identifying highly correlated variables
+
+# Retain only the numeric columns in the dataset
+df_house_cor <- df_house[sapply(df_house, is.numeric)]
+
+# use 'complete.obs' to handle missing values
+corr_matrix <- cor(df_house_cor, use = "complete.obs")
+
+threshold <- 0.8
+high_corr <- which(abs(corr_matrix) > threshold, arr.ind = TRUE)
+high_corr <- high_corr[high_corr[, 1] < high_corr[, 2], ]
+
+# Find highly correlated predictors
+for (pair in 1:nrow(high_corr)) {
+    row <- high_corr[pair, "row"]
+    col <- high_corr[pair, "col"]
+    cat(names(df_house_cor)[row], "and", names(df_house_cor)[col], 
+        "have a correlation of", corr_matrix[row, col], "\n")
+}
+```
+
+### Streamlining the Dataset for Enhanced Analysis
+
+This section of the analysis is dedicated to refining the dataset by removing variables that are redundant or unnecessary for our modeling objectives. Specifically, we remove columns such as 'sqft_living', 'yr_renovated', 'yr_built'. This pruning is an essential step in data preparation, ensuring that our dataset is lean and focused, which helps in improving the efficiency and accuracy of our predictive models. By eliminating these variables, we aim to enhance the clarity and relevancy of our data analysis.
+
+```{r Remove unnecessary variables}
+
+# Remove redundant, unnecessary columns from dataset. 
+df_house[c("date","sqft_living", "yr_renovated", 
+           "yr_built")] <- list(NULL)
+
+```
+
+## Initial Statistical Data Summary
+
+The dataset from King County includes 21,613 observations with 22 variables related to house sales. Variables include continuous data like price, square footage, and lat/long coordinates, and categorical data such as bedrooms, floors, and waterfront status. The price ranges from $75,000 to $7,700,000, with a mean of $540,088. Houses range from 0 to 33 bedrooms, reflecting diverse property types. The dataset also contains binary and ordinal variables, such as view and condition, that require dummy coding for analysis.
+
+```{r Stat Summary}
+
+str(df_house)
+summary(df_house)
+
+```
+
+```{r Stat summary of the price}
+
+# Stat summary of the price
+summary(df_house$price)
+
+```
+
+## Graphical Analysis
+
+
+### Exploratory Analysis through Pairwise Scatter Plots
+
+This subsection is dedicated to exploring the relationships between house prices and other key variables using pairwise scatter plots. These visualizations aim to unearth correlations that could indicate influential factors in housing prices within King County. By examining these relationships, we can hypothesize which features may drive property values and warrant further investigation in our predictive modeling.
+
+The Pairwise scatter plot below shows the correlation between highly correlated variables between price and other independent variables extracted from heatmap correlation matrix.
+
+```{r Pairwise scatter plot}
+
+# Pairwise scatter plot with correlation coefficients
+ggpairs(ndf_house, 
+        columns = c("price", "sqft_living", "bedrooms", "bathrooms", "grade"), 
+        title = "Pairwise Scatter Plots with House Price")
+
+```
+
+**Analysis:** The pairwise scatter plots reveal varying degrees of correlation between house prices and selected features. Notably, the square footage of living space (sqft_living) and construction grade (grade) show substantial positive correlations with price, indicating that larger, higher-quality homes tend to command higher prices. Conversely, the number of bedrooms shows a weaker correlation, suggesting that while size matters, the mere number of bedrooms is less predictive of price. These insights are critical for focusing our modeling efforts on the most impactful predictors. Also, notice that each variable's distribution is shown on the diagonal, with price notably skewed towards lower values, indicating most homes are on the more affordable end of the spectrum with fewer high-priced outliers.
+
+
+### Distribution of Sales Prices
+
+This subsection aims to analyze the distribution of sales prices across the dataset. The histogram provides visual insight into the range and frequency of house prices, highlighting the market's tendencies.
+
+```{r Histogram of prices}
+
+# Plot a Histogram of house sales prices
+ggplot(df_house, aes(x = price)) +
+  geom_histogram(bins = 30, fill = "#6baed6", color = "black") +
+  labs(title = "Histogram of House Prices", x = "Price", y = "Count") +
+  theme_minimal()
+
+```
+
+**Analysis:** The histogram below shows the distribution of house prices, revealing that most houses are in the lower price range with a significant decrease in the number of houses as the price increases, indicating a right-skewed distribution with relatively few high-priced houses. This skewness suggests that while the majority of the market consists of moderately priced homes, luxury properties significantly drive up the average price.
+
+
+### Variability of Housing Prices Across Bedroom Counts
+
+This subsection will analyze the relationship between the number of bedrooms in a property and its market price. By employing a boxplot, we can visually discern the central tendency and dispersion of house prices within each bedroom category, revealing insights into how additional bedrooms could potentially affect property values.
+
+```{r Outlier analysis using Boxplots}
+
+# Boxplot for price by number of bedrooms
+ggplot(df_house, aes(x = factor(bedrooms), y = price)) + 
+  geom_boxplot(fill = "#6baed6", color = "black") +
+  labs(title = "Boxplot of Prices by Number of Bedrooms", 
+       x = "Number of Bedrooms", y = "Price") +
+  theme_minimal()
+
+```
+
+**Analysis:** The provided boxplot depicts the distribution of house prices with respect to the number of bedrooms. It shows a general increase in median price as the number of bedrooms increases up to a certain point, after which the median price plateaus and then fluctuates. Notably, homes with an exceptionally high number of bedrooms (e.g., 11, 33) exhibit significant price variability and outlier presence. This suggests a more complex relationship where factors beyond mere bedroom count may influence the higher pricing tiers. The presence of outliers, especially in categories with fewer bedrooms, indicates exceptions to general trends, possibly due to location, property condition, or other value-adding features. 
+
+
+### Price Variability by Construction Grade
+
+This subsection explores the relationship between house prices and construction grades. Construction grade is an indicator of the quality and design of a building, which can significantly impact its market value. The boxplot visualizes the distribution of house prices within each grade category, revealing how price variability and central tendencies change with the grade.
+
+```{r Outlier analysis using Boxplots 2}
+
+# Boxplot for price by construction grade
+ggplot(df_house, aes(x = factor(grade), y = price)) + 
+  geom_boxplot(fill = "#6baed6", color = "black") +
+  labs(title = "Boxplot of Prices by Construction Grade", 
+       x = "Grade", y = "Price") +
+  theme_minimal()
+
+```
+
+**Analysis:** The boxplot of house prices by construction grade shows that higher-grade homes tend to have a higher median price, indicating a positive correlation between construction quality and house value. Notably, the spread and range of prices increase with the grade, suggesting greater diversity in the higher-end market. Outliers are present across all grades, but are especially pronounced at higher grades, which may indicate a niche market for luxury homes with exceptional features not captured by the grade alone.
+
+
+### Average Price by Number of Bedrooms
+
+In this subsection, the analysis aims to uncover how the number of bedrooms influences the average house price. This investigation will reveal market trends and preferences, offering insights into the most sought-after property types.
+
+```{r Average Price analysis}
+
+# Average Price analysis
+average_prices <- aggregate(price ~ bedrooms, data = ndf_house, FUN = mean)
+ggplot(average_prices, aes(x = factor(bedrooms), y = price)) +
+  geom_bar(stat = "identity", fill = "#6baed6", color = "black") +
+  labs(title = "Average Price by Number of Bedrooms",
+       x = "Number of Bedrooms",
+       y = "Average Price") +
+  theme_minimal()
+
+```
+
+**Analysis:** The bar chart depicting "Average Price by Number of Bedrooms" reveals a nuanced view of the housing market. Unlike the variability presented in the "Boxplot of Prices by Number of Bedrooms," which shows a broad price range across different bedroom counts, the bar chart focuses on average values, smoothing out extreme data points. It highlights a peak in average prices for mid-range bedroom counts, suggesting a higher market value for these properties. This pattern may reflect a balance between affordability and space that appeals to a wider demographic, contrasting with the outliers seen in the boxplot. There is a notable outlier at 33 bedrooms with a relatively low average price, which could indicate an atypical property or data error.
+
+
+### House Prices by Waterfront Presence
+
+Here the analysis examines the impact of a waterfront location on house prices. This visual comparison aims to highlight any premium attached to waterfront properties, which is a common factor in real estate valuation.
+
+```{r Outlier analysis for Waterfront vs Mountain view}
+
+# Boxplot for Outlier analysis of Waterfront vs Mountain view
+ggplot(df_house, aes(x = factor(waterfront), y = price)) +
+  geom_boxplot(fill = "#6baed6", color = "black") +
+  labs(title = "Boxplot of House Prices by Waterfront", 
+       x = "Waterfront", y = "Price") +
+  theme_minimal()
+
+```
+
+**Analysis:** The boxplot illustrates a significant difference in the distribution of house prices based on the presence of a waterfront. Non-waterfront properties (denoted by 0) show a dense clustering of prices with fewer outliers, suggesting a more uniform pricing structure within this category. On the other hand, waterfront properties (denoted by 1) exhibit a higher median price and a much wider spread, indicating a greater variance in how much buyers are willing to pay for this luxury feature. The presence of outliers in the waterfront category also suggests that certain premium properties command exceptional prices, which are not as prevalent in non-waterfront real estate. This analysis underscores the value added by waterfront locations, which can significantly increase property values and attract a niche market willing to invest in these desirable features.
+
+
+### Mapping Price Hotspots: Geospatial Analysis of King County's Real Estate
+
+This geospatial visualization maps the distribution of house prices across King County. By plotting price data against longitude and latitude, we aim to identify regional price trends and potential hotspots of high-value properties. This analysis provides insights into how location within the county correlates with housing prices, supporting a comprehensive understanding of the real estate market dynamics.
+
+```{r Geo dist of house prices in King County}
+
+# Scatter plot of properties with mid-point transition color
+ggplot(data = df_house, aes(x = long, y = lat, color = price)) +
+  geom_point(alpha = 10) +
+  scale_color_gradient(low = "#6baed6", high = "red") +
+  labs(title = "Geographical Distribution of House Prices in King County",
+       x = "Longitude", y = "Latitude", color = "Price") +
+  theme_minimal()
+
+```
+
+**Analysis:** The geographical map scatter plot reveals a concentration of higher-priced properties (indicated by warmer colors) along specific geographic corridors, more specifically situated around the latitude line of 47.6 and longitude between -122.25 and -122.00, which corresponds to the central and northern parts of Seattle, suggesting that certain areas command premium prices. Notably, waterfront locations and urban centers show elevated price levels. The relatively lower-priced properties per square foot, shown in colder colors, are more dispersed and located primarily south of central Seattle, extending towards Tacoma, as well as in the outlying suburban areas. It is also noticeable that along the latitudinal line around 47.4, there are pockets of high-priced properties per square foot, potentially indicating affluent neighborhoods or areas with high-value real estate. This spatial pattern underscores the importance of location in property valuation and can guide potential investments and urban development strategies. The map clearly shows a correlation between location and property value per square foot, with central urban areas exhibiting the highest values. This pattern is typical for urban centers where proximity to amenities, employment opportunities, and other socioeconomic factors drive up real estate prices. The visual representation also highlights outliers, which could be subject to further investigation to understand the factors driving their exceptional market value.
+
+## Summary: Comprehensive Data Assessment and Visual Exploration
+
+In Section II, we dove into the analytical scrutiny of King County's house sales dataset and thoroughly explored it, examining both continuous and categorical variables through statistical tests and extensive graphical analysis, vital for the predictive modeling accuracy. We highlighted the strong correlations between variables like 'sqft_living', 'grade', 'sqft_above', and 'price'. The section progresses through statistical examinations, categorical conversions, and novel variable formulations, all while maintaining a critical eye on data integrity. Extensive graphical analyses elucidate underlying trends, from scatter plots to geospatial mappings, provided nuanced insights into the factors influencing house prices, setting the stage for advanced predictive modeling in subsequent sections, and painting a vivid landscape of the market's intricacies. This foundational work paves the way for sophisticated modeling techniques, poised to capture the essence of the county's real estate dynamics.
+
+
+\newpage
+# III. Model Development Process
+
+
+## Data Partitioning
+
+In this crucial phase of the model development process, we strategically divide our dataset into separate subsets for training and validation purposes. Establishing a 70-30 split, we allocate the majority for model training, ensuring ample data for learning, while reserving 30% for testing, which will serve as a litmus test for our model's predictive power in real-world scenarios.
+
+```{r splitting the data into train and test}
+set.seed(1023)
+n<-dim(df_house)[1]
+IND<-sample(c(1:n),round(n*0.7))
+train.dat<-df_house[IND,]
+test.dat<-df_house[-c(IND),]
+
+dim(train.dat)
+dim(test.dat)
+```
+
+**Analysis:** The partitioning results in 15,129 cases for model training, providing a comprehensive learning set that encompasses a wide spectrum of the data's variability. The test set, with 6,484 cases, is sufficiently large to evaluate model performance and guard against overfitting. This balanced approach to data division equips us with the necessary framework to rigorously train and objectively assess our predictive model, setting a strong foundation for robust statistical analysis.
+
+
+## Model Fitting and Initial Evaluation
+
+In this step, we meticulously construct a linear regression model, leveraging the training dataset to ascertain how well our predictors explain the variability in house prices. The initial model fitting is a critical juncture where we assess the significance of each predictor and the overall strength of the model.
+
+```{r Regression model fitting}
+
+# Fit a linear regression model based on the training dataset
+house_lm<-lm(price ~.,data=train.dat)
+summary(house_lm)
+
+# Calculate the Mean Standard Error
+MSE <- summary(house_lm)$sigma^2
+print(MSE)
+
+```
+
+**Analysis:** The preliminary output indicates a robust model with an R-squared value of 80.66%, signifying that approximately 80% of the variability in house prices can be explained by the predictors in the model. The significant p-values across most variables confirm their relevance in predicting house prices. However, the substantial Residual Standard Error suggests room for improvement in model accuracy. The residual diagnostics will need to be carefully examined to identify potential violations of model assumptions and to strategize on improvements.
+
+The house_lm model to predict price has:
+  - Residual Standard Error of 159,500 on 15040 degrees of freedom
+  - Adjusted R-squared of 80.55%
+  - p-value is practically near 0
+  - Mean Standard Error is 25,460,114,812
+
+Overall, the model appears to be statistically significant overall given the low p-value for the F-statistic. Most predictors (except sqft_lot15) have a statistically significant impact on the house price. Predictions on the test dataset should be done to further validate model usefulness.
+
+
+## Assumptions Testing 
+
+This section is devoted to examining the assumptions inherent in linear regression analysis. By evaluating the residuals from the fitted model, we can assess whether the assumptions of linearity, normality, homoscedasticity, and the absence of influential outliers are met. These diagnostics are crucial to ensure the validity of the model's inferences.
+
+```{r plotting the Reg model - house_lm}
+
+# Plotting the Regular Model
+par(mfrow=c(2,2))
+plot(house_lm)
+
+```
+
+**Analysis:** The diagnostic plots from the model indicate potential issues with the regression model. We observe the following:
+  - *LINEARITY ASSUMPTION:* The Residuals vs Fitted plot shows a non-random pattern, suggesting that linearity assumptions may be violated. There's a cone shape along the line, which is mostly horizontal along 0.
+  - *NORMALITY ASSUMPTION:* The Q-Q plot of residuals reveals deviations from normality, particularly in the tails. The residuals do not meet the normality assumption.
+  - *CONSTANT VARIANCE ASSUMPTION:* The Scale-Location plot indicates heteroscedasticity, implying that the variance of residuals is not constant. 
+  - The *HOMOSCEDASTICITY ASSUMPTION* is violated. Moreover the line is curvilinear.
+  - Lastly, the Residuals vs Leverage plot flags several potential outliers and influential points that could unduly affect the model’s predictions. 
+  
+These observations suggest that the model may benefit from transformations or robust regression techniques to meet the necessary assumptions.
+
+
+## Variable Inflation Factor (VIF) Analysis
+
+The Variable Inflation Factor (VIF) analysis is conducted to assess multicollinearity among predictors in the regression model. VIF quantifies how much the variance of an estimated regression coefficient increases if your predictors are correlated. A VIF above 5 suggests a problematic level of multicollinearity. 
+
+
+```{r Calculate VIF}
+
+# Variable Inflation Factor
+vif(house_lm)
+
+```
+
+**Analysis:** The VIF statistics indicate that 'sqft_above' and 'zipcode' display significant multicollinearity, with 'zipcode' showing an exceptionally high VIF due to numerous dummy variables. Additionally, 'lat' and 'long' have high VIF values, suggesting that geographical variables are interrelated. These high VIF values suggest a need to consider reducing multicollinearity, possibly by combining related variables, removing some predictors, or applying regularization techniques to improve the model's predictive performance and interpretability.
+
+
+## Refinement of Predictive Model Post-VIF Analysis
+
+The process of refining a predictive model often involves the elimination of variables that cause multicollinearity. This subsection illustrates how the identification of high VIF scores led to the removal of the 'lat' and 'long' variables, which are likely to be interdependent, and the subsequent reevaluation of the model.
+
+Removing 'zipcode' actually reduces the model predictability from 80% to about 65%, we're keep it as is and will work on some transformation later on.
+
+```{r Remove highly correlated variables ccording to VIF analysis}
+
+# Remove redundant, unnecessary columns from dataset. 
+df_house[c("lat", "long")] <- list(NULL)
+train.dat[c("lat", "long")] <- list(NULL)
+test.dat[c("lat", "long")] <- list(NULL)
+
+set.seed(1023)
+n<-dim(df_house)[1]
+IND<-sample(c(1:n),round(n*0.7))
+train.dat<-df_house[IND,]
+test.dat<-df_house[-c(IND),]
+
+dim(train.dat)
+dim(test.dat)
+
+```
+
+```{r refitting the model after removing lat and long}
+
+# Refitting the Model after removing Latitude and Longitude
+house_lm<-lm(price ~.,data=train.dat)
+summary(house_lm)
+
+# Variable Inflation Factor of the adjusted Model 
+vif(house_lm)
+
+```
+
+**Analysis:** After removing the 'lat' and 'long' variables to address multicollinearity, the model was re-fitted, resulting in an unchanged R-squared value of approximately 80.65%. This indicates that the removal of these variables did not significantly affect the model's explanatory power. The residual standard error remains around 159,600, and the p-value is still less than 2.2e-16, suggesting that the model remains statistically significant. The GVIF values post-refinement show that while multicollinearity may still be present, its severity has decreased, pointing towards an improved model fit and predictive capability.
+
+
+## Evaluating Model Efficacy with Test Data
+
+This subsection assesses the linear regression model's performance on the test data. By applying the model to unseen data, we measure its predictive accuracy and generalizability beyond the training dataset.
+
+```{r Test Linear Regression models}
+
+# Test data Predictions
+house_lm_test_pred <- predict(house_lm, newdata = test.dat)
+
+house_lm_test_mse <- mean((house_lm_test_pred - test.dat$price)^2)
+house_lm_test_rmse <- sqrt(house_lm_test_mse)
+house_lm_test_residuals <- test.dat$price - house_lm_test_pred
+house_lm_test_rsq <- 1 - var(house_lm_test_residuals) / var(test.dat$price)
+house_lm_test_sse <- sum((test.dat$price - house_lm_test_pred)^2)
+
+# Add the predictions to the results
+results.df <- data.frame(model = "Linear Regression Test Data Predictions",
+                         R.Squared.Train = summary(house_lm)$r.square,
+                         R.Squared.Test = house_lm_test_rsq,
+                         RMSE.test = house_lm_test_rmse,
+                         SSE.test = house_lm_test_sse)
+
+print(results.df)
+
+```
+
+**Analysis:** The model demonstrates robust predictive performance with an R-squared of 0.8124 on the test data, indicating that about 81.24% of the variability in the test price data is explained by the model. This is a slight increase from the training R-squared of 80.65%, suggesting good model generalization. The RMSE of 164,370.3 quantifies the average deviation between the predicted and actual prices, and the SSE of 1.75182e+14 represents the total deviation squared, both of which are metrics used to gauge the model’s accuracy and precision on new data.
+
+
+## Enhancing Model Accuracy by Dropping Insignificant Predictors
+
+This segment of the analysis concentrates on refining the model by discarding predictors that do not contribute significantly to the prediction of house prices. This is achieved by examining the p-values of the predictors and eliminating those that surpass a chosen significance level, thereby simplifying the model without notably affecting its explanatory power.
+
+The columns 'sqft_lot15' and 'year' are being dropped for having a p-value > 0.05, subsequently 'year' and 'month' are also being dropped because of their similarity to the calculated column 'age' that takes year built or renovated to determine how modern the construction might be.
+
+```{r Drop Insignificant Predictors}
+
+# Remove predictors from datasets
+train.dat <- subset(train.dat, select = -c(sqft_lot15, day))
+test.dat <- subset(test.dat, select = -c(sqft_lot15, day))
+
+# Refit the model with updated datasets
+house_lm <- lm(price ~ ., data = train.dat)
+summary(house_lm)
+
+# Display the Regression function of Price
+# Assuming you have a function dispRegFunc to display the regression equation
+output <- capture.output(dispRegFunc(house_lm))
+
+# Print the output
+cat(paste(strwrap(output, width=80), collapse="\n"))
+
+```
+
+**Analysis:** Post removal of predictors deemed insignificant (p-value > 0.05), the model's R-squared decreased insignificantly, indicating a negligible loss in explanatory power. This reduction is counterbalanced by the benefits of a more parsimonious model, which can lead to better generalization on unseen data. The remaining predictors continue to display strong significance levels (p < 0.05), assuring their relevance in price prediction. The residual standard error remains relatively stable, further affirming the refined model's validity.
+
+### Prediction Power of the new Model
+
+```{r Test Linear Regression model}
+
+# Test data Predictions
+house_lm_test_pred <- predict(house_lm, newdata = test.dat)
+
+house_lm_test_mse <- mean((house_lm_test_pred - test.dat$price)^2)
+house_lm_test_rmse <- sqrt(house_lm_test_mse)
+house_lm_test_residuals <- test.dat$price - house_lm_test_pred
+house_lm_test_rsq <- 1 - var(house_lm_test_residuals) / var(test.dat$price)
+house_lm_test_sse <- sum((test.dat$price - house_lm_test_pred)^2)
+
+# Append the predictions after predictors removal to the results
+results.df = rbind(results.df, data.frame(
+  model = "Linear Regression Test without Insignificant Predictors",
+  R.Squared.Train = summary(house_lm)$r.square,
+  R.Squared.Test = house_lm1_test_rsq,
+  RMSE.test = house_lm1_test_rmse,
+  SSE.test = house_lm1_test_sse))
+
+print(results.df)
+
+```
+
+
+
+## Diagnostic Plotting for Residual Analysis
+
+This section is dedicated to visually diagnosing the regression model's fit using residual plots. These plots are essential tools for detecting issues with model assumptions such as linearity, normality, and homoscedasticity.
+
+### Boxplot of Residuals
+
+The boxplot provides a visual summary of the residuals' distribution, offering insights into potential outliers and the central tendency of the model's errors.
+
+```{r Boxplot of Residuals}
+
+# Create a Data Frame with the residuals
+ei <- house_lm$residuals
+ei_df <- data.frame(residuals = ei)
+
+# Create a Boxplot of Residuals
+ggplot(ei_df, aes(y = residuals)) +
+  geom_boxplot(fill = "#6baed6", color = "black") +
+  coord_flip() +  # To make the boxplot horizontal
+  labs(title = "House Price Regression Residuals", x = "") +
+  theme_minimal() +
+  theme(
+    axis.title.y = element_blank(),  
+    axis.text.y = element_blank(), 
+  )
+
+```
+
+**Analysis:** There are individual points far from the central box, which are potential outliers. These points suggest instances where the model predictions were significantly off from the actual house prices. The presence of these outliers could be due to unusual or extreme values within the dataset that the model could not accurately predict, or they could indicate potential leverage points that are influencing the model fit. While the residuals being centered around zero is a good sign, the significant outliers indicate that there might be instances where the model fails to capture the underlying pattern. These could be due to the model not accounting for non-linear relationships or interactions between predictors, or they could be a result of data issues such as incorrect entries, extreme values, or influential points that have a disproportionate effect on the model. In summary, the boxplot suggests that while the model is generally good at predicting house prices, there are a few cases where it performs poorly. The reasons for these poor predictions should be explored further. This could include looking into the data points corresponding to the outliers to understand what might be causing these large residuals and considering model improvements or data transformations if necessary.
+
+
+### Residuals vs. Fitted Values Plot
+
+This plot examines the relationship between residuals and predicted values, crucial for identifying non-linear patterns that a linear model may not capture.
+
+```{r Fitted vs residuals}
+
+# Create Fitted vs Residuals Plot
+ggplot(data = data.frame(fitted = house_lm$fitted.values, residuals = ei), aes(x = fitted, y = residuals)) +
+  geom_point(color = "#6baed6") +
+  geom_hline(yintercept = 0, color = "black", linetype = "dashed") +
+  labs(x = "Fitted Values", y = "Residuals", title = "Fitted vs. Residuals Plot") +
+  theme_minimal()
+
+```
+
+**Analysis:** This plot suggests that while the model may be suitable for a range of predictions, there are certain areas, especially at the higher end of the price spectrum, where the model's assumptions do not hold, and its predictive accuracy is compromised. Further investigation and possible model refinement are warranted.
+
+
+## Analysis of Variance (ANOVA) for Model Comparison
+
+The ANOVA test has been conducted to compare the variance explained by each predictor variable in the linear regression model to the overall variance of the response variable, house prices. The F-statistic is used to test the null hypothesis that a predictor's group means are equal (i.e., the variable has no effect) against the alternative hypothesis that at least one group mean is different.
+
+```{r Run ANOVA}
+
+# Run Analysis of Variance on the current model
+anova(house_lm)
+
+```
+
+**Analysis:** The ANOVA indicates that most of the variables included in the model are significant predictors of house prices. However, the significance of floors is not established, and the high residual sum of squares suggests room for model improvement, possibly by including additional predictors or refining existing ones. Some details:
+  - *Significant Predictors:* Almost all variables, except floors, have a highly significant p-value (less than 0.05), indicated by "< 2.2e-16", which means these variables contribute significantly to the model and have a strong association with the house price.
+  - *Floors Variable:* The floors variable, however, has a p-value of 0.229, which is greater than the typical alpha level of 0.05, suggesting that this predictor does not have a statistically significant effect on the house price within the model.
+  - *Effect Sizes:* The Sum Sq column represents the total variance explained by each variable. For example, bathrooms, with the highest Sum Sq value, contribute a large effect to the price, indicating that as the number of bathrooms in a house increases, the price is significantly affected.
+  - *Predictor Importance:* The F-value column gives a sense of the relative importance of each predictor. Higher values indicate a greater impact on the response variable. Here, bathrooms and grade have the highest F values, suggesting they are key predictors of house prices in the model.
+  - *Model Adequacy:* The Residuals row shows the variance that is not explained by the model. A large Sum Sq for residuals suggests that there might be other factors affecting house prices that are not included in the model.
+
+
+
+## Statistical Tests for Individual Coefficients
+
+Individual coefficient significance testing within a regression model is crucial to identify which predictors have a statistically significant impact on the response variable. In this case, a two-tailed t-test is employed for each predictor to test the null hypothesis ($H_0$) that the coefficient is equal to zero (no effect) against the alternative hypothesis (HA) that the coefficient is not equal to zero (significant effect). The critical t-value is determined based on the alpha level ($\alpha=0.01$) and the degrees of freedom associated with the model.
+
+A two sides t statistical test is used for testing individual coefficients and their significance. The critical t -value applicable given $\alpha=0.01$ and n-2 degrees of freedom is 2.576.
+$H_0$: intercept = 0, $H_a$: intercept is not 0
+$H_0$: slope = 0    , $H_a$: slope is not 0
+Decision rule: when t > t critical reject null hypothesis
+
+The model, as indicated by the significant coefficients, suggests that features such as the number of bedrooms, bathrooms, square footage of living space, waterfront status, view, grade, etc, play a statistically significant role in predicting the house price.
+
+```{r}
+
+# We divide by 2 because this is a two tail test
+# ... if alpha=0.05, then use .05/2
+conf <- 0.01/2
+
+# Manually calculate the degrees of freedom
+df <- 21613-2            
+value <- formatC(qt(conf, df, lower.tail = FALSE))    
+print(paste("Critical T values: ", value))
+
+# Extract coefficients in matrix
+matrix_coef <- summary(house_lm)$coefficients
+matrix_coef   
+
+# Matrix manipulation to extract estimates
+my_estimates <- matrix_coef[ , 1]
+
+# Step 6: Pr(>|t|) < 0.01 there is sufficient statistical evidence to reject 
+# null for both parameters. Using a t-test we noted that t-values 
+# (6.259865 and abs(4.102897) are larger than t-critical that is 2.637
+
+```
+
+**Analysis:** It indicates that many predictors have t-values significantly larger than the critical t-value of 2.576, suggesting that these variables have coefficients significantly different from zero. For instance, predictors such as bedrooms, bathrooms, and waterfront status exhibit large t-values and very small p-values, far below the 0.01 significance level, confirming their strong influence on house prices.
+
+$H_o$: Error variances are constant
+$H_a$: Error variances are not constant
+Decision Rule is if statistic> critical reject the null
+or if p-value < $\alpha$ (0.01) reject the hull
+
+P value is < 2.2e-16. So we reject $H_0$, Error variances are not constant.
+
+The intercept, despite its negative coefficient, is significantly different from zero, which suggests that the base price for the model (the price when all other predictors are zero) is a meaningful value in the context of the dataset.
+
+The analysis also highlights the complexity and the nuanced nature of real estate pricing, where a multitude of factors must be considered to accurately predict prices. The significant predictors identified through these t-tests can provide actionable insights for real estate valuation and investment strategies.
+
+In summary, most predictors in the model contribute significantly to predicting house prices, with a few exceptions. These insights can guide future model refinement and the selection of variables for more robust predictive analytics.
+
+
+## Breusch-Pagan Test for Heteroskedasticity
+
+The Breusch-Pagan test is a statistical test used to detect the presence of heteroskedasticity in a regression model. Heteroskedasticity occurs when the variance of the errors is not constant across all levels of the independent variables. When heteroskedasticity is present, it can lead to inefficiency of the estimates and can affect the validity of some statistical tests.
+
+```{r Run BP test}
+
+# Test the model for Heteroskedasticity
+bptest(house_lm, studentize = FALSE)
+
+```
+
+**Analysis:** The results of the Breusch-Pagan test show a BP statistic of 65708 with 82 degrees of freedom, and the p-value is less than 2.2e-16. This extremely low p-value indicates strong evidence against the null hypothesis of homoskedasticity (constant error variance). Thus, we reject the null hypothesis in favor of the alternative, which is that heteroskedasticity is present in the model. The presence of heteroskedasticity suggests that the error variance changes with the level of the independent variables, which may imply that the model could be improved. For instance, this could be addressed by transforming variables, adding variables to the model that capture the effect on variance, or using heteroskedasticity-consistent standard error estimators. In practical terms, this test suggests that the model's predictive performance may vary across different values of the predictors, and care should be taken when interpreting the results, especially concerning the significance of the predictors and the prediction intervals for the house prices. Further investigation and potential model adjustments are warranted to address this issue.
+
+## Box-Cox Transformation
+
+The Box-Cox transformation[@libretexts_boxcox] is a statistical technique used to stabilize variance and make the data more closely adhere to the assumption of normality, which is a key consideration in linear regression modeling. This section of the analysis focuses on determining the optimal lambda parameter for the Box-Cox transformation of the response variable, which in this context is the house price. By conducting an initial wide search followed by a refined search for lambda, we aim to identify the value that maximizes the log-likelihood of our model, thereby indicating the most appropriate transformation for our dataset.
+
+
+```{r Box-Cox Initial wide search}
+
+# Initial wide search for a Lambda value
+bc_initial <- boxcox(house_lm, lambda=seq(-4, 4, by=0.1))
+lambda_initial <- bc_initial$x[which.max(bc_initial$y)]
+cat("The initial optimal lambda is:", lambda_initial, "\n")
+
+```
+
+**Analysis:** The initial search for the optimal lambda within the range of -4 to 4 suggested a lambda of approximately 0.1212, indicating that a transformation is indeed necessary. To hone in on the most suitable value, a refined will be conducted next in search for a more refined value of lambda.
+
+
+```{r Box-Cox refined lambda}
+
+# Narrow down search based on initial results
+lower_bound <- max(-4, lambda_initial - 0.5)
+upper_bound <- min(4, lambda_initial + 0.5)
+
+# More precise search around the initial estimate
+bc_refined <- boxcox(house_lm, lambda=seq(lower_bound, upper_bound, by=0.01))
+lambda_refined <- bc_refined$x[which.max(bc_refined$y)]
+cat("The refined optimal lambda is:", lambda_refined, "\n")
+
+# Apply refined value to the variable to be used on the transformation
+lambda <- lambda_refined
+
+```
+
+**Analysis:** The proximity of the optimal lambda to zero hints at the potential efficacy of a logarithmic transformation to improve model assumptions. However, the best lambda identified through the Box-Cox method is not exactly zero, suggesting that a Box-Cox transformation with this specific lambda may offer a better model fit than a straightforward logarithmic transformation. Applying this transformation to the house price is expected to yield residuals with more constant variance and a distribution that more closely approximates normality. These improvements are crucial for enhancing the reliability of the model's predictions and the validity of its inferential statistics. The refined Box-Cox transformation with a lambda of 0.0912 should now be applied to the house price data, and the resulting model should be evaluated against the original model. 
+
+
+## Final Model Evaluation
+
+After applying the Box-Cox transformation to the dataset, a final model evaluation is essential to determine the impact of the transformation on the model's performance. This evaluation will assess how the transformation has potentially improved the model's adherence to the assumptions of linear regression, including linearity, normality of errors, homoscedasticity, and the absence of influential outliers. These characteristics are critical for the validity of the model's statistical inferences and its predictive capabilities.
+
+
+### Summary of Transformed Model
+
+This subsection provides a summary of the linear regression model fitted to the transformed response variable. The summary includes key metrics such as the coefficients, their standard errors, t-values, and significance levels. These metrics offer insight into the relationship between the predictors and the transformed house prices, highlighting which variables have a significant effect on the outcome. This summary is pivotal in understanding the dynamics of the real estate market as captured by the model.
+
+```{r Reffit the Box-Cox transformed model}
+
+# Reffit the Box-Cox transformed model
+house_lm1<-lm(price^lambda~.,data=train.dat)
+summary(house_lm1)
+
+```
+
+**Analysis:** The transformed model exhibits a significant reduction in the residuals' magnitude, with the majority now lying closer to zero, which suggests an improved fit of the model. The coefficients for bathrooms, sqft_lot, waterfront, view, condition, grade, sqft_above, and sqft_basement remain significant, indicating a consistent impact on the transformed house prices. The substantial F-statistic and near-zero p-value confirm the model's overall statistical significance. However, the bedrooms variable has become insignificant, implying that its effect on the transformed price is minimal. The multiple R-squared of 0.8838 is quite high, signifying that the transformed model explains a large portion of the variance in the data. Overall, the Box-Cox transformation appears to have enhanced the model's explanatory power.
+
+
+### Diagnostic Plots of Transformed Model
+
+Diagnostic plots are instrumental in visually assessing the model's compliance with regression assumptions. This subsection will exhibit a series of plots, including Residuals vs. Fitted, Normal Q-Q, Scale-Location, and Residuals vs. Leverage. Each plot serves a distinct purpose, from detecting non-linearity and outliers to checking for equal variance and the influence of individual data points. A close examination of these plots will reveal any remaining anomalies post-transformation and guide any further refinement needed for the model.
+
+```{r Plot the BoxCox Transformed Model}
+
+# Plot the BoxCox Transformed Model
+par(mfrow=c(2,2))
+plot(house_lm1)
+
+```
+
+**Analysis:** The diagnostic plots suggest that while the Box-Cox transformation has likely improved the model fit, there are still some areas where the model does not perfectly meet the assumptions of linear regression. There may be potential outliers or influential points that need to be investigated further. Additionally, the presence of heteroscedasticity might be addressed with additional transformations or by considering a different type of model, such as generalized least squares. It would also be prudent to examine the leverage points more closely to determine if any action, such as exclusion or weighting, is necessary.
+
+After boxcox transformation, we observe that:
+  - Residual Standard Error has reduced significantly to 0.1072 from 160,300 
+  - Multiple R-square has increased to 88.5% from 80.45%
+  - p-value remains same at < 2.2e-16
+
+Overall, the model appears to be a much better fit that before. From the model plot we observe the following:
+  - *LINEARITY ASSUMPTION:* The Residuals vs Fitted plot looks better than before and confirms that a linear regression model is appropriate.
+  - *NORMALITY ASSUMPTION:* The points are much better aligned along the diagonal in the Q-Q Residuals plot, however some heavy tails remain on both ends.
+  - *CONSTANT VARIANCE ASSUMPTION:* The Scale Location plot points to constant variance
+  - There are still some outlier observations which may be to be impactful as seen from the the Residual vs. Leverage graph
+
+
+### Display of Transformed Regression Equation
+
+The transformation's efficacy is encapsulated in the regression equation of the transformed model. This subsection will present the regression function, explicitly showing the transformed relationship between the predictors and the outcome. By interpreting this function, we can understand how the Box-Cox transformation affects the scale and interactions of the variables within the model, thus providing a comprehensive view of the model's structure after the transformation.
+
+```{r}
+
+# Display the Regression function of Price^Lambda
+output <- capture.output(dispRegFunc(house_lm1))
+
+# Print the output of dispRegFunc wrapped in max 80 char width
+cat(paste(strwrap(output, width=80), collapse="\n"))
+
+```
+
+
+## Predictions on Test Data and Model Comparison
+
+This section is designed to evaluate how well the Box-Cox transformed model performs on unseen data and to compare this performance with the original model.
+
+```{r}
+PredictedTest<-exp(predict(house_lm1,test.dat))
+ModelTest<-data.frame(obs = test.dat$price, pred=PredictedTest)
+round(defaultSummary(ModelTest),3)
+```
+
+```{r Test BoxCox model predictions}
+
+# Test BoxCox model predictions
+pred <- predict(house_lm1,test.dat)^(1/lambda)
+act <- test.dat$price
+
+house_lm1_test_mse <- mean((pred - act)^2)
+house_lm1_test_rmse <- sqrt(house_lm1_test_mse)
+house_lm1_test_residuals <- act - pred
+house_lm1_test_rsq <- 1 - var(house_lm1_test_residuals) / var(act)
+house_lm1_test_sse <- sum((act - pred)^2)
+
+# Append results after BoxCox Transformation
+results.df = rbind(results.df, 
+                   data.frame(model = "Linear Regression Test after Boxcox",
+                              R.Squared.Train = summary(house_lm1)$r.square,
+                              R.Squared.Test = house_lm1_test_rsq,
+                              RMSE.test = house_lm1_test_rmse,
+                              SSE.test = house_lm1_test_sse))
+
+print(results.df)
+
+```
+
+**Analysis:** The output indicates an improvement in the model's performance on the test data after applying the Box-Cox transformation. The R-squared value for the test data increased minimally from 0.8275312 to 0.8282285, indicating the same fit to the test data. Similarly, the RMSE decreased minimally as well, suggesting more accurate predictions from the transformed model. The SSE also decreased, further confirming the enhanced predictive performance post-transformation. Overall, the Box-Cox transformation has led to a model that explains a greater proportion of variance in house prices and predicts them with higher accuracy, as evidenced by the improved R-squared and lower RMSE and SSE values. This demonstrates the effectiveness of the transformation in stabilizing variance and improving model fit for the data at hand.
+
+
+\newpage
+# IV. Model Performance Testing
+
+*Use the test data set to assess the model performances. Here, build the best multiple linear models by using the stepwise both ways selection method. Compare the performance of the best two linear models. Make sure that model assumption(s) are checked for the final linear model. Apply remedy measures (transformation, etc.) that helps satisfy the assumptions. In particular you must deeply investigate unequal variances and multicollinearity. If necessary, apply remedial methods (WLS, Ridge, Elastic Net, Lasso, etc.). *
+
+**Analysis:**
+
+The stepwise method yields a similar model with the elimination of sqft_lot15 being the only difference. This variable was insignificant in the Boxcox transformed model. The r-squared value remains nearly the same at 0.77 with all the predictor variables being significant at 0.001. 
+
+Graph 1 (Residuals vs Fitted): (linearity assumption) A linear relationship seems appropriate. (The average mean error equal to zero assumption) The average mean seems to be equal to zero.
+
+Graph 2 (Q-Q Residuals): (normality assumption) There is minor departure from a normal distribution at the tails.
+
+Graph 3 (Scale-Location): (constant variance assumption) The residuals do not seem to be equally distributed throughout. (homoscedasticity assumption) The variances do not appear constant and this indicated through the Breush-Pagan.
+
+Graph 4 (Residuals vs Leverage): There are no influential outliers.
+
+```{r Stepwise model fit}
+
+stepwise_model <- ols_step_both_p(house_lm1, penter = 0.05, premove = 0.05, progress = T, details = T)
+
+sw_model <- lm(formula = stepwise_model$model, data = train.dat)
+summary(sw_model)
+```
+```{r plotting stepwise model}
+par(mfrow=c(2,2))
+plot(sw_model)
+```
+
+```{r stepwise regression with AIC criterion}
+library(olsrr)
+library(datasets)
+
+k <- ols_step_forward_aic(house_lm1)
+k
+```
+
+**Analysis:**
+
+The WLS regression model makes the error variances more equally distributed throughout. The adjusted r-squared value increased to 0.79 with almost all of the independent variables being significant.
+
+Graph 1 (Residuals vs Fitted): (linearity assumption) A linear relationship seems appropriate. (The average mean error equal to zero assumption) The average mean seems to be equal to zero.
+
+Graph 2 (Q-Q Residuals): (normality assumption) There is minor departure from a normal distribution at the tails.
+
+Graph 3 (Scale-Location): (constant variance assumption) The residuals seem to be more equally distributed throughout compared to the stepwise model. (homoscedasticity assumption) The variances appear to be slightly more constant.
+
+Graph 4 (Residuals vs Leverage): There now appears to be several influential outliers beyond the Cook's distance line.
+
+
+```{r WLS regression}
+
+# Weighted Least Squares Regression
+# We notice from the scale-location graph of the main model that the error variances are unequal.
+
+# Calculating the weights for the model
+ei <- house_lm$residuals
+abs.ei <- abs(ei)
+g1 <- lm(abs.ei ~ train.dat$price)
+summary(g1)
+
+s <- g1$fitted.values
+wi = 1/(s^2)
+
+# Weighted-least squares regression
+house_lm_wls <- lm(price ~ ., weights = wi, data = train.dat)
+
+summary(house_lm_wls)
+par(mfrow=c(2,2))
+plot(house_lm_wls)
+
+```
+
+**Analysis:** 
+Before performing Ridge, Lasso, and ElasticNet regression methods, we will assess the multicollinearity in the model.
+There are no multicollinearity issues in the train data set since we have handled the highly correlated variables during the data preparation process.
+
+```{r}
+# [Ibrahim]
+# Testing the main (boxcox) model for multicollinearity
+vif(house_lm1)
+```
+
+**Analysis:**
+The Ridge regression generates a lambda value of 24125.359. The model performs well with a r-squared value of 0.69. The mean squared error is high with a value of 39,928,261,630. 
+
+```{r df for ridge}
+set.seed(1023)
+n<-dim(df_house_original)[1]
+IND<-sample(c(1:n),round(n*0.7))
+train.dat.o<-df_house_original[IND,]
+test.dat.o<-df_house_original[-c(IND),]
+
+dim(train.dat.o)
+dim(test.dat.o)
+```
+
+
+```{r - Ridge Regression}
+
+# Ridge Regression
+
+# Extract 'x' and 'y'
+x <- data.matrix(dplyr::select(train.dat.o, -price))
+y <- train.dat$price
+
+# Perform ridge regression
+house_lm_ridge <- glmnet::cv.glmnet(x, y, alpha = 0, nlambda = 100, lambda.min.ratio = 0.0001)
+best.lambda.ridge <- house_lm_ridge$lambda.min
+plot(house_lm_ridge)
+
+print(paste0("Ridge best lambda of ", round(best.lambda.ridge, digits = 3)))
+
+# Generating the results of the model
+price.predictors.train <- colnames(dplyr::select(train.dat.o, -price))
+
+ridge_results <- data.frame(
+  price.train = train.dat.o$price,
+  price.ridge.train = predict(house_lm_ridge, s = best.lambda.ridge, newx = data.matrix(train.dat.o[price.predictors.train]))
+)
+
+calc_metrics <- function(actual, predicted) {
+  sse <- sum((actual - predicted) ^ 2)
+  mse <- sse / length(actual)
+  rmse <- sqrt(mse) # Calculate RMSE
+  sst <- sum((actual - mean(actual)) ^ 2)
+  r2 <- 1 - sse / sst
+  return(c(SST = sst, SSE = sse, MSE = mse, RMSE = rmse, R2 = r2))
+}
+
+# function to each set of predictions
+ridge_metrics <- data.frame(
+  Model = c("Ridge"),
+  do.call(rbind, lapply(2:ncol(ridge_results), function(i) calc_metrics(ridge_results$price.train, ridge_results[,i])))
+)
+
+# Display the metrics table with RMSE
+ridge_metrics %>%
+  dplyr::arrange(desc(R2)) %>%
+  knitr::kable(caption = "SST, SSE, MSE, RMSE, and R2 of the Model")
+
+```
+**Analysis:**
+The Lasso regression generates a lambda value of 393.183. The r-squared value of 0.69 is indicative of the model's considerable strength. Out of the three models used for dealing with multicollinearity, this one had the lowest RMSE value at 199,084.7.
+
+```{r}
+
+# Lasso Regression
+house_lm_lasso <- glmnet::cv.glmnet(x, y, alpha = 1, nlambda = 100, lambda.min.ratio = 0.0001)
+best.lambda.lasso <- house_lm_lasso$lambda.min
+plot(house_lm_lasso)
+
+print(paste0("Lasso best lambda of ", round(best.lambda.lasso, digits = 3)))
+
+# Generating the results of the model
+lasso_results <- data.frame(
+  price.train = train.dat.o$price,
+  price.lasso.train = predict(house_lm_lasso, s = best.lambda.lasso, newx = data.matrix(train.dat.o[price.predictors.train]))
+)
+
+calc_metrics <- function(actual, predicted) {
+  sse <- sum((actual - predicted) ^ 2)
+  mse <- sse / length(actual)
+  rmse <- sqrt(mse) # Calculate RMSE
+  sst <- sum((actual - mean(actual)) ^ 2)
+  r2 <- 1 - sse / sst
+  return(c(SST = sst, SSE = sse, MSE = mse, RMSE = rmse, R2 = r2))
+}
+
+# function to each set of predictions
+lasso_metrics <- data.frame(
+  Model = c("Lasso"),
+  do.call(rbind, lapply(2:ncol(lasso_results), function(i) calc_metrics(lasso_results$price.train, lasso_results[,i])))
+)
+
+# Display the metrics table with RMSE
+lasso_metrics %>%
+  dplyr::arrange(desc(R2)) %>%
+  knitr::kable(caption = "SST, SSE, MSE, RMSE, and R2 of the Model")
+```
+
+**Analysis:**
+The ElasticNet regression generates a lambda value of 786.366. Similar to the Ridge and Lasso Regression models, the r-squared value of this model is 0.69. Again, the MSE and RMSE are quite high. This remedial measure may help generalize the model for higher applicability.
+
+```{r}
+
+# Elastic Net Regression
+house_lm_enet <- glmnet::cv.glmnet(x, y, alpha = 0.5, nlambda = 100, lambda.min.ratio = 0.0001)
+plot(house_lm_enet)
+best.lambda.enet <- house_lm_enet$lambda.min
+
+print(paste0("ElasticNet best lambda of ", round(best.lambda.enet, digits = 3)))
+
+# Generating the results of the model
+enet_results <- data.frame(
+  price.train = train.dat.o$price,
+  price.enet.train = predict(house_lm_enet, s = best.lambda.enet, newx = data.matrix(train.dat.o[price.predictors.train]))
+)
+
+calc_metrics <- function(actual, predicted) {
+  sse <- sum((actual - predicted) ^ 2)
+  mse <- sse / length(actual)
+  rmse <- sqrt(mse) # Calculate RMSE
+  sst <- sum((actual - mean(actual)) ^ 2)
+  r2 <- 1 - sse / sst
+  return(c(SST = sst, SSE = sse, MSE = mse, RMSE = rmse, R2 = r2))
+}
+
+# function to each set of predictions
+enet_metrics <- data.frame(
+  Model = c("ElasticNet"),
+  do.call(rbind, lapply(2:ncol(enet_results), function(i) calc_metrics(enet_results$price.train, enet_results[,i])))
+)
+
+# Display the metrics table with RMSE
+enet_metrics %>%
+  dplyr::arrange(desc(R2)) %>%
+  knitr::kable(caption = "SST, SSE, MSE, RMSE, and R2 of the Model")
+```
+
+**Analysis:**
+Before the Robust regression method using Huber and Bisquare weights, we will assess the severity of the outliers.
+
+The Cook's D chart shows two observations that could have a substantial level of influence on the model. 
+
+The Outlier and Leverage Diagnostics for price^lambda plot illustrates numerous leverage, outlier, and outlier and leverage values. These outlying values could be having a large effect on the performance of the model. The model results, consequently, may suffer from reliability in their interpretation.
+
+The Deleted Studentized Residual vs Predicted Values plot depicts considerable portions of data outlying the thresholds.
+
+```{r}
+# [Ibrahim]
+# Looking at the residuals using the Cook's distance chart
+ols_plot_cooksd_chart(house_lm1)
+
+# Studentized Residuals vs Leverage Plot
+ols_plot_resid_lev(house_lm1)
+
+# Deleted Studentized Residuals vs Fitted Values Plot
+ols_plot_resid_stud_fit(house_lm1)
+```
+
+**Analysis:**
+The Robust Regression model with the Huber weights results in a residual standard error of 112700. This is because Huber weights have difficulties with severe outliers which we can notice from the plots above. After performing the Robust regression however, we can notice that there are no influential outliers based on the Residuals vs Leverage plot. This ensures that the interpretation of the model's results will be reliable.
+
+```{r}
+# Robust Regression using Huber weights 
+# There are influential points (see plots above)
+house_lm_huber <- MASS::rlm(price ~ ., psi = psi.huber, data = train.dat)
+summary(house_lm_huber)
+par(mfrow=c(2,2))
+plot(house_lm_huber)
+```
+
+```{r remove imfluential outliers based on huber weights criteria}
+# Taking a quick look at the Huber weights
+huber_weights <- data.frame(Observation = 1:nrow(train.dat), Residual = house_lm_huber$resid, Weight = house_lm_huber$w)
+
+a <- huber_weights[order(house_lm_huber$w), ]
+
+head10 <- head(a$Observation,10)
+head10
+
+dim(train.dat)
+
+# weight threshold for outliers
+weight_threshold <- 0.1
+outlier_indices <- which(house_lm_huber$w < weight_threshold)
+train.dat.cleaned <- train.dat[-outlier_indices, ]
+
+house_lm_c <- lm(price ~ ., data = train.dat.cleaned)
+summary(house_lm_c)
+
+bcc <- boxcox(house_lm_c, lambda=seq(-4, 4, by=0.1))
+lambda_c <- bcc$x[which.max(bcc$y)]
+cat("The optimal lambda is:", lambda, "\n")
+
+
+```
+```{r transforming the cleaned data model house_lm_c}
+house_lm_c1 <- lm(log(price) ~ ., data = train.dat.cleaned)
+summary(house_lm_c1)
+
+dim(train.dat.cleaned)
+
+par(mfrow = c(2,2))
+plot(house_lm_c1)
+
+# Looking at the residuals using the Cook's distance chart
+ols_plot_cooksd_chart(house_lm_c1)
+
+# Studentized Residuals vs Leverage Plot
+ols_plot_resid_lev(house_lm_c1)
+
+# Deleted Studentized Residuals vs Fitted Values Plot
+ols_plot_resid_stud_fit(house_lm_c1)
+
+```
+ 
+```{r}
+cbind(house_lm_c$coefficients,house_lm_huber$coefficients)
+```
+
+
+**Analysis:**
+The Robust regression with the bisquare weights has a lower residual standard error compared to the Huber weights. 
+
+```{r}
+
+# Robust Regression using bisquare weights 
+house_lm_bisquare <- MASS::rlm(price ~ ., psi = psi.bisquare, data = train.dat)
+summary(house_lm_bisquare)
+
+```
+
+**Analysis:**
+Both the linear and stepwise model are most the effective at predicting the price when using the test data. Both have r-squared values of 0.77. The Lasso regression model performs the best out of the remedial models. It produces an r-squared value of 0.69. ElasticNet and Ridge regression perform just as well. Robust regression with the Huber weights has an r-squared value of 0.65, not far off from the top three models. Robust regression with the Bisquare weights is where we see a dip in performance with an r-squared value of 0.59. The Weighted Least Squares regression performs the worst with a r-squared value of 0.41.
+
+```{r}
+# Evaluating the performance of the models using the test data set
+
+price.predictors <- colnames(dplyr::select(test.dat.o, -price))
+
+# Predictions for each model using the test dataset
+predictions <- data.frame(
+  price = test.dat$price,
+  price.lm = predict(house_lm1, test.dat)^(1/lambda),
+  price.sw.lm = predict(sw_model, test.dat)^(1/lambda),
+  price.wls = predict(house_lm_wls, test.dat),
+  price.ridge = predict(house_lm_ridge, s = best.lambda.ridge, newx = data.matrix(test.dat.o[price.predictors])),
+  price.lasso = predict(house_lm_lasso, s = best.lambda.lasso, newx = data.matrix(test.dat.o[price.predictors])),
+  price.en = predict(house_lm_enet, s = best.lambda.enet, newx = data.matrix(test.dat.o[price.predictors])),
+  price.huber = predict(house_lm_huber, test.dat),
+  price.bisquare = predict(house_lm_bisquare, test.dat)
+)
+
+# Function to calculate SSE, R2, MSE, and RMSE
+calc_metrics <- function(actual, predicted) {
+  sse <- sum((actual - predicted) ^ 2)
+  mse <- sse / length(actual)
+  rmse <- sqrt(mse) # Calculate RMSE
+  sst <- sum((actual - mean(actual)) ^ 2)
+  r2 <- 1 - sse / sst
+  return(c(SST = sst, SSE = sse, MSE = mse, RMSE = rmse, R2 = r2))
+}
+
+# function to each set of predictions
+metrics <- data.frame(
+  Model = c("Linear after BoxCox", "Stepwise", "Weighted Least Squares", "Ridge", "Lasso", "Elastic Net", "Huber", "Bisquare"),
+  do.call(rbind, lapply(2:ncol(predictions), function(i) calc_metrics(predictions$price, predictions[,i])))
+)
+
+# Display the metrics table with RMSE
+metrics %>%
+  dplyr::arrange(desc(R2)) %>%
+  knitr::kable(caption = "SST, SSE, MSE, RMSE, and R2 of the Different Models")
+
+```
+
+```{r Best Subset Regression}
+
+# This is not working - commenting out temporaryly to improve knit times
+#k1<-ols_step_best_subset(house_lm1)
+#k1
+#plot(k1, guide="none")
+
+```
+
+\newpage
+# V. Challenger Models
+
+In this section, we explore alternative predictive models to challenge our primary regression model. This is crucial for ensuring our final model's robustness by comparing it against these 'challenger' models. Here, we experiment with different modeling techniques such as regression trees, neural networks, or SVMs, evaluating their performance and applicability. This comparative analysis helps in understanding the strengths and weaknesses of various approaches, guiding us to select the most effective model for predicting real estate prices in King County.
+
+## Regression Tree Models
+
+This block is designed to determine the optimal depth for a regression tree model predicting house prices. It iterates over a predefined set of depth values, constructing a model at each depth, and calculating MSE and R-squared values for both the test and training datasets. The loop stores these metrics for each depth, and upon completion, it identifies the depth that yields the highest R-squared value on the test data, suggesting the best generalization performance.
+
+```{r Regression Tree Train/Test Data Split}
+set.seed(1023)
+n<-dim(df_house_original)[1]
+IND<-sample(c(1:n),round(n*0.7))
+train.dat.tree <-df_house_original[IND,]
+test.dat.tree <-df_house_original[-c(IND),]
+```
+
+```{r Decision Tree Cross-Validation}
+depth_values <- c(2:20)
+
+mse_values = numeric(length(depth_values))
+test_rsq_values = numeric(length(depth_values))
+train_rsq_values = numeric(length(depth_values))
+
+for (i in seq_along(depth_values)) {
+  depth = depth_values[i]
+
+  regression_tree_model = rpart(price ~ ., 
+                                data = train.dat, 
+                                method = "anova", 
+                                control=rpart.control(maxdepth=depth))
+  predictions_test <- predict(regression_tree_model, newdata = test.dat)
+  predictions_train <- predict(regression_tree_model, newdata = train.dat)
+
+  mse_values[i] <- mean((predictions_test - test.dat$price)^2)
+  test_rsq_values[i] = cor(predictions_test,test.dat$price)^2
+  train_rsq_values[i] = cor(predictions_train,train.dat$price)^2
+}
+
+# Find the maximum R-squared value
+max_rsq <- max(test_rsq_values)
+# Get the corresponding depth value
+best_depth <- depth_values[which.max(test_rsq_values)]
+
+cat("Best depth:", best_depth, "with R-squared:", max_rsq)
+
+```
+
+### Optimized Regression Tree Visualization
+
+This subsection presents the visual depiction of the regression tree model at its calculated optimal complexity. By tuning the tree to the 'best_depth', we ensure the model is neither overfitting nor underfitting. The rpart.plot is customized to enhance interpretability, detailing split labels and the count of observations at each node, thereby providing a clear, scaled-up graphical representation of the decision-making process within the model.
+
+Now we use the rpart.plot function to create a detailed plot of the tree, incorporating the optimal tree depth previously determined (best_depth). The plot is configured to show a type 4 tree, which includes split labels, and extra = 1 to display the number of observations in each node. The main title of the plot reflects the chosen depth for easy reference.
+
+```{r Plot the Regression Tree with best depth}
+
+# Fitting decision tree with best depth
+dtm = rpart(price ~ ., 
+              data = train.dat.tree, 
+              method = "anova",
+              control=rpart.control(maxdepth=best_depth))
+
+# Plot the tree
+rpart.plot(dtm, main=paste("Regression Tree - Depth: ", best_depth), 
+           type = 4, extra = 1, tweak=1.6)
+
+```
+
+**Analysis:** The regression tree plot depicts a model of depth 6 (best_depth), indicating a sequence of decisions starting from the root node using features such as 'grade', 'lat', 'sqft_above', and others. Each node represents a condition that splits the data, leading to more homogenous subsets. The leaf nodes represent the predicted price, with the number in each leaf node showing the average price for the observations that follow the path to that node. The tree structure suggests that 'grade', 'sqft_living15', location ('waterfront', 'lat' & 'long'), and 'sqft_above' are important predictors, as they appear near the top and on many many different levels of the tree, indicating their significant role in splitting the data and hence in predicting house prices.
+
+
+### Assessing Regression Tree Model Complexity with RMSE
+
+Analysis of the regression tree model's accuracy across varying depths, utilizing Root Mean Squared Error (RMSE) as the key performance metric.
+
+```{r Plot the RMSE results}
+
+# Data frame for plotting RMSE results
+plot_data <- data.frame(Depth=depth_values, RMSE=mse_values)
+
+# Plot RMSE results vs Depth of the Tree
+ggplot(plot_data, aes(x=Depth, y=RMSE)) +
+  geom_point(color = "#6baed6") +
+  geom_line(color = "#6baed6") +
+  labs(x = "Depth Value", y = "Root Mean Squared Error", 
+       title = "Regression Tree Cross Validation (RMSE vs depth)") +
+  theme_minimal()
+
+```
+
+**Analysis:** The plot illustrates how RMSE changes as the depth of the regression tree increases. Initially, RMSE decreases significantly, suggesting improvements in model accuracy with added complexity. However, from a depth of 6 and beyond, the reduction in RMSE plateaus, indicating that increasing the tree depth further provides diminishing returns in terms of model accuracy. This visualization aids in selecting an appropriate model complexity to balance between underfitting and overfitting.
+
+### Regression Tree Model Fit Evaluation with R-squared
+
+Influence of tree depth on the regression tree model's explanatory power, as indicated by the R-squared values.
+
+```{r Plot the R-squared results}
+
+# Data frame for plotting R-squared results
+plot_data <- data.frame(Depth=depth_values, TestR2=test_rsq_values)
+
+# Plot R-squared vs Depth of the Tree
+ggplot(plot_data, aes(x=Depth, y=TestR2)) +
+  geom_point(color="#6baed6") +
+  geom_line(color="#6baed6") +
+  geom_text(aes(label=round(TestR2, 4)), vjust=-0.5, color="black") +
+  labs(x = "Depth Value", y = "Test R-squared", 
+       title = "Regression Tree Cross Validation (R2 vs depth)") +
+  theme_minimal() 
+
+```
+
+**Analysis:** The plot illustrates the R-squared value at varying tree depths, showing a trend of increasing explanatory power as the depth increases from 2 to 5. The leveling off of R-squared values beyond a depth of 6 suggests that additional depth does not substantially improve the model's ability to explain the variance in the data, indicating an optimal depth for model complexity.
+
+### Prioritizing Features in the Regression Tree Model
+
+This subsection investigates the variable importance derived from the regression tree model, offering a clear depiction of which factors most heavily influence house pricing predictions. The measure of importance is calculated based on the reduction of prediction error attributed to each variable, providing insight into their relative predictive power within the model. This analysis is critical for understanding the key drivers of real estate values and can inform strategic decisions regarding property investments and market evaluations.
+
+```{r Find the Variable Importance using the regression tree}
+
+imp = dtm$variable.importance
+dt_test_pred <- predict(dtm, newdata=test.dat.tree)
+dt_train_pred <- predict(dtm, newdata=train.dat.tree)
+dt_test_results = postResample(pred = dt_test_pred, obs = test.dat.tree$price)
+dt_train_results = postResample(pred = dt_train_pred, obs = train.dat.tree$price)
+dt_test_sse = sum((dt_test_pred - test.dat.tree$price)^2)
+
+# Variable importance may be more reliable 
+# if considering other values from cross validation
+blue_gradient <- colorRampPalette(c("#6baed6", "white"))(length(imp))
+barplot(imp, las=2, main="Variable Importance in Decision Tree", 
+        col=blue_gradient, cex.names=0.8, cex.axis=0.7, cex.lab=0.7)
+
+```
+
+**Analysis:** The bar plot indicates that 'grade' has the most significant impact on the model's decisions, followed by 'sqft_living15', and 'sqft_above'. Variables such as 'age', 'floors', and 'renovated' have minimal impact. This suggests that house quality and living area are the primary drivers of price according to the model, which aligns with real-world expectations of property valuation.
+
+
+```{r Appending Regression Tree Results}
+
+# Append results
+results.df = rbind(results.df,data.frame(model = "Decision Tree Regression",
+                            R.Squared.Train = unname(dt_train_results[2]),
+                            R.Squared.Test = unname(dt_test_results[2]),
+                            RMSE.test = unname(dt_test_results[1]),
+                            SSE.test = dt_test_sse))
+
+```
+
+## Random Forest Model
+
+The Random Forest model is a powerful ensemble learning method used for both classification and regression tasks. It operates by constructing a multitude of decision trees at training time and outputting the class that is the mode of the classes (classification) or mean prediction (regression) of the individual trees. Random Forests correct for decision trees' habit of overfitting to their training set by introducing randomness in the tree-building process. This randomness can come from building trees on different samples of the data (bootstrap aggregating or bagging) or considering a random subset of features for splitting at each node. The model is robust against overfitting, can handle large datasets with higher dimensionality, and can estimate the importance of variables used in the classification or regression.
+
+```{r Random Forest Hyperparameter Grid}
+hyperparameter_grid <- expand.grid(
+  ntree = c(200, 400, 550),  # Different values for ntree
+  minsplit = c(4, 6, 8)  # Different values for minsplit
+)
+```
+
+```{r Random Forest Tuning Grid Search and Cross Validation}
+
+#Skip model tuning for computation time
+skip_grid = TRUE
+if (skip_grid==TRUE){
+best_rf = randomForest(price ~ .
+-year-renovated-floors-month-day-condition-bedrooms-sqft_basement-bathrooms-sqft_lot15-age-yr_renovated, 
+              data = train.dat.tree,
+              ntree = 200,
+              mtry=7,
+              minsplit=4,
+              importance=TRUE)
+
+summary(best_rf)
+
+} else{
+  
+# Initialize model and its RMSE
+best_rf <- NULL
+best_rmse <- Inf
+
+# initialize scores (RMSE, R-square) 
+rmse_values_rf = numeric(nrow(hyperparameter_grid))
+test_rsq_values_rf = numeric(nrow(hyperparameter_grid))
+train_rsq_values_rf = numeric(nrow(hyperparameter_grid))
+
+# Perform Grid Search to tune ntree (number of trees) and minsplit (minimum value in node to split)
+for (i in 1:nrow(hyperparameter_grid)) {
+  current_model <- randomForest(
+    formula = price ~. -year-renovated-floors-month-day-condition-bedrooms-sqft_basement-bathrooms-sqft_lot15-age-yr_renovated,
+    data = train.dat.tree,
+    ntree = hyperparameter_grid$ntree[i],
+    minsplit = hyperparameter_grid$minsplit[i]
+  )
+
+  # Make predictions
+  predictions_test <- predict(current_model, test.dat.tree)
+  predictions_train <- predict(current_model, train.dat.tree)
+  
+  # store results
+  train_results = postResample(pred = predictions_train, obs = train.dat.tree$price)
+  test_results = postResample(pred = predictions_test, obs = test.dat.tree$price)
+  
+  # RMSE
+  current_rmse <- sqrt(mean((predictions_test - test.dat.tree$price)^2))
+  
+  rmse_values_rf[i] <- current_rmse
+  
+  # Rsquared
+  test_rsq_values_rf[i] = unname(test_results[2])
+  train_rsq_values_rf[i] = unname(train_results[2])
+
+
+  # Check if current model is better than the best model so far
+  if (current_rmse < best_rmse) {
+    best_rmse <- current_rmse
+    best_rf <- current_model
+    best_minsplit = hyperparameter_grid$minsplit[i]
+  }
+}
+# Cross validate to tune mtry (number of possible random variables per split)
+ctrl = trainControl(method = "cv",  # Cross-validation method
+                     number = 5,    # Number of folds
+                     verboseIter = TRUE,  # Display iteration progress
+                     summaryFunction = defaultSummary)  # For regression
+
+param_grid = expand.grid(mtry=c(8,10,12))
+
+# Finding model
+best_rf = train(price ~ . -year-renovated-floors-yr_renovated-month-day-condition-bedrooms-sqft_basement-bathrooms-sqft_lot15-age, 
+                  data = train.dat.tree,
+                  method = "rf",
+                  trControl = ctrl,
+                  ntree=200,
+                  maxdepth=5,
+                  minsplit=4,
+                  tuneGrid = param_grid)
+}
+```
+
+**Analysis:** This plot depicts the mean squared error (MSE) across the number of trees in the model. The MSE sharply decreases as more trees are added, especially evident in the initial phase with fewer trees. As the number of trees reaches around 50, the decrease in MSE begins to plateau, indicating that adding more trees has diminishing returns on model performance. The model, consisting of 200 trees, explains approximately 86.09% of the variance, showcasing a high level of model accuracy. This suggests that the Random Forest model has a strong predictive capability for the housing price data, with a substantial portion of the variability in the response variable accounted for by the predictors used in the model.
+
+### Variable Significance in Random Forest Modeling
+
+This subsection delves into the variable importance generated by the Random Forest model, providing insight into which predictors most significantly impact the target variable, house price. The analysis illustrates the relative influence of each variable through two metrics: the mean decrease in accuracy and the mean decrease in node purity.
+
+```{r RF variable importance}
+
+# Create a Dataframe with Random Forest variable importance
+rf_importance <- as.data.frame(importance(best_rf))
+
+# Create a tidy data frame for ggplot
+rf_importance$Variable <- rownames(rf_importance)
+rf_importance <- rf_importance %>%
+  tidyr::gather(Measure, Value, -Variable)
+
+# Plot RF variable importance
+ggplot(rf_importance, aes(x = reorder(Variable, Value), y = Value)) +
+  geom_col(fill="#6baed6") +
+  facet_wrap(~Measure, scales = "free") +
+  coord_flip() +
+  theme_minimal() +
+  labs(x = NULL, y = NULL, title = "Variable Importance in Random Forest Model") +
+  theme(legend.position = "none")
+```
+
+**Analysis:** This plot provides a clear visualization of the features that have the most substantial impact on predicting house prices. The length of the bars represents the importance of each variable, with 'grade' and 'lat' being the most significant predictors according to both measures used: the percentage increase in Mean Squared Error (%IncMSE) and Increase in Node Purity (IncNodePurity). This visualization is essential to understand which variables contribute most to the model's predictive power and potentially guide feature selection.
+
+
+```{r Random Forest Results}
+
+# Random Forest Test Results
+rf_train_pred = predict(best_rf, newdata = train.dat.tree)
+rf_test_pred = predict(best_rf, newdata = test.dat.tree)
+
+rf_train_results = postResample(pred = rf_train_pred, obs = train.dat.tree$price)
+rf_test_results = postResample(pred = rf_test_pred, obs = test.dat.tree$price)
+rf_test_sse = sum((rf_test_pred - test.dat.tree$price)^2)
+
+# Append to the Results Data Frame
+results.df = rbind(results.df,data.frame(model = "Random Forest Tuned Model",
+            R.Squared.Train = unname(rf_train_results[2]),
+            R.Squared.Test = unname(rf_test_results[2]),
+            RMSE.test = unname(rf_test_results[1]),
+            SSE.test = rf_test_sse)
+)
+```
+
+
+## Support Vector Machine (SVM) Model
+
+### SVM Model Construction
+
+This subsection discusses the creation of the Support Vector Machine model. It entails the training phase on the dataset, where the SVM algorithm learns to find the best hyperplane that categorizes the data points.
+
+```{r Build the SVM model}
+
+# Build the SVM model
+svm_model <- svm(price ~ ., data = train.dat)
+print(summary(svm_model))
+
+```
+
+**Analysis:** The SVM model summary indicates it's an epsilon-type regression with a radial basis function kernel. The cost parameter is set to 1, which controls the trade-off between allowing training errors and forcing rigid margins. Gamma, set at approximately 0.0588, defines the influence of a single training example, with lower values meaning ‘far’ and higher values meaning ‘close’. The epsilon of 0.1 specifies the epsilon-tube within which no penalty is associated in the training loss function with points predicted within a distance epsilon from the actual value. The model has a large number of support vectors, amounting to 9020, which could imply a complex model that may be at risk of overfitting.
+
+
+### SVM Model Evaluation
+
+In this part, we assess the performance of the SVM model using the test dataset. The Root Mean Square Error (RMSE) metric provides insight into the average deviation of the predicted house prices from the actual values.
+
+```{r SVM Prediction and Performance}
+
+# Prediction and Performance
+svm_predictions <- predict(svm_model, test.dat)
+svm_rmse <- sqrt(mean((svm_predictions - test.dat$price)^2))
+print(paste("SVM RMSE:", svm_rmse))
+
+```
+
+**Analysis:** The reported RMSE value for the SVM model is $195,393.38, which suggests that on average, the model's price predictions deviate from the actual sale prices by this amount. Given the high value, this may indicate that the model is not predicting the prices with a high degree of accuracy. In the context of house prices, such a large RMSE could be considered substantial, and it suggests that model parameters may need tuning or the model itself may require a more in-depth evaluation to identify areas of improvement.
+
+
+### SVM Model Visualization
+
+This subsection is dedicated to the visual exploration of the Support Vector Machine model's predictive performance. Through graphical representations such as scatter plots of predicted versus actual values and histograms of prediction errors, we can intuitively assess the accuracy and distribution of the model's predictions, and identify patterns or anomalies in the data. These visual analyses are critical for conveying complex statistical results in a clear and actionable format.
+
+```{r SVM Scatter Plot of Actual vs. Predicted Prices}
+
+# SVM Scatter Plot of Actual vs. Predicted Prices
+ggplot(data = data.frame(Actual = test.dat$price, Predicted = svm_predictions), aes(x = Actual, y = Predicted)) +
+  geom_point(color = "#6baed6") +
+  geom_abline(intercept = 0, slope = 1, color = "black") +
+  labs(title = "SVM Actual vs. Predicted Prices", x = "Actual Prices", y = "Predicted Prices") +
+  theme_minimal()
+
+```
+
+**Analysis:** The SVM Actual vs. Predicted Prices plot shows a positive correlation between the actual and predicted values, yet there is noticeable deviation from the line of perfect fit, especially at higher price points. This deviation contributes to the model's overall RMSE.
+
+
+```{r SVM Histogram of Prediction Errors}
+
+# Create a data frame for the SVM errors
+svm_errors <- test.dat$price - svm_predictions
+svm_errors_df <- data.frame(Errors = svm_errors)
+
+# Plot Histogram of Prediction Errors
+ggplot(svm_errors_df, aes(x=Errors)) +
+  geom_histogram(bins = 15, fill="#6baed6", color="black") + # ggplot chooses binwidth
+  labs(title="SVM Prediction Error Distribution", x="Prediction Error", y="Count") +
+  theme_minimal()
+
+```
+
+**Analysis:** The SVM Prediction Error Distribution histogram reveals that most prediction errors cluster around a small range, indicating a concentration of errors close to zero. However, the presence of errors across the scale shows that the model has varying degrees of accuracy for different price levels.
+
+
+```{r SVM Plot of Residuals vs. Fitted Values}
+
+# SVM Plot of Residuals vs. Fitted Values
+ggplot(data = data.frame(Predicted = svm_predictions, Residuals = svm_errors), aes(x = Predicted, y = Residuals)) +
+  geom_point(color = "#6baed6") +
+  geom_hline(yintercept = 0, color = "black") +
+  labs(title = "SVM Residuals vs. Predicted", x = "Predicted Prices", y = "Residuals") +
+  theme_minimal()
+
+
+```
+
+**Analysis:** The SVM Residuals vs. Predicted plot shows that residuals are not randomly dispersed around the zero line, particularly for higher-priced houses where the model tends to underestimate prices, evident from the residuals' pattern. This suggests that the model might not capture all the nuances in the data, particularly for properties with higher actual prices.
+
+
+## Neural Network Model
+
+### Data Normalization for Neural Network
+
+Preparing the dataset for neural network analysis by normalizing the data. The normalize function adjusts each feature to a common scale, eliminating discrepancies due to different units or scales.
+
+```{r Prepare the NN data}
+
+# Data must be normalized for the Neural Network
+normalize <- function(x) {
+  # Only normalize if x is numeric
+  if (is.numeric(x)) {
+    return((x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE)))
+  } else {
+    return(x)
+  }
+}
+
+# Identify numeric columns
+numeric_cols <- sapply(train.dat, is.numeric)
+
+# Apply normalization only to numeric columns
+train.dat.norm <- as.data.frame(lapply(train.dat[, numeric_cols], normalize))
+test.dat.norm <- as.data.frame(lapply(test.dat[, numeric_cols], normalize))
+
+```
+
+### Neural Network Construction and Architecture
+
+Here, we construct the neural network model using the normalized data and visualize its structure. The neuralnet package is utilized to build the model with a specified architecture and then plot it to understand its configuration.
+
+```{r Build and Plot the NN model}
+
+house_NN <- neuralnet(price ~ ., data = train.dat.norm, hidden = c(2,2), linear.output = TRUE)
+
+```
+
+**Analysis:** The neural network diagram represents a model with inputs corresponding to features of the houses such as 'bedrooms', 'bathrooms', 'sqft_living', etc. The two hidden layers with two neurons each suggest an attempt to capture non-linear complexities in the data. The weights, denoted by numbers along the connections, indicate how each input is considered in predicting the house price. Significant weights suggest features that more strongly influence price predictions. Conversely, smaller weights might indicate less influence. The final output is the 'price', representing the model's prediction based on the learned weights through the network's training.
+
+### Performance Analysis of Neural Network
+
+This final section evaluates the neural network's predictive performance. It involves computing predictions, calculating key performance metrics like RMSE, R-squared, and SSE, and visualizing prediction accuracy and error distribution.
+
+```{r Performance Analysis of Neural Network}
+
+# Now run the compute function
+model_results <- compute(house_NN, train.dat.norm)
+
+#model_results <- compute(house_NN, train.dat.norm[-1])
+predicted_y <- model_results$net.result
+unnormalize <- function(x) {return((x * (max(df_house$price)) -min(df_house$price)) + min(df_house$price))}
+
+pred_new_train <- unnormalize(predicted_y)
+PredictedTest<-pred_new_train
+NN_train_performance<-data.frame(obs = train.dat.norm$price, pred=PredictedTest)
+round(defaultSummary(NN_train_performance),3)
+
+#performance on test data set
+model_results <- compute(house_NN, test.dat.norm[-1])
+predicted_y <- model_results$net.result
+
+#transforming back to original scale
+pred_new_test <- unnormalize(predicted_y)
+
+PredictedTest<-pred_new_test
+NN_test_performance<-data.frame(obs = test.dat.norm$price, pred=PredictedTest)
+round(defaultSummary(NN_test_performance),3)
+
+```
+
+```{r Evaluate Performance}
+
+rmse_value <- rmse(pred_new_test, test.dat.norm$price)
+r_squared_value <- r_squared(pred_new_test, test.dat.norm$price)
+sse_value <- sse(pred_new_test, test.dat.norm$price)
+
+cat("RMSE:", rmse_value, "\n")
+cat("R-squared:", r_squared_value, "\n")
+cat("SSE:", sse_value, "\n")
+
+```
+
+**Analysis:** Given the RMSE of 0.04553926, the model’s predictions are relatively close to the actual prices, but there's room for improvement, especially considering the R-squared value of 0.3436959, which suggests that only about 34% of the variance in the house prices is being explained by the model. The SSE of 13.44667 further indicates a substantial sum of errors squared, calling for model refinement to better capture complex patterns in the data.
+
+```{r checking the correlation between predicted price and test price.}
+model_results <- compute(house_NN, test.dat.norm[-1])
+predicted_price <- model_results$net.result
+cor(predicted_price, test.dat.nn$price)
+```
+
+**Analysis:** The histogram of prediction errors displays a concentration around zero, indicating most predictions are close to the actual values, but the spread towards the right suggests a skew in overestimating house prices.
+
+
+```{r Prediction Accuracy Plot for NN}
+
+plot(test.dat.norm$price, predicted_price, 
+     main = "Actual vs. Predicted Prices", 
+     xlab = "Actual Prices", ylab = "Predicted Prices")
+abline(0, 1, col = "red")
+
+```
+
+**Analysis:** The scatter plot of actual vs. predicted prices shows a cluster below the ideal 45-degree line, reinforcing that the model tends to underpredict the higher-valued houses.
+
+
+\newpage
+# VI. Model Limitation and Assumptions
+
+*Based on the performances on both train and test data sets, determine your primary (champion) model and the other model which would be your benchmark model. Validate your models using the test sample. Do the residuals look normal? Does it matter given your technique? How is the prediction performance using Pseudo R^2, SSE, RMSE?  Benchmark the model against alternatives. How good is the relative fit? Are there any serious violations of the model assumptions? Has the model had issues or limitations that the user must know? (Which assumptions are needed to support the Champion model?)* 
+
+```{r Printing all important results}
+
+# Results dataframe
+
+# We're supposed to use Pseudo R-squared, SSE, RMSE, as seen above. 
+# We'll have to look into 'Pseudo R-squared' most likely
+
+results.df
+
+```
+
+\newpage
+# VII. Ongoing Model Monitoring Plan
+
+*How would you picture the model needing to be monitored, which quantitative thresholds and triggers would you set to decide when the model needs to be replaced? What are the assumptions that the model must comply with for its continuous use?*
+
+For model monitoring, we need to:
+1. regularly check for changes in the distribution of input or target variables, track the importance of variables, monitor model stability, and check for the presence of outliers in new data that might affect model performance.
+2. define the key performance metrics for regression models e.g Mean Squared Error (MSE), Root Mean Squared Error (RMSE), Mean Absolute Error (MAE), R-squared, SSE, Confusion Matrix, F1 score, etc; and set thresholds for these metrics based on the acceptable level of model performance. 
+3. periodically validate the model on new data to ensure it generalizes well. Cross-validation can be implement to assess model performance on unseen data.
+4. be mindful of changes in the business environment, processes, customer behavior, or external/internal factors may affect the model's performance. We can setup alerts to notify stakeholders when model performance drops below acceptable levels
+5. maintain detailed documentation of the model, including its assumptions, methodologies, and any updates made.
+5. regularly assess the model for bias that may affect certain demographic groups unfairly, and also ensure that the model complies with any regulatory requirements. 
+
+The model must comply with various assumptions for regression model to hold such as linearity, independence, homoscedasticity, normality of residuals, etc
+
+\newpage
+# VIII. Conclusion
+
+*Summarize your results here. What is the best model for the data and why?*
+
+# Bibliography
+
+*Please include all references, articles and papers in this section.*
+
+
+# Appendix
+
+The Appendix provides additional detailed analyses and visual representations that complement the main body of the report. This section includes further explorations of model variations, extended error assessments, and a complete overview of performance metrics, enriching the reader's comprehension of the research findings.
+
+## Enhanced Model Visualizations
+
+## Neurla Network
+
+```{r}
+plot(house_NN, main="Neural Network Architecture Visualization")
+
+library(NeuralNetTools)
+
+```
+
+### Regression Tree Depth Variations
+
+Supplementary plots showcasing regression trees of various depths that were not included in the main analysis. These visualizations represent alternative models with simplified complexities, providing a broader understanding of the model's behavior with less granular splitting. They serve as a reference for how the model's structure changes with depth, offering additional context to the primary findings presented in the report.
+
+```{r Plot extra Regression Trees }
+
+# Plot the least significant trees from the regresssion tree model
+depth_values <- c(2, 3, 4, 5)
+
+for (i in seq_along(depth_values)) {
+  depth = depth_values[i]
+
+  tree_model = rpart(price ~ ., 
+                     data = train.dat, 
+                     method = "anova", 
+                     control=rpart.control(maxdepth=depth))
+  
+  # Less significant trees that were not plotted in the model analysis
+  rpart.plot(tree_model, main=paste("Regression Tree - Depth: ", depth), 
+             type = 4, extra = 1, tweak=1.6)
+}
+
+```
+
+### Additional Predictive Accuracy Charts
+
+#### Neural Network
+
+**Analysis:** The scatter plot of actual vs. predicted prices shows a cluster below the ideal 45-degree line, reinforcing that the model tends to underpredict the higher-valued houses.
+
+```{r Extra Prediction Accuracy Plot for NN}
+
+plot(test.dat.norm$price, predicted_price, 
+     main = "Actual vs. Predicted Prices", 
+     xlab = "Actual Prices", ylab = "Predicted Prices")
+abline(0, 1, col = "red")
+
+```
+
+### Neural Network Predictive Performance and Error Distribution
+
+A dual-faceted visual evaluation of the neural network model. The first plot highlights the spread and central tendency of predictive errors, revealing the model's precision range. The second plot maps predicted values against actual prices, offering a direct visual assessment of accuracy, with the proximity to the diagonal indicating the model's effectiveness in capturing the underlying price determinants. Together, these plots form a comprehensive view of the model's prediction capabilities and areas for improvement.
+
+
+```{r Error Distribution Plot}
+
+# Create a data frame for the Neural Network errors
+nn_errors <- test.dat.norm$price - predicted_price
+nn_errors_df <- data.frame(Errors = nn_errors)
+
+# Plot Histogram of Prediction Errors
+ggplot(nn_errors_df, aes(x=Errors)) +
+  geom_histogram(bins = 15, fill="#6baed6", color="black") +
+  labs(title="NN Prediction Error Distribution", 
+       x="Prediction Error", y="Count") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+**Analysis:** The histogram of prediction errors displays a concentration around zero, indicating most predictions are close to the actual values, but the spread towards the right suggests a skew in overestimating house prices.
+
+## Extended Data Analysis Support
+
+### Comprehensive Error Distribution Review
+
+### Full Model Performance Metrics
+
+
+
