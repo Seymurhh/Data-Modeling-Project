@@ -2165,7 +2165,7 @@ for (i in seq_along(depth_values)) {
   
   # Less significant trees that were not plotted in the model analysis
   rpart.plot(tree_model, main=paste("Regression Tree - Depth: ", depth), 
-             type = 4, extra = 0, tweak=1.6)
+             type = 4, extra = 100, tweak=2)
 }
 
 ```
