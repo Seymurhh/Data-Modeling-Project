@@ -916,27 +916,13 @@ k
 **Analysis:** In our stepwise regression with AIC criterion, we observed a meticulous variable selection process that enhanced the model by methodically minimizing the AIC value. Each step of inclusion saw the introduction of variables that significantly contributed to the predictive strength of the model. Starting with 'zipcode', which significantly reduced the AIC, we systematically included variables such as 'sqft_above', 'sqft_basement', and 'view', among others, resulting in a progressive decrease in AIC and a concomitant increase in adjusted R-squared. This indicated that each new variable provided substantial explanatory power. The process culminated with the inclusion of 'age', resulting in the lowest AIC reached in our selection process and an adjusted R-squared that indicated a strong explanatory ability, accounting for approximately 88.47% of the variance in the response variable. This rigorous selection process yielded a model that is not only succinct but also retains a high level of predictive accuracy, which is vital for both interpretation and practical application. The absence of certain variables, such as 'bedrooms', which were excluded due to their lack of significant contribution to the model, underscores the efficiency of the stepwise method in creating a parsimonious yet powerful model.
 
 
+## Weighted Least Squares (WLS) Regression
 
+### Weight Calculation for WLS
 
+Preliminary steps for conducting a Weighted Least Squares Regression. The focus is on calculating the weights to be used in the WLS model. Here, the absolute residuals from a preliminary model are regressed against the predictor variable 'price' to determine the variance function. These calculated weights are then used to address the issue of heteroscedasticity, where error variances are unequal across observations. The methodical approach to determining these weights is crucial for the subsequent steps in WLS regression.
 
-
-
-
-
-**Analysis:**
-
-The WLS regression model makes the error variances more equally distributed throughout. The adjusted r-squared value increased to 0.79 with almost all of the independent variables being significant.
-
-Graph 1 (Residuals vs Fitted): (linearity assumption) A linear relationship seems appropriate. (The average mean error equal to zero assumption) The average mean seems to be equal to zero.
-
-Graph 2 (Q-Q Residuals): (normality assumption) There is minor departure from a normal distribution at the tails.
-
-Graph 3 (Scale-Location): (constant variance assumption) The residuals seem to be more equally distributed throughout compared to the stepwise model. (homoscedasticity assumption) The variances appear to be slightly more constant.
-
-Graph 4 (Residuals vs Leverage): There now appears to be several influential outliers beyond the Cook's distance line.
-
-
-```{r WLS regression}
+```{r WLS Weigh Calculation}
 
 # Weighted Least Squares Regression
 # The scale-location graph of the main model that the error variances are unequal
@@ -947,40 +933,78 @@ abs.ei <- abs(ei)
 g1 <- lm(abs.ei ~ train.dat$price)
 summary(g1)
 
+```
+**Analysis:** The regression analysis used to compute weights for the WLS model reveals a significant relationship between the absolute residuals and the predictor variable 'price,' indicating that the error variance is proportional to the value of 'price,' justifying the use of WLS for variance stabilization.
+
+
+### Performing WLS Regression
+
+In this part, we perform the WLS regression using the previously computed weights. This technique is employed to correct for the unequal variances identified in the model residuals, aiming to improve the model's estimation accuracy. The summary of the WLS model is inspected to evaluate the coefficients and the overall fit, ensuring that the weighted regression has adjusted for heteroscedasticity effectively.
+
+```{r WLS Regression}
+
 s <- g1$fitted.values
 wi = 1/(s^2)
 
 # Weighted-least squares regression
 house_lm_wls <- lm(price ~ ., weights = wi, data = train.dat)
 
-summary(house_lm_wls)
-par(mfrow=c(2,2))
-plot(house_lm_wls)
+house_lm_wls_summary <- summary(house_lm_wls)
+house_lm_wls_summary
 
 ```
+
+**Analysis:** The Weighted Least Squares regression, accounting for non-constant variances in the residuals, shows substantial improvements in fitting the model to the data. The significant coefficients across the predictors indicate a robust model, with the weights effectively stabilizing variances, as evidenced by the reduced residual standard error and the high R-squared value.
+
+
+### Diagnostic Plotting of the WLS Model
+
+This subsection focuses on visual diagnostic analysis of the WLS model. It involves generating plots such as Residuals vs Fitted, Q-Q plot, Scale-Location, and Residuals vs Leverage. These plots are critical for checking the assumptions underlying the linear regression model after applying the WLS method, including linearity, normality of residuals, equal variance, and the influence of outliers.
+
+```{r Plot the WLS Model}
+
+# Plot the WLS Model
+par(mfrow=c(2,2))
+suppressWarnings(plot(house_lm_wls))
+
+```
+
+**Analysis:** The WLS regression model makes the error variances more equally distributed throughout. The adjusted r-squared value increased to 0.79 with almost all of the independent variables being significant.
+  - Graph 1 (Residuals vs Fitted): (linearity assumption) A linear relationship seems appropriate. (The average mean error equal to zero assumption) The average mean seems to be equal to zero.
+  - Graph 2 (Q-Q Residuals): (normality assumption) There is minor departure from a normal distribution at the tails.
+  - Graph 3 (Scale-Location): (constant variance assumption) The residuals seem to be more equally distributed throughout compared to the stepwise model. (homoscedasticity assumption) The variances appear to be slightly more constant.
+  - Graph 4 (Residuals vs Leverage): There now appears to be several influential outliers beyond the Cook's distance line.
+
+
+### Model Performance Evaluation and Results Integration
+
+Here, we evaluate the performance of the WLS model using prediction metrics on the training and test datasets. The model's effectiveness is gauged using R-squared values, Root Mean Squared Error (RMSE), and the Sum of Squared Errors (SSE). The results are then consolidated into a comprehensive results dataframe, which provides a comparative analysis against other models and encapsulates the predictive power and accuracy of the WLS approach.
+
 ```{r Append WLS Results}
 # Append to results.df
 
-# Random Forest Test Results
-wls_train_pred = predict(house_lm_wls, newdata = train.dat)
+# WLS Test Results
 wls_test_pred = predict(house_lm_wls, newdata = test.dat)
 
-wls_train_results = postResample(pred = wls_train_pred, obs = train.dat$price)
 wls_test_results = postResample(pred = wls_test_pred, obs = test.dat$price)
 wls_test_sse = sum((wls_test_pred - test.dat$price)^2)
 
 # Append to the Results Data Frame
 results.df = rbind(results.df,data.frame(model = "Weighted Least Squared Regression",
-            R.Squared.Train = unname(wls_train_results[2]),
+            R.Squared.Train = house_lm_wls_summary$r.squared,
             R.Squared.Test = unname(wls_test_results[2]),
             RMSE.test = unname(wls_test_results[1]),
-            SSE.test = wls_test_sse)
-)
+            SSE.test = wls_test_sse))
+
+results.df
+
 ```
 
-**Analysis:** 
-Before performing Ridge, Lasso, and ElasticNet regression methods, we will assess the multicollinearity in the model.
-There are no multicollinearity issues in the train data set since we have handled the highly correlated variables during the data preparation process.
+
+
+## Assessment of Multicollinearity 
+
+Before performing Ridge, Lasso, and ElasticNet regression methods, we will assess the multicollinearity in out main model so far, the Linear Regression Test after BoxCox transformation.
 
 ```{r Test BoxCox model for multicollinearity}
 
@@ -988,6 +1012,10 @@ There are no multicollinearity issues in the train data set since we have handle
 vif(house_lm1)
 
 ```
+
+**Analysis:** There are no multicollinearity issues in the train data set since we have handled the highly correlated variables during the data preparation process.
+
+
 
 **Analysis:**
 The Ridge regression generates a lambda value of 24125.359. The model performs well with a r-squared value of 0.69. The mean squared error is high with a value of 39,928,261,630. 
@@ -1056,6 +1084,8 @@ ridge_metrics %>%
   knitr::kable(caption = "SST, SSE, MSE, RMSE, and R2 of the Model")
 
 ```
+
+
 ```{r Append Ridge Regression Results}
 # Append to results.df
 ridge_train_pred = predict(house_lm_ridge, 
@@ -1077,6 +1107,9 @@ results.df = rbind(results.df,data.frame(model = "Ridge Regression",
             SSE.test = ridge_test_sse)
 )
 ```
+
+
+
 
 **Analysis:**
 The Lasso regression generates a lambda value of 393.183. The r-squared value of 0.69 is indicative of the model's considerable strength. Out of the three models used for dealing with multicollinearity, this one had the lowest RMSE value at 199,084.7.
