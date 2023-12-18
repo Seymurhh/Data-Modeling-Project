@@ -354,7 +354,7 @@ ggplot(df_house, aes(x = factor(waterfront), y = price)) +
 
 ```
 
-**Analysis:** The boxplot illustrates a significant difference in the distribution of house prices based on the presence of a waterfront. Non-waterfront properties (denoted by 0) show a dense clustering of prices with fewer outliers, suggesting a more uniform pricing structure within this category. On the other hand, waterfront properties (denoted by 1) exhibit a higher median price and a much wider spread, indicating a greater variance in how much buyers are willing to pay for this luxury feature. The presence of outliers in the waterfront category also suggests that certain premium properties command exceptional prices, which are not as prevalent in non-waterfront real estate. This analysis underscores the value added by waterfront locations, which can significantly increase property values and attract a niche market willing to invest in these desirable features.
+**Analysis:** The boxplot illustrates a significant difference in the distribution of house prices based on the presence of a waterfront. Non-waterfront properties (denoted by 0) show a dense clustering of prices with fewer outliers, suggesting a more uniform pricing structure within this category. On the other hand, waterfront properties (denoted by 1) exhibit a higher median price and a much wider spread, indicating a greater variance in how much buyers are willing to pay for this luxury feature. The presence of outliers in the waterfront category also suggests that certain premium properties command exceptional prices, which are not as prevalent in non-waterfront real estate. Waterfront locations can significantly increase property values and attract a niche market willing to invest.
 
 
 ### Mapping Price Hotspots: Geospatial Analysis of King County's Real Estate
@@ -553,7 +553,6 @@ house_lm <- lm(price ~ ., data = train.dat)
 summary(house_lm)
 
 # Display the Regression function of Price
-# Assuming you have a function dispRegFunc to display the regression equation
 output <- capture.output(dispRegFunc(house_lm))
 
 # Print the output
@@ -868,18 +867,11 @@ kable(results.df.asc)
 \newpage
 # IV. Model Performance Testing
 
-*Use the test data set to assess the model performances. Here, build the best multiple linear models by using the stepwise both ways selection method. Compare the performance of the best two linear models. Make sure that model assumption(s) are checked for the final linear model. Apply remedy measures (transformation, etc.) that helps satisfy the assumptions. In particular you must deeply investigate unequal variances and multicollinearity. If necessary, apply remedial methods (WLS, Ridge, Elastic Net, Lasso, etc.). *
-
-
-The stepwise method yields a similar model with the elimination of sqft_lot15 being the only difference. This variable was insignificant in the Boxcox transformed model. The r-squared value remains nearly the same at 0.77 with all the predictor variables being significant at 0.001.[ @guyon2003introduction ]
-
-
 ## Stepwise Regression Analysis
-
 
 ### Fitting the Stepwise Regression Model
 
-This subsection involves fitting a stepwise regression model to the training data. The stepwise method, using both forward and backward steps, identifies the most significant predictors for the house price. The 'step' function is used with a criterion based on the Akaike Information Criterion (AIC) to select the best model. This process iteratively adds or removes predictors based on their impact on the AIC, aiming to find an optimal balance between model complexity and explanatory power.
+This subsection involves fitting a stepwise regression model to the training data. The stepwise method, using both forward and backward steps, identifies the most significant predictors for the house price. The 'step' function is used with a criterion based on the Akaike Information Criterion (AIC) to select the best model. This process iteratively adds or removes predictors based on their impact on the AIC, aiming to find an optimal balance between model complexity and explanatory power. 
 
 ```{r Stepwise model fit}
 
@@ -910,7 +902,7 @@ kable(results.df.asc)
 
 ```
 
-**Analysis:** The stepwise regression analysis, with an AIC-driven selection process, led to a refined model that demonstrates strong predictive performance for house prices. By eliminating 'bedrooms' and retaining other significant variables, the model attained an Adjusted R-squared value of 0.8839, indicating that about 88.39% of the variability in house prices is explained by the model. This high degree of explanation, coupled with significant p-values for most predictors, affirms the model's robustness. Notably, 'zipcode' variables emerged as significant predictors, reflecting the importance of location in housing prices. The residual standard error of 0.06866 suggests a good fit of the model to the data. Overall, this stepwise model, balancing model complexity and explanatory power, provides a comprehensive understanding of the factors influencing house prices.
+**Analysis:** The stepwise regression analysis, with an AIC-driven selection process, led to a refined model that demonstrates strong predictive performance for house prices. By eliminating 'bedrooms' and retaining other significant variables, the model attained an Adjusted R-squared value of 0.8839, indicating that about 88.39% of the variability in house prices is explained by the model. This high degree of explanation, coupled with significant p-values for most predictors, affirms the model's robustness. Notably, 'zipcode' variables emerged as significant predictors, reflecting the importance of location in housing prices. The residual standard error of 0.06866 suggests a good fit of the model to the data. Overall, this stepwise model, balancing model complexity and explanatory power, provides a comprehensive understanding of the factors influencing house prices. [ @guyon2003introduction ]
 
 
 ### Diagnostic Plots for the Stepwise Model
@@ -1509,7 +1501,7 @@ The Stepwise Regression model shows a promising R-squared of 0.8833 on the train
 
 In contrast, the Robust Regression - Bisquare model underperforms in terms of both R-squared and RMSE on the test set. Its relatively lower R-squared of 0.7406, coupled with the highest RMSE and SSE, indicates a lesser fit and predictive accuracy, particularly for outlier management.
 
-The table provided paints a nuanced picture of model efficacy, revealing that while some models excel in training, their prowess does not always translate to unseen data. Models like the Random Forest, not shown in this specific table but discussed earlier, with their intricate decision-making pathways, tend to outperform simpler models, especially in complex datasets. This analysis emphasizes the importance of not only model selection but also the rigorous evaluation of model performance across multiple dimensions to ensure the selection of the most appropriate model for deployment.
+The table provided paints a nuanced picture of model efficacy, revealing that while some models excel in training, their prowess does not always translate to unseen data. Models like the Random Forest, not shown in this specific table but discussed later, with their intricate decision-making pathways, tend to outperform simpler models, especially in complex datasets. This analysis emphasizes the importance of not only model selection but also the rigorous evaluation of model performance across multiple dimensions to ensure the selection of the most appropriate model for deployment.
 
 
 ## Challenges with Best Subset Regression
@@ -1537,7 +1529,7 @@ In this section, we explore alternative predictive models to challenge our prima
 
 ## Regression Tree Models
 
-This block is designed to determine the optimal depth for a regression tree model predicting house prices. It iterates over a predefined set of depth values, constructing a model at each depth, and calculating MSE and R-squared values for both the test and training datasets. The loop stores these metrics for each depth, and upon completion, it identifies the depth that yields the highest R-squared value on the test data, suggesting the best generalization performance. [@ shifrin2014comparative ]
+This block is designed to determine the optimal depth for a regression tree model predicting house prices. It iterates over a predefined set of depth values, constructing a model at each depth, and calculating MSE and R-squared values for both the test and training datasets. The loop stores these metrics for each depth, and upon completion, it identifies the depth that yields the highest R-squared value on the test data, suggesting the best generalization performance. [@shifrin2014comparative ]
 
 ```{r Regression Tree Train/Test Data Split}
 set.seed(1023)
@@ -1596,8 +1588,8 @@ dtm = rpart(price ~ .,
 print(dtm)
 
 # Plot the tree
-rpart.plot(dtm, cex = .25, main=paste("Regression Tree - Depth: ", best_depth), 
-           type = 4, extra = 0, tweak=2)
+rpart.plot(dtm, cex = .25, main=paste("Regression Tree - Depth: ", best_depth),
+           extra=100,type=4,tweak=2)
 
 ```
 
