@@ -1162,7 +1162,7 @@ enet_test_results = postResample(pred = enet_test_pred, obs = test.dat.o$price)
 enet_test_sse = sum((enet_test_pred - test.dat$price)^2)
 
 # Append to the Results Data Frame
-results.df = rbind(results.df,data.frame(model = "Lasso Regression",
+results.df = rbind(results.df,data.frame(model = "Elastic Net Regression",
             R.Squared.Train = unname(enet_train_results[2]),
             R.Squared.Test = unname(enet_test_results[2]),
             RMSE.test = unname(enet_test_results[1]),
