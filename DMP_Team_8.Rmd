@@ -1885,6 +1885,25 @@ cat("SSE:", sse_value, "\n")
 
 ```
 
+```{r Append Neural Network results to dataframe}
+
+nn_train_pred = predict(house_lm_wls, newdata = train.dat.norm)
+nn_test_pred = predict(house_lm_wls, newdata = test.dat.norm)
+
+nn_train_results = postResample(pred = nn_train_pred, obs = train.dat.norm$price)
+nn_test_results = postResample(pred = nn_test_pred, obs = test.dat.norm$price)
+nn_test_sse = sum((nn_test_pred - test.dat.norm$price)^2)
+
+# Append to the Results Data Frame
+results.df = rbind(results.df,data.frame(model = "Neural Network",
+            R.Squared.Train = unname(nn_train_results[2]),
+            R.Squared.Test = unname(nn_test_results[2]),
+            RMSE.test = unname(nn_test_results[1]),
+            SSE.test = nn_test_sse)
+)
+```
+
+
 **Analysis:** Given the RMSE of 0.04553926, the model’s predictions are relatively close to the actual prices, but there's room for improvement, especially considering the R-squared value of 0.3436959, which suggests that only about 34% of the variance in the house prices is being explained by the model. The SSE of 13.44667 further indicates a substantial sum of errors squared, calling for model refinement to better capture complex patterns in the data.
 
 ```{r checking the correlation between predicted price and test price.}
