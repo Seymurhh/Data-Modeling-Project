@@ -2079,13 +2079,10 @@ The accompanying performance table accentuates the stark contrast between the ch
 
 
 ```{r Printing all important results}
-
 # Final Results dataframe
 results.df.asc = results.df[order(results.df$RMSE.test),]
-
 library(knitr)
 kable(results.df.asc)
-
 ```
 
 \newpage
@@ -2138,9 +2135,8 @@ The Appendix provides additional detailed analyses and visual representations th
 ```{r Neural Network Architecture}
 
 # Neural Network Architecture
-plot(house_NN, main="Neural Network Architecture Visualization")
-
 library(NeuralNetTools)
+plot(house_NN, main="Neural Network Architecture Visualization")
 
 ```
 
