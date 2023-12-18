@@ -509,7 +509,7 @@ vif(house_lm)
 
 This subsection assesses the linear regression model's performance on the test data. By applying the model to unseen data, we measure its predictive accuracy and generalizability beyond the training dataset.
 
-```{r}
+```{r Test Linear Regression model}
 
 # Test data Predictions
 house_lm_test_pred <- predict(house_lm, newdata = test.dat)
@@ -540,7 +540,7 @@ This segment of the analysis concentrates on refining the model by discarding pr
 
 The columns 'sqft_lot15' and 'year' are being dropped for having a p-value > 0.05, subsequently 'year' and 'month' are also being dropped because of their similarity to the calculated column 'age' that takes year built or renovated to determine how modern the construction might be.
 
-```{r}
+```{r Drop Insignificant Predictors}
 
 predictors_to_drop <- c("sqft_lot15", "year", "month", "day")
 
@@ -573,9 +573,11 @@ The boxplot provides a visual summary of the residuals' distribution, offering i
 
 ```{r Boxplot of Residuals}
 
+# Create a Data Frame with the residuals
 ei <- house_lm$residuals
 ei_df <- data.frame(residuals = ei)
 
+# Create a Boxplot of Residuals
 ggplot(ei_df, aes(y = residuals)) +
   geom_boxplot(fill = "#6baed6", color = "black") +
   coord_flip() +  # To make the boxplot horizontal
@@ -597,13 +599,14 @@ This plot examines the relationship between residuals and predicted values, cruc
 
 ```{r Fitted vs residuals}
 
-
-plot(house_lm$fitted.values, ei, 
-     xlab="Fitted Values House Linear Model", 
-     ylab="Residuals House Linear Model")
+# Create Fitted vs Residuals Plot
+ggplot(data = data.frame(fitted = house_lm$fitted.values, residuals = ei), aes(x = fitted, y = residuals)) +
+  geom_point(color = "#6baed6") +
+  geom_hline(yintercept = 0, color = "black", linetype = "dashed") +
+  labs(x = "Fitted Values", y = "Residuals", title = "Fitted vs. Residuals Plot") +
+  theme_minimal()
 
 ```
-
 
 **Analysis:** This plot suggests that while the model may be suitable for a range of predictions, there are certain areas, especially at the higher end of the price spectrum, where the model's assumptions do not hold, and its predictive accuracy is compromised. Further investigation and possible model refinement are warranted.
 
@@ -643,12 +646,12 @@ The model, as indicated by the significant coefficients, suggests that features 
 
 # We divide by 2 because this is a two tail test
 # ... if alpha=0.05, then use .05/2
-conf= 0.01/2
+conf <- 0.01/2
 
 # Manually calculate the degrees of freedom
-df<-21613-2            
-value<-formatC(qt(conf,df,lower.tail=FALSE))    
-print(paste("Critical T values: ",value))
+df <- 21613-2            
+value <- formatC(qt(conf, df, lower.tail = FALSE))    
+print(paste("Critical T values: ", value))
 
 # Extract coefficients in matrix
 matrix_coef <- summary(house_lm)$coefficients
@@ -843,8 +846,7 @@ Graph 3 (Scale-Location): (constant variance assumption) The residuals do not se
 
 Graph 4 (Residuals vs Leverage): There are no influential outliers.
 
-```{r}
-# [Ibrahim]
+```{r Stepwise model fit}
 
 stepwise_model <- ols_step_both_p(house_lm1, penter = 0.05, premove = 0.05)
 
@@ -868,7 +870,7 @@ k
 #plot(k1)
 ```
 
-**Analysis:*
+**Analysis:**
 
 The WLS regression model makes the error variances more equally distributed throughout. The adjusted r-squared value increased to 0.79 with almost all of the independent variables being significant.
 
@@ -882,7 +884,7 @@ Graph 4 (Residuals vs Leverage): There now appears to be several influential out
 
 
 ```{r WLS regression}
-# [Ibrahim]
+
 # Weighted Least Squares Regression
 # We notice from the scale-location graph of the main model that the error variances are unequal.
 
@@ -930,7 +932,7 @@ dim(test.dat.o)
 
 
 ```{r - Ridge Regression}
-# [Ibrahim]
+
 # Ridge Regression
 
 # Extract 'x' and 'y'
@@ -977,7 +979,7 @@ ridge_metrics %>%
 The Lasso regression generates a lambda value of 393.183. The r-squared value of 0.69 is indicative of the model's considerable strength. Out of the three models used for dealing with multicollinearity, this one had the lowest RMSE value at 199,084.7.
 
 ```{r}
-# [Ibrahim]
+
 # Lasso Regression
 house_lm_lasso <- glmnet::cv.glmnet(x, y, alpha = 1, nlambda = 100, lambda.min.ratio = 0.0001)
 best.lambda.lasso <- house_lm_lasso$lambda.min
@@ -1016,7 +1018,7 @@ lasso_metrics %>%
 The ElasticNet regression generates a lambda value of 786.366. Similar to the Ridge and Lasso Regression models, the r-squared value of this model is 0.69. Again, the MSE and RMSE are quite high. This remedial measure may help generalize the model for higher applicability.
 
 ```{r}
-# [Ibrahim]
+
 # Elastic Net Regression
 house_lm_enet <- glmnet::cv.glmnet(x, y, alpha = 0.5, nlambda = 100, lambda.min.ratio = 0.0001)
 plot(house_lm_enet)
@@ -1156,12 +1158,12 @@ price.predictors <- colnames(dplyr::select(test.dat, -price))
 # Predictions for each model using the test dataset
 predictions <- data.frame(
   price = test.dat$price,
-  price.lm = predict(house_lm1, test.dat),
-  price.sw.lm = predict(sw_model, test.dat),
+  price.lm = predict(house_lm1, test.dat)^(1/lambda),
+  price.sw.lm = predict(sw_model, test.dat)^(1/lambda),
   price.wls = predict(house_lm_wls, test.dat),
-  price.ridge = predict(house_lm_ridge, s = best.lambda.ridge, newx = data.matrix(test.dat[price.predictors])),
-  price.lasso = predict(house_lm_lasso, s = best.lambda.lasso, newx = data.matrix(test.dat[price.predictors])),
-  price.en = predict(house_lm_enet, s = best.lambda.enet, newx = data.matrix(test.dat[price.predictors])),
+  #price.ridge = predict(house_lm_ridge, s = best.lambda.ridge, newx = data.matrix(test.dat[price.predictors])),
+  #price.lasso = predict(house_lm_lasso, s = best.lambda.lasso, newx = data.matrix(test.dat[price.predictors])),
+  #price.en = predict(house_lm_enet, s = best.lambda.enet, newx = data.matrix(test.dat[price.predictors])),
   price.huber = predict(house_lm_huber, test.dat),
   price.bisquare = predict(house_lm_bisquare, test.dat)
 )
@@ -1178,7 +1180,8 @@ calc_metrics <- function(actual, predicted) {
 
 # function to each set of predictions
 metrics <- data.frame(
-  Model = c("Linear", "Stepwise", "Weighted Least Squares", "Ridge", "Lasso", "Elastic Net", "Huber", "Bisquare"),
+  #Model = c("Linear", "Stepwise", "Weighted Least Squares", "Ridge", "Lasso", "Elastic Net", "Huber", "Bisquare"),
+  Model = c("Linear", "Stepwise", "Weighted Least Squares", "Huber", "Bisquare"),
   do.call(rbind, lapply(2:ncol(predictions), function(i) calc_metrics(predictions$price, predictions[,i])))
 )
 
@@ -1273,11 +1276,11 @@ plot_data <- data.frame(Depth=depth_values, RMSE=mse_values)
 
 # Plot RMSE results vs Depth of the Tree
 ggplot(plot_data, aes(x=Depth, y=RMSE)) +
-  geom_point(color = "#6baed6") +  # Add points
-  geom_line(color = "#6baed6") +   # Connect points with a line
+  geom_point(color = "#6baed6") +
+  geom_line(color = "#6baed6") +
   labs(x = "Depth Value", y = "Root Mean Squared Error", 
        title = "Regression Tree Cross Validation (RMSE vs depth)") +
-  theme_minimal()  # Use a minimal theme for a clean look
+  theme_minimal()
 
 ```
 
@@ -1294,12 +1297,12 @@ plot_data <- data.frame(Depth=depth_values, TestR2=test_rsq_values)
 
 # Plot R-squared vs Depth of the Tree
 ggplot(plot_data, aes(x=Depth, y=TestR2)) +
-  geom_point(color="#6baed6") +  # Add points with color
-  geom_line(color="#6baed6") +   # Connect points with a line of the same color
-  geom_text(aes(label=round(TestR2, 4)), vjust=-0.5, color="black") + # Add text labels
+  geom_point(color="#6baed6") +
+  geom_line(color="#6baed6") +
+  geom_text(aes(label=round(TestR2, 4)), vjust=-0.5, color="black") +
   labs(x = "Depth Value", y = "Test R-squared", 
        title = "Regression Tree Cross Validation (R2 vs depth)") +
-  theme_minimal()  # Use a minimal theme for a clean look
+  theme_minimal() 
 
 ```
 
@@ -1447,10 +1450,12 @@ This subsection is dedicated to the visual exploration of the Support Vector Mac
 
 ```{r SVM Scatter Plot of Actual vs. Predicted Prices}
 
-plot(test.dat$price, svm_predictions, 
-     main="SVM Actual vs. Predicted Prices", 
-     xlab="Actual Prices", ylab="Predicted Prices")
-abline(0, 1, col="red")
+# SVM Scatter Plot of Actual vs. Predicted Prices
+ggplot(data = data.frame(Actual = test.dat$price, Predicted = svm_predictions), aes(x = Actual, y = Predicted)) +
+  geom_point(color = "#6baed6") +
+  geom_abline(intercept = 0, slope = 1, color = "black") +
+  labs(title = "SVM Actual vs. Predicted Prices", x = "Actual Prices", y = "Predicted Prices") +
+  theme_minimal()
 
 ```
 
@@ -1467,8 +1472,7 @@ svm_errors_df <- data.frame(Errors = svm_errors)
 ggplot(svm_errors_df, aes(x=Errors)) +
   geom_histogram(bins = 15, fill="#6baed6", color="black") + # ggplot chooses binwidth
   labs(title="SVM Prediction Error Distribution", x="Prediction Error", y="Count") +
-  theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme_minimal()
 
 ```
 
@@ -1477,10 +1481,13 @@ ggplot(svm_errors_df, aes(x=Errors)) +
 
 ```{r SVM Plot of Residuals vs. Fitted Values}
 
-plot(svm_predictions, svm_errors, 
-     main="SVM Residuals vs. Predicted", 
-     xlab="Predicted Prices", ylab="Residuals")
-abline(h=0, col="blue")
+# SVM Plot of Residuals vs. Fitted Values
+ggplot(data = data.frame(Predicted = svm_predictions, Residuals = svm_errors), aes(x = Predicted, y = Residuals)) +
+  geom_point(color = "#6baed6") +
+  geom_hline(yintercept = 0, color = "black") +
+  labs(title = "SVM Residuals vs. Predicted", x = "Predicted Prices", y = "Residuals") +
+  theme_minimal()
+
 
 ```
 
@@ -1534,7 +1541,7 @@ house_NN <- neuralnet(price ~ ., data = train.dat.norm, hidden = 5, linear.outpu
 
 ```
 
-**Analysis:** The neural network diagram represents a model with inputs corresponding to features of the houses such as 'bedrooms', 'bathrooms', 'sqft_living15', etc. The two hidden layers with two neurons each suggest an attempt to capture non-linear complexities in the data. The weights, denoted by numbers along the connections, indicate how each input is considered in predicting the house price. Significant weights suggest features that more strongly influence price predictions. Conversely, smaller weights might indicate less influence. The final output is the 'price', representing the model's prediction based on the learned weights through the network's training.
+**Analysis:** The neural network diagram represents a model with inputs corresponding to features of the houses such as 'bedrooms', 'bathrooms', 'sqft_living', etc. The two hidden layers with two neurons each suggest an attempt to capture non-linear complexities in the data. The weights, denoted by numbers along the connections, indicate how each input is considered in predicting the house price. Significant weights suggest features that more strongly influence price predictions. Conversely, smaller weights might indicate less influence. The final output is the 'price', representing the model's prediction based on the learned weights through the network's training.
 
 ### Performance Analysis of Neural Network
 
@@ -1584,6 +1591,24 @@ predicted_price <- model_results$net.result
 cor(predicted_price, test.dat.nn$price)
 ```
 
+<<<<<<< HEAD
+=======
+**Analysis:** The histogram of prediction errors displays a concentration around zero, indicating most predictions are close to the actual values, but the spread towards the right suggests a skew in overestimating house prices.
+
+
+```{r Prediction Accuracy Plot for NN}
+
+plot(test.dat.norm$price, predicted_price, 
+     main = "Actual vs. Predicted Prices", 
+     xlab = "Actual Prices", ylab = "Predicted Prices")
+abline(0, 1, col = "red")
+
+```
+
+**Analysis:** The scatter plot of actual vs. predicted prices shows a cluster below the ideal 45-degree line, reinforcing that the model tends to underpredict the higher-valued houses.
+
+
+>>>>>>> 83ec1524afeeeb6444274e4813b3eb9439001a97
 \newpage
 # VI. Model Limitation and Assumptions
 
@@ -1675,7 +1700,7 @@ for (i in seq_along(depth_values)) {
 
 **Analysis:** The scatter plot of actual vs. predicted prices shows a cluster below the ideal 45-degree line, reinforcing that the model tends to underpredict the higher-valued houses.
 
-```{r Prediction Accuracy Plot}
+```{r Extra Prediction Accuracy Plot for NN}
 
 plot(test.dat.norm$price, predicted_price, 
      main = "Actual vs. Predicted Prices", 
