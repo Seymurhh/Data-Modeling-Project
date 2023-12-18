@@ -475,9 +475,9 @@ Removing 'zipcode' actually reduces the model predictability from 80% to about 6
 ```{r Remove highly correlated variables ccording to VIF analysis}
 
 # Remove redundant, unnecessary columns from dataset. 
-df_house[c("lat", "long")] <- list(NULL)
-train.dat[c("lat", "long")] <- list(NULL)
-test.dat[c("lat", "long")] <- list(NULL)
+df_house[c("lat", "long", "year")] <- list(NULL)
+train.dat[c("lat", "long", "year")] <- list(NULL)
+test.dat[c("lat", "long", "year")] <- list(NULL)
 
 set.seed(1023)
 n<-dim(df_house)[1]
@@ -501,7 +501,7 @@ vif(house_lm)
 
 ```
 
-**Analysis:** After removing the 'lat' and 'long' variables to address multicollinearity, the model was re-fitted, resulting in an unchanged R-squared value of approximately 80.65%. This indicates that the removal of these variables did not significantly affect the model's explanatory power. The residual standard error remains around 159,600, and the p-value is still less than 2.2e-16, suggesting that the model remains statistically significant. The GVIF values post-refinement show that while multicollinearity may still be present, its severity has decreased, pointing towards an improved model fit and predictive capability.
+**Analysis:** After removing the 'lat' and 'long' variables to address multicollinearity, the model was re-fitted, resulting in an unchanged R-squared value of approximately 80.6%. This indicates that the removal of these variables did not significantly affect the model's explanatory power. The residual standard error remains around 159,600, and the p-value is still less than 2.2e-16, suggesting that the model remains statistically significant. The GVIF values post-refinement show that while multicollinearity may still be present, its severity has decreased, pointing towards an improved model fit and predictive capability.
 
 
 ## Evaluating Model Efficacy with Test Data
@@ -1003,6 +1003,7 @@ results.df
 
 ```
 
+**Analysis:** The Weighted Least Squares (WLS) model, while fitting the training data well, shows a decrease in generalization performance on the test data, with a lower R-squared value and a substantially increased RMSE, indicating less accurate predictions compared to the other models.
 
 
 ## Assessment of Multicollinearity 
@@ -1019,9 +1020,9 @@ vif(house_lm1)
 **Analysis:** There are no multicollinearity issues in the train data set since we have handled the highly correlated variables during the data preparation process.
 
 
+## Advanced Regression Techniques (Ridge, Lasso, and Elastic Net)
 
-**Analysis:**
-The Ridge regression generates a lambda value of 24125.359. The model performs well with a r-squared value of 0.69. The mean squared error is high with a value of 39,928,261,630. 
+### Ridge Regression
 
 ```{r df for ridge}
 
@@ -1107,15 +1108,16 @@ results.df = rbind(results.df,data.frame(model = "Ridge Regression",
             R.Squared.Train = unname(ridge_train_results[2]),
             R.Squared.Test = unname(ridge_test_results[2]),
             RMSE.test = unname(ridge_test_results[1]),
-            SSE.test = ridge_test_sse)
-)
+            SSE.test = ridge_test_sse))
+
+results.df
+
 ```
 
+**Analysis:** The Ridge regression generates a lambda value of 24125.359. The model performs well with a r-squared value of 0.69. The mean squared error is high with a value of 39,928,261,630. 
 
 
-
-**Analysis:**
-The Lasso regression generates a lambda value of 393.183. The r-squared value of 0.69 is indicative of the model's considerable strength. Out of the three models used for dealing with multicollinearity, this one had the lowest RMSE value at 199,084.7.
+### Lasso Regression
 
 ```{r Lasso Regression}
 
@@ -1179,12 +1181,16 @@ results.df = rbind(results.df,data.frame(model = "Lasso Regression",
             R.Squared.Train = unname(lasso_train_results[2]),
             R.Squared.Test = unname(lasso_test_results[2]),
             RMSE.test = unname(lasso_test_results[1]),
-            SSE.test = lasso_test_sse)
-)
+            SSE.test = lasso_test_sse))
+
+results.df
+
 ```
 
-**Analysis:**
-The ElasticNet regression generates a lambda value of 786.366. Similar to the Ridge and Lasso Regression models, the r-squared value of this model is 0.69. Again, the MSE and RMSE are quite high. This remedial measure may help generalize the model for higher applicability.
+**Analysis:** The Lasso regression generates a lambda value of 393.183. The r-squared value of 0.69 is indicative of the model's considerable strength. Out of the three models used for dealing with multicollinearity, this one had the lowest RMSE value at 199,084.7.
+
+
+### Elastic Net Regression
 
 ```{r Elastic Net Regression}
 
@@ -1250,16 +1256,17 @@ results.df = rbind(results.df,data.frame(model = "Elastic Net Regression",
             RMSE.test = unname(enet_test_results[1]),
             SSE.test = enet_test_sse)
 )
+
+results.df
+
 ```
 
-**Analysis:**
-Before the Robust regression method using Huber and Bisquare weights, we will assess the severity of the outliers.
+**Analysis:** The ElasticNet regression generates a lambda value of 786.366. Similar to the Ridge and Lasso Regression models, the r-squared value of this model is 0.69. Again, the MSE and RMSE are quite high. This remedial measure may help generalize the model for higher applicability.
 
-The Cook's D chart shows two observations that could have a substantial level of influence on the model. 
 
-The Outlier and Leverage Diagnostics for price^lambda plot illustrates numerous leverage, outlier, and outlier and leverage values. These outlying values could be having a large effect on the performance of the model. The model results, consequently, may suffer from reliability in their interpretation.
+## Robust Regression Methods
 
-The Deleted Studentized Residual vs Predicted Values plot depicts considerable portions of data outlying the thresholds.
+Before the Robust regression method using Huber and Bisquare weights, we will assess the severity of the outliers. 
 
 ```{r Graphical Analysis of the main model}
 
@@ -1274,8 +1281,13 @@ ols_plot_resid_stud_fit(house_lm1)
 
 ```
 
-**Analysis:**
-The Robust Regression model with the Huber weights results in a residual standard error of 112700. This is because Huber weights have difficulties with severe outliers which we can notice from the plots above. After performing the Robust regression however, we can notice that there are no influential outliers based on the Residuals vs Leverage plot. This ensures that the interpretation of the model's results will be reliable.
+**Analysis:** These are out observations from the plots:
+  - The Cook's D chart shows two observations that could have a substantial level of influence on the model. 
+  - The Outlier and Leverage Diagnostics for price^lambda plot illustrates numerous leverage, outlier, and outlier and leverage values. These outlying values could be having a large effect on the performance of the model. The model results, consequently, may suffer from reliability in their interpretation.
+  - The Deleted Studentized Residual vs Predicted Values plot depicts considerable portions of data outlying the thresholds.
+
+
+### Robust Regression using Huber weights
 
 ```{r Regression using Huber weights}
 
@@ -1302,6 +1314,9 @@ results.df = rbind(results.df,data.frame(model = "Robust Regression",
             RMSE.test = unname(hub1_test_results[1]),
             SSE.test = hub1_test_sse)
 )
+
+results.df
+
 ```
 
 ```{r remove influential outliers based on huber weights criteria}
@@ -1388,15 +1403,19 @@ results.df = rbind(results.df,data.frame(model = "Robust Regression (transformed
             RMSE.test = unname(hub3_test_results[1]),
             SSE.test = hub3_test_sse)
 )
+
+results.df
+
 ```
  
 ```{r}
 cbind(house_lm1$coefficients,house_lm_huber$coefficients)
 ```
 
+**Analysis:** The Robust Regression model with the Huber weights results in a residual standard error of 112700. This is because Huber weights have difficulties with severe outliers which we can notice from the plots above. After performing the Robust regression however, we can notice that there are no influential outliers based on the Residuals vs Leverage plot. This ensures that the interpretation of the model's results will be reliable.
 
-**Analysis:**
-The Robust regression with the bisquare weights has a lower residual standard error compared to the Huber weights. 
+
+### Robust Regression using Bisquare weights
 
 ```{r}
 
@@ -1420,11 +1439,14 @@ results.df = rbind(results.df,data.frame(model = "Robust Regression (transformed
             RMSE.test = unname(hub4_test_results[1]),
             SSE.test = hub4_test_sse)
 )
+
+results.df
 ```
 
+**Analysis:** The Robust regression with the bisquare weights has a lower residual standard error compared to the Huber weights. 
 
-**Analysis:**
-Both the linear and stepwise model are most the effective at predicting the price when using the test data. Both have r-squared values of 0.77. The Lasso regression model performs the best out of the remedial models. It produces an r-squared value of 0.69. ElasticNet and Ridge regression perform just as well. Robust regression with the Huber weights has an r-squared value of 0.65, not far off from the top three models. Robust regression with the Bisquare weights is where we see a dip in performance with an r-squared value of 0.59. The Weighted Least Squares regression performs the worst with a r-squared value of 0.41.
+
+## Comparative Analysis of Model Performances
 
 ```{r}
 # Evaluating the performance of the models using the test data set
@@ -1473,14 +1495,25 @@ metrics %>%
 
 ```
 
-## Best Subset Regression Attempts
-
-After several tentatives, we were not able to run a Best Subset Regression due to a lack of Compute resources. It would never finish, and sometimes freeze the application or the computer itself.
+**Analysis:** Both the linear and stepwise model are most the effective at predicting the price when using the test data. Both have r-squared values of 0.81. The Huber regression model performs the best out of the remedial models. It produces an r-squared value of 0.78. Bisquare and Lasso regression perform just as well. The Weighted Least Squares regression performs the worst with a r-squared value of 0.63.
 
 
-## Summary of Sections IV
+## Challenges with Best Subset Regression
 
-Need a Summary to add here.
+After several tentatives, we were not able to run a Best Subset Regression due to a lack of Compute resources. It would never finish, and sometimes freeze the application or the computer itself. One a very powerful gaming PC, it took more than 3h to finish. Since we exhausted our tentatives with this model, we decided to drop it from out analysis.
+
+
+## Summary of Model Performance Testing
+
+The comprehensive assessment of regression models in Section IV has provided valuable insights into their predictive performances. Our investigation commenced with a stepwise regression that subtly refined the initial linear model, retaining robust R-squared values and identifying 'sqft_lot15' as a non-contributory predictor. Diagnostic evaluations corroborated the adherence to the linearity assumption, detected slight normality deviations, and pinpointed potential heteroscedasticity issues.
+
+The implementation of Weighted Least Squares (WLS) regression was an endeavor to rectify the variance inconsistencies observed. Although the WLS model exhibited a marginally improved fit on training data, it regrettably demonstrated diminished performance on test data, evidenced by lower R-squared values and an escalated RMSE, hinting at a possible compromise in the model's generalization capability.
+
+Our exploration expanded to regularization techniques such as Ridge, Lasso, and Elastic Net regressions, with the objective of curtailing multicollinearity and enhancing the model's generalization. The Lasso regression stood out, presenting the most favorable balance between model complexity and predictive accuracy, as reflected by the lowest RMSE among regularization approaches.
+
+Robust regression methods, employing Huber and Bisquare weights, were introduced to mitigate outlier influences. Despite a reduction in outlier effects, as discerned from the diagnostic plots, these methods did not ascend to any predictive superiority based on R-squared values.
+
+To encapsulate, the Linear Regression after BoxCox transformation and the Stepwise Regression surfaced as the superior models in this analytical journey. The stepwise model excelled in variable selection efficiency, whereas the BoxCox transformed model epitomized an optimal equilibrium between complexity and predictive performance, ensuring commendable generalizability. Robust regression techniques, while instrumental in addressing outliers, did not manifest as the most reliable predictors in this context. Advancing from these findings, future endeavors should concentrate on refining the existing models, potentially working with other Challenger Models that we'll explore in the Section V.
 
 
 \newpage
