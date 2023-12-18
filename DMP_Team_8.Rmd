@@ -1506,11 +1506,12 @@ rf_test_results = postResample(pred = rf_test_pred, obs = test.dat.tree$price)
 rf_test_sse = sum((rf_test_pred - test.dat.tree$price)^2)
 
 # Append to the Results Data Frame
-data.frame(model = "Random Forest Tuned Model",
+results.df = rbind(results.df,data.frame(model = "Random Forest Tuned Model",
             R.Squared.Train = unname(rf_train_results[2]),
             R.Squared.Test = unname(rf_test_results[2]),
             RMSE.test = unname(rf_test_results[1]),
             SSE.test = rf_test_sse)
+)
 ```
 
 
@@ -1605,16 +1606,6 @@ Preparing the dataset for neural network analysis by normalizing the data. The n
 
 ```{r Prepare the NN data}
 
-# Remove redundant, unnecessary columns from dataset. 
-#df_house_nn <- df_house_original
-#df_house_nn[c("date","zipcode", "day")] <- list(NULL)
-
-#set.seed(1023)
-#n<-dim(df_house_nn)[1]
-#IND<-sample(c(1:n),round(n*0.7))
-#train.dat.nn<-df_house_nn[IND,]
-#test.dat.nn<-df_house_nn[-c(IND),]
-
 # Data must be normalized for the Neural Network
 normalize <- function(x) {
   # Only normalize if x is numeric
@@ -1640,7 +1631,7 @@ Here, we construct the neural network model using the normalized data and visual
 
 ```{r Build and Plot the NN model}
 
-house_NN <- neuralnet(price ~ ., data = train.dat.norm, hidden = 5, linear.output = T)
+house_NN <- neuralnet(price ~ ., data = train.dat.norm, hidden = 2, linear.output = T)
 
 ```
 
@@ -1697,8 +1688,6 @@ predicted_price <- model_results$net.result
 cor(predicted_price, test.dat.nn$price)
 ```
 
-<<<<<<< HEAD
-=======
 **Analysis:** The histogram of prediction errors displays a concentration around zero, indicating most predictions are close to the actual values, but the spread towards the right suggests a skew in overestimating house prices.
 
 
@@ -1714,7 +1703,6 @@ abline(0, 1, col = "red")
 **Analysis:** The scatter plot of actual vs. predicted prices shows a cluster below the ideal 45-degree line, reinforcing that the model tends to underpredict the higher-valued houses.
 
 
->>>>>>> 83ec1524afeeeb6444274e4813b3eb9439001a97
 \newpage
 # VI. Model Limitation and Assumptions
 
