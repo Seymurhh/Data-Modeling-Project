@@ -623,10 +623,12 @@ This plot examines the relationship between residuals and predicted values, cruc
 ```{r Fitted vs residuals}
 
 # Create Fitted vs Residuals Plot
-ggplot(data = data.frame(fitted = house_lm$fitted.values, residuals = ei), aes(x = fitted, y = residuals)) +
+ggplot(data = data.frame(fitted = house_lm$fitted.values, residuals = ei), 
+       aes(x = fitted, y = residuals)) +
   geom_point(color = "#6baed6") +
   geom_hline(yintercept = 0, color = "black", linetype = "dashed") +
-  labs(x = "Fitted Values", y = "Residuals", title = "Fitted vs. Residuals Plot") +
+  labs(x = "Fitted Values", y = "Residuals", 
+       title = "Fitted vs. Residuals Plot") +
   theme_minimal()
 
 ```
@@ -908,7 +910,7 @@ Graph 4 (Residuals vs Leverage): There now appears to be several influential out
 ```{r WLS regression}
 
 # Weighted Least Squares Regression
-# We notice from the scale-location graph of the main model that the error variances are unequal.
+# The scale-location graph of the main model that the error variances are unequal
 
 # Calculating the weights for the model
 ei <- house_lm$residuals
@@ -951,7 +953,7 @@ results.df = rbind(results.df,data.frame(model = "Weighted Least Squared Regress
 Before performing Ridge, Lasso, and ElasticNet regression methods, we will assess the multicollinearity in the model.
 There are no multicollinearity issues in the train data set since we have handled the highly correlated variables during the data preparation process.
 
-```{r}
+```{r Test BoxCox model for multicollinearity}
 
 # Testing the main (boxcox) model for multicollinearity
 vif(house_lm1)
@@ -962,6 +964,8 @@ vif(house_lm1)
 The Ridge regression generates a lambda value of 24125.359. The model performs well with a r-squared value of 0.69. The mean squared error is high with a value of 39,928,261,630. 
 
 ```{r df for ridge}
+
+# Create a Data Frame for Ridge
 set.seed(1023)
 n<-dim(df_house_original)[1]
 IND<-sample(c(1:n),round(n*0.7))
@@ -970,10 +974,11 @@ test.dat.o<-df_house_original[-c(IND),]
 
 dim(train.dat.o)
 dim(test.dat.o)
+
 ```
 
 
-```{r - Ridge Regression}
+```{r Ridge Regression}
 
 # Ridge Regression
 
@@ -1050,7 +1055,8 @@ The Lasso regression generates a lambda value of 393.183. The r-squared value of
 ```{r Lasso Regression}
 
 # Lasso Regression
-house_lm_lasso <- glmnet::cv.glmnet(x, y, alpha = 1, nlambda = 100, lambda.min.ratio = 0.0001)
+house_lm_lasso <- glmnet::cv.glmnet(x, y, alpha = 1, nlambda = 100, 
+                                    lambda.min.ratio = 0.0001)
 best.lambda.lasso <- house_lm_lasso$lambda.min
 plot(house_lm_lasso)
 
@@ -1059,7 +1065,9 @@ print(paste0("Lasso best lambda of ", round(best.lambda.lasso, digits = 3)))
 # Generating the results of the model
 lasso_results <- data.frame(
   price.train = train.dat.o$price,
-  price.lasso.train = predict(house_lm_lasso, s = best.lambda.lasso, newx = data.matrix(train.dat.o[price.predictors.train]))
+  price.lasso.train = predict(
+    house_lm_lasso, s = best.lambda.lasso, 
+    newx = data.matrix(train.dat.o[price.predictors.train]))
 )
 
 calc_metrics <- function(actual, predicted) {
@@ -1074,13 +1082,17 @@ calc_metrics <- function(actual, predicted) {
 # function to each set of predictions
 lasso_metrics <- data.frame(
   Model = c("Lasso"),
-  do.call(rbind, lapply(2:ncol(lasso_results), function(i) calc_metrics(lasso_results$price.train, lasso_results[,i])))
+  do.call(
+    rbind, lapply(
+      2:ncol(lasso_results), 
+      function(i) calc_metrics(lasso_results$price.train, lasso_results[,i])))
 )
 
 # Display the metrics table with RMSE
 lasso_metrics %>%
   dplyr::arrange(desc(R2)) %>%
   knitr::kable(caption = "SST, SSE, MSE, RMSE, and R2 of the Model")
+
 ```
 
 ```{r Append Lasso Regression to results}
@@ -1112,7 +1124,8 @@ The ElasticNet regression generates a lambda value of 786.366. Similar to the Ri
 ```{r Elastic Net Regression}
 
 # Elastic Net Regression
-house_lm_enet <- glmnet::cv.glmnet(x, y, alpha = 0.5, nlambda = 100, lambda.min.ratio = 0.0001)
+house_lm_enet <- glmnet::cv.glmnet(x, y, alpha = 0.5, nlambda = 100, 
+                                   lambda.min.ratio = 0.0001)
 plot(house_lm_enet)
 best.lambda.enet <- house_lm_enet$lambda.min
 
@@ -1121,7 +1134,9 @@ print(paste0("ElasticNet best lambda of ", round(best.lambda.enet, digits = 3)))
 # Generating the results of the model
 enet_results <- data.frame(
   price.train = train.dat.o$price,
-  price.enet.train = predict(house_lm_enet, s = best.lambda.enet, newx = data.matrix(train.dat.o[price.predictors.train]))
+  price.enet.train = predict(
+    house_lm_enet, s = best.lambda.enet, 
+    newx = data.matrix(train.dat.o[price.predictors.train]))
 )
 
 calc_metrics <- function(actual, predicted) {
@@ -1136,13 +1151,17 @@ calc_metrics <- function(actual, predicted) {
 # function to each set of predictions
 enet_metrics <- data.frame(
   Model = c("ElasticNet"),
-  do.call(rbind, lapply(2:ncol(enet_results), function(i) calc_metrics(enet_results$price.train, enet_results[,i])))
+  do.call(
+    rbind, lapply(
+      2:ncol(enet_results), 
+      function(i) calc_metrics(enet_results$price.train, enet_results[,i])))
 )
 
 # Display the metrics table with RMSE
 enet_metrics %>%
   dplyr::arrange(desc(R2)) %>%
   knitr::kable(caption = "SST, SSE, MSE, RMSE, and R2 of the Model")
+
 ```
 
 ```{r Append Elastic Net Regression to results}
@@ -1177,8 +1196,8 @@ The Outlier and Leverage Diagnostics for price^lambda plot illustrates numerous 
 
 The Deleted Studentized Residual vs Predicted Values plot depicts considerable portions of data outlying the thresholds.
 
-```{r}
-# [Ibrahim]
+```{r Graphical Analysis of the main model}
+
 # Looking at the residuals using the Cook's distance chart
 ols_plot_cooksd_chart(house_lm1)
 
@@ -1187,18 +1206,21 @@ ols_plot_resid_lev(house_lm1)
 
 # Deleted Studentized Residuals vs Fitted Values Plot
 ols_plot_resid_stud_fit(house_lm1)
+
 ```
 
 **Analysis:**
 The Robust Regression model with the Huber weights results in a residual standard error of 112700. This is because Huber weights have difficulties with severe outliers which we can notice from the plots above. After performing the Robust regression however, we can notice that there are no influential outliers based on the Residuals vs Leverage plot. This ensures that the interpretation of the model's results will be reliable.
 
-```{r}
+```{r Regression using Huber weights}
+
 # Robust Regression using Huber weights 
 # There are influential points (see plots above)
 house_lm_huber <- MASS::rlm(price ~ ., psi = psi.huber, data = train.dat)
 summary(house_lm_huber)
 par(mfrow=c(2,2))
 plot(house_lm_huber)
+
 ```
 ```{r Append Robust Regression results}
 hub1_train_pred = predict(house_lm_huber, newdata = train.dat)
@@ -1581,7 +1603,8 @@ rmse_values_rf = numeric(nrow(hyperparameter_grid))
 test_rsq_values_rf = numeric(nrow(hyperparameter_grid))
 train_rsq_values_rf = numeric(nrow(hyperparameter_grid))
 
-# Perform Grid Search to tune ntree (number of trees) and minsplit (minimum value in node to split)
+# Perform Grid Search to tune ntree 
+#   (number of trees) and minsplit (minimum value in node to split)
 for (i in 1:nrow(hyperparameter_grid)) {
   current_model <- randomForest(
     formula = price ~. -year-renovated-floors-month-day-condition-bedrooms-sqft_basement-bathrooms-sqft_lot15-age-yr_renovated,
@@ -1595,8 +1618,10 @@ for (i in 1:nrow(hyperparameter_grid)) {
   predictions_train <- predict(current_model, train.dat.tree)
   
   # store results
-  train_results = postResample(pred = predictions_train, obs = train.dat.tree$price)
-  test_results = postResample(pred = predictions_test, obs = test.dat.tree$price)
+  train_results = postResample(pred = predictions_train, 
+                               obs = train.dat.tree$price)
+  test_results = postResample(pred = predictions_test, 
+                              obs = test.dat.tree$price)
   
   # RMSE
   current_rmse <- sqrt(mean((predictions_test - test.dat.tree$price)^2))
@@ -1615,6 +1640,7 @@ for (i in 1:nrow(hyperparameter_grid)) {
     best_minsplit = hyperparameter_grid$minsplit[i]
   }
 }
+
 # Cross validate to tune mtry (number of possible random variables per split)
 ctrl = trainControl(method = "cv",  # Cross-validation method
                      number = 5,    # Number of folds
@@ -1624,14 +1650,15 @@ ctrl = trainControl(method = "cv",  # Cross-validation method
 param_grid = expand.grid(mtry=c(8,10,12))
 
 # Finding model
-best_rf = train(price ~ . -year-renovated-floors-yr_renovated-month-day-condition-bedrooms-sqft_basement-bathrooms-sqft_lot15-age, 
-                  data = train.dat.tree,
-                  method = "rf",
-                  trControl = ctrl,
-                  ntree=200,
-                  maxdepth=5,
-                  minsplit=4,
-                  tuneGrid = param_grid)
+best_rf = train(
+  price ~ . -year-renovated-floors-yr_renovated-month-day-condition-bedrooms-sqft_basement-bathrooms-sqft_lot15-age, 
+  data = train.dat.tree,
+  method = "rf",
+  trControl = ctrl,
+  ntree=200,
+  maxdepth=5,
+  minsplit=4,
+  tuneGrid = param_grid)
 }
 ```
 
@@ -1724,10 +1751,12 @@ This subsection is dedicated to the visual exploration of the Support Vector Mac
 ```{r SVM Scatter Plot of Actual vs. Predicted Prices}
 
 # SVM Scatter Plot of Actual vs. Predicted Prices
-ggplot(data = data.frame(Actual = test.dat$price, Predicted = svm_predictions), aes(x = Actual, y = Predicted)) +
+ggplot(data = data.frame(Actual = test.dat$price, Predicted = svm_predictions), 
+       aes(x = Actual, y = Predicted)) +
   geom_point(color = "#6baed6") +
   geom_abline(intercept = 0, slope = 1, color = "black") +
-  labs(title = "SVM Actual vs. Predicted Prices", x = "Actual Prices", y = "Predicted Prices") +
+  labs(title = "SVM Actual vs. Predicted Prices", 
+       x = "Actual Prices", y = "Predicted Prices") +
   theme_minimal()
 
 ```
@@ -1743,8 +1772,9 @@ svm_errors_df <- data.frame(Errors = svm_errors)
 
 # Plot Histogram of Prediction Errors
 ggplot(svm_errors_df, aes(x=Errors)) +
-  geom_histogram(bins = 15, fill="#6baed6", color="black") + # ggplot chooses binwidth
-  labs(title="SVM Prediction Error Distribution", x="Prediction Error", y="Count") +
+  geom_histogram(bins = 15, fill="#6baed6", color="black") +
+  labs(title="SVM Prediction Error Distribution", 
+       x="Prediction Error", y="Count") +
   theme_minimal()
 
 ```
@@ -1755,12 +1785,13 @@ ggplot(svm_errors_df, aes(x=Errors)) +
 ```{r SVM Plot of Residuals vs. Fitted Values}
 
 # SVM Plot of Residuals vs. Fitted Values
-ggplot(data = data.frame(Predicted = svm_predictions, Residuals = svm_errors), aes(x = Predicted, y = Residuals)) +
+ggplot(data = data.frame(Predicted = svm_predictions, Residuals = svm_errors), 
+       aes(x = Predicted, y = Residuals)) +
   geom_point(color = "#6baed6") +
   geom_hline(yintercept = 0, color = "black") +
-  labs(title = "SVM Residuals vs. Predicted", x = "Predicted Prices", y = "Residuals") +
+  labs(title = "SVM Residuals vs. Predicted", 
+       x = "Predicted Prices", y = "Residuals") +
   theme_minimal()
-
 
 ```
 
@@ -1779,7 +1810,8 @@ Preparing the dataset for neural network analysis by normalizing the data. The n
 normalize <- function(x) {
   # Only normalize if x is numeric
   if (is.numeric(x)) {
-    return((x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE)))
+    return((x - min(x, na.rm = TRUE)) / 
+             (max(x, na.rm = TRUE) - min(x, na.rm = TRUE)))
   } else {
     return(x)
   }
@@ -1800,7 +1832,8 @@ Here, we construct the neural network model using the normalized data and visual
 
 ```{r Build and Plot the NN model}
 
-house_NN <- neuralnet(price ~ ., data = train.dat.norm, hidden = c(2,2), linear.output = TRUE)
+house_NN <- neuralnet(price ~ ., data = train.dat.norm, hidden = c(2,2), 
+                      linear.output = TRUE)
 
 ```
 
@@ -1817,7 +1850,8 @@ model_results <- compute(house_NN, train.dat.norm)
 
 #model_results <- compute(house_NN, train.dat.norm[-1])
 predicted_y <- model_results$net.result
-unnormalize <- function(x) {return((x * (max(df_house$price)) -min(df_house$price)) + min(df_house$price))}
+unnormalize <- function(x) {return(
+  (x * (max(df_house$price)) -min(df_house$price)) + min(df_house$price))}
 
 pred_new_train <- unnormalize(predicted_y)
 PredictedTest<-pred_new_train
@@ -1848,6 +1882,25 @@ cat("R-squared:", r_squared_value, "\n")
 cat("SSE:", sse_value, "\n")
 
 ```
+
+```{r Append Neural Network results to dataframe}
+
+nn_train_pred = predict(house_lm_wls, newdata = train.dat.norm)
+nn_test_pred = predict(house_lm_wls, newdata = test.dat.norm)
+
+nn_train_results = postResample(pred = nn_train_pred, obs = train.dat.norm$price)
+nn_test_results = postResample(pred = nn_test_pred, obs = test.dat.norm$price)
+nn_test_sse = sum((nn_test_pred - test.dat.norm$price)^2)
+
+# Append to the Results Data Frame
+results.df = rbind(results.df,data.frame(model = "Neural Network",
+            R.Squared.Train = unname(nn_train_results[2]),
+            R.Squared.Test = unname(nn_test_results[2]),
+            RMSE.test = unname(nn_test_results[1]),
+            SSE.test = nn_test_sse)
+)
+```
+
 
 **Analysis:** Given the RMSE of 0.04553926, the model’s predictions are relatively close to the actual prices, but there's room for improvement, especially considering the R-squared value of 0.3436959, which suggests that only about 34% of the variance in the house prices is being explained by the model. The SSE of 13.44667 further indicates a substantial sum of errors squared, calling for model refinement to better capture complex patterns in the data.
 
@@ -1919,7 +1972,7 @@ The Appendix provides additional detailed analyses and visual representations th
 
 ## Enhanced Model Visualizations
 
-## Neurla Network
+### Neural Network Architecture
 
 ```{r}
 plot(house_NN, main="Neural Network Architecture Visualization")
@@ -1952,11 +2005,9 @@ for (i in seq_along(depth_values)) {
 
 ```
 
-### Additional Predictive Accuracy Charts
+## Additional Predictive Accuracy Charts
 
-#### Neural Network
-
-**Analysis:** The scatter plot of actual vs. predicted prices shows a cluster below the ideal 45-degree line, reinforcing that the model tends to underpredict the higher-valued houses.
+### Extra Neural Network Prediction Accuracy Plot
 
 ```{r Extra Prediction Accuracy Plot for NN}
 
@@ -1967,10 +2018,12 @@ abline(0, 1, col = "red")
 
 ```
 
+**Analysis:** The scatter plot of actual vs. predicted prices shows a cluster below the ideal 45-degree line, reinforcing that the model tends to underpredict the higher-valued houses.
+
+
 ### Neural Network Predictive Performance and Error Distribution
 
 A dual-faceted visual evaluation of the neural network model. The first plot highlights the spread and central tendency of predictive errors, revealing the model's precision range. The second plot maps predicted values against actual prices, offering a direct visual assessment of accuracy, with the proximity to the diagonal indicating the model's effectiveness in capturing the underlying price determinants. Together, these plots form a comprehensive view of the model's prediction capabilities and areas for improvement.
-
 
 ```{r Error Distribution Plot}
 
