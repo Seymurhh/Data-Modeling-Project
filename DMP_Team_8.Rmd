@@ -421,6 +421,7 @@ print(MSE)
 **Analysis:** The preliminary output indicates a robust model with an R-squared value of 80.66%, signifying that approximately 80% of the variability in house prices can be explained by the predictors in the model. The significant p-values across most variables confirm their relevance in predicting house prices. However, the substantial Residual Standard Error suggests room for improvement in model accuracy. The residual diagnostics will need to be carefully examined to identify potential violations of model assumptions and to strategize on improvements.
 
 The house_lm model to predict price has:
+
   - Residual Standard Error of 159,500 on 15040 degrees of freedom
   - Adjusted R-squared of 80.55%
   - p-value is practically near 0
@@ -442,6 +443,7 @@ plot(house_lm)
 ```
 
 **Analysis:** The diagnostic plots from the model indicate potential issues with the regression model. We observe the following:
+
   - *LINEARITY ASSUMPTION:* The Residuals vs Fitted plot shows a non-random pattern, suggesting that linearity assumptions may be violated. There's a cone shape along the line, which is mostly horizontal along 0.
   - *NORMALITY ASSUMPTION:* The Q-Q plot of residuals reveals deviations from normality, particularly in the tails. The residuals do not meet the normality assumption.
   - *CONSTANT VARIANCE ASSUMPTION:* The Scale-Location plot indicates heteroscedasticity, implying that the variance of residuals is not constant. 
@@ -520,13 +522,14 @@ house_lm_test_rsq <- 1 - var(house_lm_test_residuals) / var(test.dat$price)
 house_lm_test_sse <- sum((test.dat$price - house_lm_test_pred)^2)
 
 # Add the predictions to the results
-results.df <- data.frame(model = "Linear Regression Test Data Predictions",
+results.df <- data.frame(model = "Linear Regression Model - Original",
                          R.Squared.Train = summary(house_lm)$r.square,
                          R.Squared.Test = house_lm_test_rsq,
                          RMSE.test = house_lm_test_rmse,
                          SSE.test = house_lm_test_sse)
 
-print(results.df)
+results.df.asc <- results.df[order(results.df$RMSE.test),]
+kable(results.df.asc)
 
 ```
 
@@ -575,13 +578,15 @@ house_lm_test_sse <- sum((test.dat$price - house_lm_test_pred)^2)
 
 # Append the predictions after predictors removal to the results
 results.df = rbind(results.df, data.frame(
-  model = "Linear Regression Test without Insignificant Predictors",
+  model = "Linear Regression without Insignificant Predictors",
   R.Squared.Train = summary(house_lm)$r.square,
   R.Squared.Test = house_lm_test_rsq,
   RMSE.test = house_lm_test_rmse,
   SSE.test = house_lm_test_sse))
 
-print(results.df)
+results.df.asc <- results.df[order(results.df$RMSE.test),]
+kable(results.df.asc)
+
 
 ```
 
@@ -648,13 +653,15 @@ anova(house_lm)
 
 ```
 
-**Analysis:** The ANOVA indicates that most of the variables included in the model are significant predictors of house prices. However, the significance of floors is not established, and the high residual sum of squares suggests room for model improvement, possibly by including additional predictors or refining existing ones. Some details:
+**Analysis:** The ANOVA indicates that most of the variables included in the model are significant predictors of house prices. However, the significance of floors is not established, and the high residual sum of squares suggests room for model improvement, possibly by including additional predictors or refining existing ones.
+
+Some details:
+
   - *Significant Predictors:* Almost all variables, except floors, have a highly significant p-value (less than 0.05), indicated by "< 2.2e-16", which means these variables contribute significantly to the model and have a strong association with the house price.
   - *Floors Variable:* The floors variable, however, has a p-value of 0.229, which is greater than the typical alpha level of 0.05, suggesting that this predictor does not have a statistically significant effect on the house price within the model.
   - *Effect Sizes:* The Sum Sq column represents the total variance explained by each variable. For example, bathrooms, with the highest Sum Sq value, contribute a large effect to the price, indicating that as the number of bathrooms in a house increases, the price is significantly affected.
   - *Predictor Importance:* The F-value column gives a sense of the relative importance of each predictor. Higher values indicate a greater impact on the response variable. Here, bathrooms and grade have the highest F values, suggesting they are key predictors of house prices in the model.
   - *Model Adequacy:* The Residuals row shows the variance that is not explained by the model. A large Sum Sq for residuals suggests that there might be other factors affecting house prices that are not included in the model.
-
 
 
 ## Statistical Tests for Individual Coefficients
@@ -791,12 +798,14 @@ plot(house_lm1)
 
 **Analysis:** The diagnostic plots suggest that while the Box-Cox transformation has likely improved the model fit, there are still some areas where the model does not perfectly meet the assumptions of linear regression. There may be potential outliers or influential points that need to be investigated further. Additionally, the presence of heteroscedasticity might be addressed with additional transformations or by considering a different type of model, such as generalized least squares. It would also be prudent to examine the leverage points more closely to determine if any action, such as exclusion or weighting, is necessary.
 
-After boxcox transformation, we observe that:
+After BoxCox transformation, we observe that:
+
   - Residual Standard Error has reduced significantly to 0.1072 from 160,300 
   - Multiple R-square has increased to 88.5% from 80.45%
   - p-value remains same at < 2.2e-16
 
 Overall, the model appears to be a much better fit that before. From the model plot we observe the following:
+
   - *LINEARITY ASSUMPTION:* The Residuals vs Fitted plot looks better than before and confirms that a linear regression model is appropriate.
   - *NORMALITY ASSUMPTION:* The points are much better aligned along the diagonal in the Q-Q Residuals plot, however some heavy tails remain on both ends.
   - *CONSTANT VARIANCE ASSUMPTION:* The Scale Location plot points to constant variance
@@ -842,17 +851,18 @@ house_lm1_test_sse <- sum((act - pred)^2)
 
 # Append results after BoxCox Transformation
 results.df = rbind(results.df, 
-                   data.frame(model = "Linear Regression Test after BoxCox",
+                   data.frame(model = "Linear Regression after BoxCox",
                               R.Squared.Train = summary(house_lm1)$r.square,
                               R.Squared.Test = house_lm1_test_rsq,
                               RMSE.test = house_lm1_test_rmse,
                               SSE.test = house_lm1_test_sse))
 
-print(results.df)
+results.df.asc <- results.df[order(results.df$RMSE.test),]
+kable(results.df.asc)
 
 ```
 
-**Analysis:** The output indicates an improvement in the model's performance on the test data after applying the Box-Cox transformation. The R-squared value for the test data increased minimally from 0.8275312 to 0.8282285, indicating the same fit to the test data. Similarly, the RMSE decreased minimally as well, suggesting more accurate predictions from the transformed model. The SSE also decreased, further confirming the enhanced predictive performance post-transformation. Overall, the Box-Cox transformation has led to a model that explains a greater proportion of variance in house prices and predicts them with higher accuracy, as evidenced by the improved R-squared and lower RMSE and SSE values. This demonstrates the effectiveness of the transformation in stabilizing variance and improving model fit for the data at hand.
+**Analysis:** The output indicates an improvement in the model's performance on the test data after applying the Box-Cox transformation. The $R^2$ value for the training dataset had a significant increase of almost 8%, while the $R^2$ for the test data increased minimally from 0.8123883 to 0.8172112, indicating the same fit to the test data. Similarly, the RMSE decreased minimally as well, suggesting more accurate predictions from the transformed model. The SSE also decreased, further confirming the enhanced predictive performance post-transformation. Overall, the Box-Cox transformation has led to a model that explains a greater proportion of variance in house prices and predicts them with higher accuracy, as evidenced by the improved R-squared and lower RMSE and SSE values. This demonstrates the effectiveness of the transformation in stabilizing variance and improving model fit for the data at hand.
 
 
 \newpage
@@ -894,6 +904,10 @@ results.df = rbind(results.df,data.frame(model = "Stepwise Regression",
             R.Squared.Test = unname(step_test_results[2]),
             RMSE.test = unname(step_test_results[1]),
             SSE.test = step_test_sse))
+
+results.df.asc <- results.df[order(results.df$RMSE.test),]
+kable(results.df.asc)
+
 ```
 
 **Analysis:** The stepwise regression analysis, with an AIC-driven selection process, led to a refined model that demonstrates strong predictive performance for house prices. By eliminating 'bedrooms' and retaining other significant variables, the model attained an Adjusted R-squared value of 0.8839, indicating that about 88.39% of the variability in house prices is explained by the model. This high degree of explanation, coupled with significant p-values for most predictors, affirms the model's robustness. Notably, 'zipcode' variables emerged as significant predictors, reflecting the importance of location in housing prices. The residual standard error of 0.06866 suggests a good fit of the model to the data. Overall, this stepwise model, balancing model complexity and explanatory power, provides a comprehensive understanding of the factors influencing house prices.
@@ -912,6 +926,7 @@ plot(sw_model)
 ```
 
 **Analysis:** Based on these plots, we see that the model has minor issues with the normality at extreme values and potential heteroscedasticity as indicated by the Scale-Location plot and the spread of residuals in the Residuals vs Leverage plot. These issues may warrant further investigation and potential remediation through transformations or the use of robust regression techniques.
+
   - *Linearity Assumption:* The pattern of the residuals should not show curvature. If the linearity assumption holds, we should see a random scatter of residuals around the horizontal line at zero. The plot shows residuals evenly distributed across the range of fitted values without any systematic pattern, which suggests that the linearity assumption is not violated.
   - *Normality Assumption:* In the Q-Q plot, the residuals mostly follow the reference line except for the tails, indicating some slight deviation from normality at the extremes.
   - *Constant Variance Assumption:* In the Scale-Location plot, there is a slight trend in the spread of residuals as the fitted values increase, suggesting that the constant variance assumption may be violated, indicating potential heteroscedasticity.
@@ -987,6 +1002,7 @@ suppressWarnings(plot(house_lm_wls))
 ```
 
 **Analysis:** The WLS regression model makes the error variances more equally distributed throughout. The adjusted r-squared value increased to 0.79 with almost all of the independent variables being significant.
+
   - Graph 1 (Residuals vs Fitted): (linearity assumption) A linear relationship seems appropriate. (The average mean error equal to zero assumption) The average mean seems to be equal to zero.
   - Graph 2 (Q-Q Residuals): (normality assumption) There is minor departure from a normal distribution at the tails.
   - Graph 3 (Scale-Location): (constant variance assumption) The residuals seem to be more equally distributed throughout compared to the stepwise model. (homoscedasticity assumption) The variances appear to be slightly more constant.
@@ -998,7 +1014,6 @@ suppressWarnings(plot(house_lm_wls))
 Here, we evaluate the performance of the WLS model using prediction metrics on the training and test datasets. The model's effectiveness is gauged using R-squared values, Root Mean Squared Error (RMSE), and the Sum of Squared Errors (SSE). The results are then consolidated into a comprehensive results dataframe, which provides a comparative analysis against other models and encapsulates the predictive power and accuracy of the WLS approach.
 
 ```{r Append WLS Results}
-# Append to results.df
 
 # WLS Test Results
 wls_test_pred = predict(house_lm_wls, newdata = test.dat)
@@ -1013,7 +1028,8 @@ results.df = rbind(results.df,data.frame(model = "Weighted Least Squared Regress
             RMSE.test = unname(wls_test_results[1]),
             SSE.test = wls_test_sse))
 
-results.df
+results.df.asc <- results.df[order(results.df$RMSE.test),]
+kable(results.df.asc)
 
 ```
 
@@ -1124,7 +1140,9 @@ results.df = rbind(results.df,data.frame(model = "Ridge Regression",
             RMSE.test = unname(ridge_test_results[1]),
             SSE.test = ridge_test_sse))
 
-results.df
+results.df.asc <- results.df[order(results.df$RMSE.test),]
+kable(results.df.asc)
+
 
 ```
 
@@ -1197,7 +1215,9 @@ results.df = rbind(results.df,data.frame(model = "Lasso Regression",
             RMSE.test = unname(lasso_test_results[1]),
             SSE.test = lasso_test_sse))
 
-results.df
+results.df.asc <- results.df[order(results.df$RMSE.test),]
+kable(results.df.asc)
+
 
 ```
 
@@ -1271,7 +1291,8 @@ results.df = rbind(results.df,data.frame(model = "Elastic Net Regression",
             SSE.test = enet_test_sse)
 )
 
-results.df
+results.df.asc <- results.df[order(results.df$RMSE.test),]
+kable(results.df.asc)
 
 ```
 
@@ -1296,6 +1317,7 @@ ols_plot_resid_stud_fit(house_lm1)
 ```
 
 **Analysis:** These are out observations from the plots:
+
   - The Cook's D chart shows two observations that could have a substantial level of influence on the model. 
   - The Outlier and Leverage Diagnostics for price^lambda plot illustrates numerous leverage, outlier, and outlier and leverage values. These outlying values could be having a large effect on the performance of the model. The model results, consequently, may suffer from reliability in their interpretation.
   - The Deleted Studentized Residual vs Predicted Values plot depicts considerable portions of data outlying the thresholds.
@@ -1322,14 +1344,15 @@ hub1_test_results = postResample(pred = hub1_test_pred, obs = test.dat$price)
 hub1_test_sse = sum((hub1_test_pred - test.dat$price)^2)
 
 # Append to the Results Data Frame
-results.df = rbind(results.df,data.frame(model = "Robust Regression",
+results.df = rbind(results.df,data.frame(model = "Robust Regression - Huber",
             R.Squared.Train = unname(hub1_train_results[2]),
             R.Squared.Test = unname(hub1_test_results[2]),
             RMSE.test = unname(hub1_test_results[1]),
             SSE.test = hub1_test_sse)
 )
 
-results.df
+results.df.asc <- results.df[order(results.df$RMSE.test),]
+kable(results.df.asc)
 
 ```
 
@@ -1372,12 +1395,15 @@ hub2_test_results = postResample(pred = hub2_test_pred, obs = test.dat$price)
 hub2_test_sse = sum((hub2_test_pred - test.dat$price)^2)
 
 # Append to the Results Data Frame
-results.df = rbind(results.df,data.frame(model = "Robust Regression (clean)",
+results.df = rbind(results.df,data.frame(model = "Robust Regression - Huber (clean)",
             R.Squared.Train = unname(hub2_train_results[2]),
             R.Squared.Test = unname(hub2_test_results[2]),
             RMSE.test = unname(hub2_test_results[1]),
-            SSE.test = hub2_test_sse)
-)
+            SSE.test = hub2_test_sse))
+
+results.df.asc <- results.df[order(results.df$RMSE.test),]
+kable(results.df.asc)
+
 ```
 
 ```{r transforming the cleaned data model house_lm_c}
@@ -1411,19 +1437,18 @@ hub3_test_results = postResample(pred = hub3_test_pred, obs = test.dat$price)
 hub3_test_sse = sum((hub3_test_pred - test.dat$price)^2)
 
 # Append to the Results Data Frame
-results.df = rbind(results.df,data.frame(model = "Robust Regression (transformed + clean)",
+results.df = rbind(results.df,data.frame(model = "Robust Regression - Huber (transformed + clean)",
             R.Squared.Train = unname(hub3_train_results[2]),
             R.Squared.Test = unname(hub3_test_results[2]),
             RMSE.test = unname(hub3_test_results[1]),
-            SSE.test = hub3_test_sse)
-)
+            SSE.test = hub3_test_sse))
 
-results.df
+results.df.asc <- results.df[order(results.df$RMSE.test),]
+kable(results.df.asc)
 
 ```
 
-**Analysis:** 
-The comparison of regression and robust model with huber weights coefficients values have slight deviations, but it is not severe.
+**Analysis:** The comparison of regression and robust model with huber weights coefficients values have slight deviations, but it is not severe.
 
 ```{r}
 cbind(house_lm1$coefficients,house_lm_huber$coefficients)
@@ -1450,73 +1475,46 @@ hub4_test_results = postResample(pred = hub4_test_pred, obs = test.dat$price)
 hub4_test_sse = sum((hub4_test_pred - test.dat$price)^2)
 
 # Append to the Results Data Frame
-results.df = rbind(results.df,data.frame(model = "Robust Regression Bisquare",
+results.df = rbind(results.df,data.frame(model = "Robust Regression - Bisquare",
             R.Squared.Train = unname(hub4_train_results[2]),
             R.Squared.Test = unname(hub4_test_results[2]),
             RMSE.test = unname(hub4_test_results[1]),
-            SSE.test = hub4_test_sse)
-)
+            SSE.test = hub4_test_sse))
+
 
 ```
 
-**Analysis:** The Robust regression with the bisquare weights has a lower residual standard error compared to the Huber weights. 
+**Analysis:** The Robust regression with the Bisquare weights has a higher residual standard error compared to the Huber weights. 
 
 
 ## Comparative Analysis of Model Performances
 
+This section is dedicated to the meticulous evaluation the various statistical models developed to predict housing prices up to this point. This comparison leverages a range of performance metrics, including R-squared values for training and testing datasets, as well as the Root Mean Squared Error (RMSE) and Sum of Squares Error (SSE) on the test set. Each metric offers a unique lens through which to assess the models' accuracy, generalizability, and predictive power.
+
 ```{r}
-# Evaluating the performance of the models using the test data set
 
-price.predictors <- colnames(dplyr::select(test.dat.o, -price))
-
-# Predictions for each model using the test dataset
-predictions <- data.frame(
-  price = test.dat$price,
-  price.lm = predict(house_lm1, test.dat)^(1/lambda),
-  price.sw.lm = predict(sw_model, test.dat)^(1/lambda),
-  price.wls = predict(house_lm_wls, test.dat),
-  price.ridge = predict(house_lm_ridge, s = best.lambda.ridge, 
-                        newx = data.matrix(test.dat.o[price.predictors])),
-  price.lasso = predict(house_lm_lasso, s = best.lambda.lasso, 
-                        newx = data.matrix(test.dat.o[price.predictors])),
-  price.en = predict(house_lm_enet, s = best.lambda.enet, 
-                     newx = data.matrix(test.dat.o[price.predictors])),
-  price.huber = predict(house_lm_huber, test.dat),
-  price.bisquare = predict(house_lm_bisquare, test.dat)
-)
-
-# Function to calculate SSE, R2, MSE, and RMSE
-calc_metrics <- function(actual, predicted) {
-  sse <- sum((actual - predicted) ^ 2)
-  mse <- sse / length(actual)
-  rmse <- sqrt(mse) # Calculate RMSE
-  sst <- sum((actual - mean(actual)) ^ 2)
-  r2 <- 1 - sse / sst
-  return(c(SST = sst, SSE = sse, MSE = mse, RMSE = rmse, R2 = r2))
-}
-
-# function to each set of predictions
-metrics <- data.frame(
-  Model = c("Linear after BoxCox", "Stepwise", "Weighted Least Squares", 
-            "Ridge", "Lasso", "Elastic Net", "Huber", "Bisquare"),
-  do.call(
-    rbind, lapply(2:ncol(predictions), 
-                  function(i) calc_metrics(predictions$price, predictions[,i])))
-)
-
-# Display the metrics table with RMSE
-metrics %>%
-  dplyr::arrange(desc(R2)) %>%
-  knitr::kable(caption = "SST, SSE, MSE, RMSE, and R2 of the Different Models")
+# Evaluating the performance of all models up to this point
+results.df.asc <- results.df[order(results.df$RMSE.test),]
+kable(results.df.asc)
 
 ```
 
-**Analysis:** Both the linear and stepwise model are most the effective at predicting the price when using the test data. Both have r-squared values of 0.81. The Huber regression model performs the best out of the remedial models. It produces an r-squared value of 0.78. Bisquare and Lasso regression perform just as well. The Weighted Least Squares regression performs the worst with a r-squared value of 0.63.
+**Analysis:** The Linear Regression after BoxCox transformation demonstrates robust predictive capabilities, with an R-squared of 0.8833 on the training data and 0.8172 on the test data, indicating a strong ability to generalize from the training to the test set. The model's performance is mirrored closely by the Original Linear Regression and the Linear Regression without Insignificant Predictors, both showcasing R-squared values marginally over 0.80 for the test set, which suggests that the removal of insignificant predictors does not substantially detract from the model’s predictive strength.
+
+Robust Regression models, particularly when cleaned and transformed using Huber's method, stand out with an R-squared of 0.8373 on the training set and 0.8060 on the test set, underscoring their resilience against outliers and leverage points. The Weighted Least Squared Regression, with an R-squared of 0.8929 on the training data and 0.7563 on the test data, exhibits a notable drop in performance when generalized, though it remains a strong contender.
+
+Lasso, Elastic Net, and Ridge Regression models reflect more modest generalizability, with test R-squared scores hovering around 0.70. These regularization techniques, while mitigating overfitting, have not translated into substantial predictive improvements in this context.
+
+The Stepwise Regression model shows a promising R-squared of 0.8833 on the training set but experiences a slight decrease to 0.7509 in the test set, which may point to some overfitting despite the method's iterative approach to feature selection.
+
+In contrast, the Robust Regression - Bisquare model underperforms in terms of both R-squared and RMSE on the test set. Its relatively lower R-squared of 0.7406, coupled with the highest RMSE and SSE, indicates a lesser fit and predictive accuracy, particularly for outlier management.
+
+The table provided paints a nuanced picture of model efficacy, revealing that while some models excel in training, their prowess does not always translate to unseen data. Models like the Random Forest, not shown in this specific table but discussed earlier, with their intricate decision-making pathways, tend to outperform simpler models, especially in complex datasets. This analysis emphasizes the importance of not only model selection but also the rigorous evaluation of model performance across multiple dimensions to ensure the selection of the most appropriate model for deployment.
 
 
 ## Challenges with Best Subset Regression
 
-After several tentatives, we were not able to run a Best Subset Regression due to a lack of Compute resources. It would never finish, and sometimes freeze the application or the computer itself. One a very powerful gaming PC, it took more than 3h to finish. Since we exhausted our tentatives with this model, we decided to drop it from out analysis.
+Our efforts to implement the Best Subset Regression faced significant computational hurdles. Despite multiple attempts, we encountered insurmountable limitations in processing power that led to exceedingly long run times and system instability, including instances where the application or the computer would become unresponsive. Even when deploying a high-performance gaming PC, the process extended beyond a three-hour mark. Given these persistent operational challenges and the disproportionate resource consumption, we made the strategic decision to exclude Best Subset Regression from our suite of analytical tools. This decision allows us to allocate our computational resources more efficiently and focus on alternative models that offer a balance between performance and practicality.
 
 
 ## Summary: Comparative Evaluation of Regression Models
@@ -1603,7 +1601,7 @@ rpart.plot(dtm, cex = .25, main=paste("Regression Tree - Depth: ", best_depth),
 
 ```
 
-**Analysis:** The regression tree plot depicts a model of depth 6 (best_depth), indicating a sequence of decisions starting from the root node using features such as 'grade', 'lat', 'sqft_above', and others. Each node represents a condition that splits the data, leading to more homogenous subsets. The leaf nodes represent the predicted price, with the number in each leaf node showing the average price for the observations that follow the path to that node. The tree structure suggests that 'grade', 'sqft_living15', location ('waterfront', 'lat' & 'long'), and 'sqft_above' are important predictors, as they appear near the top and on many many different levels of the tree, indicating their significant role in splitting the data and hence in predicting house prices.
+**Analysis:** The regression tree plot depicts a model of depth 5 (best_depth), indicating a sequence of decisions starting from the root node using features such as 'grade' and 'zipcodes'. Each node represents a condition that splits the data, leading to more homogenous subsets. The leaf nodes represent the predicted price, with the number in each leaf node showing the average price for the observations that follow the path to that node. The tree structure suggests that 'grade', sqft_living', 'sqft_above' & location ('zipcode') are important predictors, as they appear near the top and on many many different levels of the tree, indicating their significant role in splitting the data and hence in predicting house prices.
 
 
 ### Assessing Regression Tree Model Complexity with RMSE
@@ -1647,7 +1645,7 @@ ggplot(plot_data, aes(x=Depth, y=TestR2)) +
 
 ```
 
-**Analysis:** The plot illustrates the R-squared value at varying tree depths, showing a trend of increasing explanatory power as the depth increases from 2 to 5. The leveling off of R-squared values beyond a depth of 6 suggests that additional depth does not substantially improve the model's ability to explain the variance in the data, indicating an optimal depth for model complexity.
+**Analysis:** The plot illustrates the R-squared value at varying tree depths, showing a trend of increasing explanatory power as the depth increases from 2 to 7. The leveling off of R-squared values beyond a depth of 5 suggests that additional depth does not substantially improve the model's ability to explain the variance in the data, indicating an optimal depth for model complexity.
 
 ### Prioritizing Features in the Regression Tree Model
 
@@ -1670,7 +1668,7 @@ barplot(imp, las=2, main="Variable Importance in Decision Tree",
 
 ```
 
-**Analysis:** The bar plot indicates that 'grade' has the most significant impact on the model's decisions, followed by 'sqft_living15', and 'sqft_above'. Variables such as 'age', 'floors', and 'renovated' have minimal impact. This suggests that house quality and living area are the primary drivers of price according to the model, which aligns with real-world expectations of property valuation.
+**Analysis:** The bar plot indicates that 'grade' has the most significant impact on the model's decisions, followed by 'sqft_living', and 'sqft_above'. Variables such as 'age', 'bedrooms', and 'yr_renovated' have minimal impact. This suggests that house quality and living area are the primary drivers of price according to the model, which aligns with real-world expectations of property valuation.
 
 
 ```{r Appending Regression Tree Results}
@@ -1681,6 +1679,9 @@ results.df = rbind(results.df,data.frame(model = "Decision Tree Regression",
                             R.Squared.Test = unname(dt_test_results[2]),
                             RMSE.test = unname(dt_test_results[1]),
                             SSE.test = dt_test_sse))
+
+results.df.asc <- results.df[order(results.df$RMSE.test),]
+kable(results.df.asc)
 
 ```
 
@@ -1824,8 +1825,11 @@ results.df = rbind(results.df,data.frame(model = "Random Forest Tuned Model",
             R.Squared.Train = unname(rf_train_results[2]),
             R.Squared.Test = unname(rf_test_results[2]),
             RMSE.test = unname(rf_test_results[1]),
-            SSE.test = rf_test_sse)
-)
+            SSE.test = rf_test_sse))
+
+results.df.asc <- results.df[order(results.df$RMSE.test),]
+kable(results.df.asc)
+
 ```
 
 
@@ -1874,8 +1878,11 @@ results.df = rbind(results.df,data.frame(model = "SVM Regression",
             R.Squared.Train = unname(svm_train_results[2]),
             R.Squared.Test = unname(svm_test_results[2]),
             RMSE.test = unname(svm_test_results[1]),
-            SSE.test = svm_test_sse)
-)
+            SSE.test = svm_test_sse))
+
+results.df.asc <- results.df[order(results.df$RMSE.test),]
+kable(results.df.asc)
+
 ```
 
 ### SVM Model Visualization
@@ -2031,14 +2038,19 @@ results.df = rbind(results.df,data.frame(model = "Neural Network",
             R.Squared.Train = unname(train_nn[2]),
             R.Squared.Test = unname(test_nn[2]),
             RMSE.test = unname(test_nn[1]),
-            SSE.test = sse_value)
-)
+            SSE.test = sse_value))
+
+results.df.asc <- results.df[order(results.df$RMSE.test),]
+kable(results.df.asc)
+
 ```
 
 
 **Analysis:** Given the RMSE of 0.04553926, the model’s predictions are relatively close to the actual prices, but there's room for improvement, especially considering the R-squared value of 0.3436959, which suggests that only about 34% of the variance in the house prices is being explained by the model. The SSE of 13.44667 further indicates a substantial sum of errors squared, calling for model refinement to better capture complex patterns in the data.
 
-```{r checking the correlation between predicted price and test price.}
+```{r checking the correlation between predicted price and test price}
+
+# Checking the correlation between predicted price and test price
 model_results <- compute(house_NN, test.dat.norm[-1])
 predicted_price <- model_results$net.result
 cor(predicted_price, test.dat$price)
@@ -2049,6 +2061,7 @@ cor(predicted_price, test.dat$price)
 
 ```{r Prediction Accuracy Plot for NN}
 
+# Prediction Accuracy Plot for NN
 plot(test.dat.norm$price, predicted_price, 
      main = "Actual vs. Predicted Prices", 
      xlab = "Actual Prices", ylab = "Predicted Prices")
@@ -2056,7 +2069,7 @@ abline(0, 1, col = "red")
 
 ```
 
-**Analysis:** The scatter plot of actual vs. predicted prices shows a cluster below the ideal 45-degree line, reinforcing that the model tends to underpredict the higher-valued houses.
+**Analysis:** The scatter plot of actual vs. predicted prices shows a cluster spread evenly around the ideal 45-degree line, reinforcing that the model tends to predict the higher-valued houses better then others.
 
 
 \newpage
@@ -2079,10 +2092,11 @@ The accompanying performance table accentuates the stark contrast between the ch
 
 
 ```{r Printing all important results}
+
 # Final Results dataframe
 results.df.asc = results.df[order(results.df$RMSE.test),]
-library(knitr)
 kable(results.df.asc)
+
 ```
 
 \newpage
