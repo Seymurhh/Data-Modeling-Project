@@ -2091,9 +2091,14 @@ The model must comply with various assumptions for regression model to hold such
 
 *Summarize your results here. What is the best model for the data and why?*
 
-As we reference the final results table, We find that among the lowest performing models includes the regularized linear models: namely, Lasso, Ridge, and Elastic Net. Their Test R-squared scores are all a bit under 0.7, and their Test RMSE ranges from 208 thousand to 210 thousand. Another low-performing model is the single regression tree, with similar scores. These are decent numbers, especially since they're predicting price which ranges in the millions, but they cannot compete with the other models.
+As we reference the final results table, We find that among the lowest performing models includes the regularized linear models: namely, Lasso, Ridge, and Elastic Net. Their Test R-squared scores are all a bit under 0.7, and their Test RMSE ranges from 208 thousand to 210 thousand. Another low-performing model is the single regression tree, with similar scores.
 
-On the hand, our best linear models perform exceptionally well, such as Linear Regression after BoxCox and the various Robust Regression models, , with Test R-squared scores ranging from 0.81 to 0.83, and test RMSE ranging from 176,678.5 to 157,271.9. These values indicate powerful models with high accuracies, able to capture the complex relationship within this data. 
+Certain models, such the Stepwise Regression, Weighted Least Squares, and Neural Network are decent, but they pale in comparison to other models. 
+
+On the hand, our best linear models perform exceptionally well, with Linear Regression after BoxCox and the various Robust Regression models, with Test R-squared scores ranging from 0.81 to 0.83, and test RMSE ranging from 176,678.5 to 157,271.9. These values indicate powerful performance with high accuracies; these models are able to capture the complex relationships within this dataset. Another powerful model is the SVM Regression, with similar numbers. 
+
+However, among all models, the best one is the Random Forest. It has both the highest Test R-squared (0.88), and the lowest Test RMSE (131,189.4), indicating the highest accuracy; and that's not all it's good for. As previously mentioned, one of the limitations of all the models we build here is that the data is specific to the King County region. Furthermore, the only years represented in the dataset are 2014 and 2015. These issues mean that the model may not perform as well on data outside of this scope. However, the Random Forest model provides variable importance metrics to help readers and stakeholders learn what factors strongly influence house prices. As we observe these graphs, we can infer this includes the square footage of the interior living space, the building design, and the location, among other variables. The patterns and insights from this subset of data are able to enhance understanding and modeling of other real estate data.
+
 
 \newpage
 # Bibliography
