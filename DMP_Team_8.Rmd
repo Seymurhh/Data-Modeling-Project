@@ -646,12 +646,12 @@ The model, as indicated by the significant coefficients, suggests that features 
 
 # We divide by 2 because this is a two tail test
 # ... if alpha=0.05, then use .05/2
-conf= 0.01/2
+conf <- 0.01/2
 
 # Manually calculate the degrees of freedom
-df<-21613-2            
-value<-formatC(qt(conf,df,lower.tail=FALSE))    
-print(paste("Critical T values: ",value))
+df <- 21613-2            
+value <- formatC(qt(conf, df, lower.tail = FALSE))    
+print(paste("Critical T values: ", value))
 
 # Extract coefficients in matrix
 matrix_coef <- summary(house_lm)$coefficients
@@ -1450,10 +1450,12 @@ This subsection is dedicated to the visual exploration of the Support Vector Mac
 
 ```{r SVM Scatter Plot of Actual vs. Predicted Prices}
 
-plot(test.dat$price, svm_predictions, 
-     main="SVM Actual vs. Predicted Prices", 
-     xlab="Actual Prices", ylab="Predicted Prices")
-abline(0, 1, col="red")
+# SVM Scatter Plot of Actual vs. Predicted Prices
+ggplot(data = data.frame(Actual = test.dat$price, Predicted = svm_predictions), aes(x = Actual, y = Predicted)) +
+  geom_point(color = "#6baed6") +
+  geom_abline(intercept = 0, slope = 1, color = "black") +
+  labs(title = "SVM Actual vs. Predicted Prices", x = "Actual Prices", y = "Predicted Prices") +
+  theme_minimal()
 
 ```
 
@@ -1470,8 +1472,7 @@ svm_errors_df <- data.frame(Errors = svm_errors)
 ggplot(svm_errors_df, aes(x=Errors)) +
   geom_histogram(bins = 15, fill="#6baed6", color="black") + # ggplot chooses binwidth
   labs(title="SVM Prediction Error Distribution", x="Prediction Error", y="Count") +
-  theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme_minimal()
 
 ```
 
@@ -1480,10 +1481,13 @@ ggplot(svm_errors_df, aes(x=Errors)) +
 
 ```{r SVM Plot of Residuals vs. Fitted Values}
 
-plot(svm_predictions, svm_errors, 
-     main="SVM Residuals vs. Predicted", 
-     xlab="Predicted Prices", ylab="Residuals")
-abline(h=0, col="blue")
+# SVM Plot of Residuals vs. Fitted Values
+ggplot(data = data.frame(Predicted = svm_predictions, Residuals = svm_errors), aes(x = Predicted, y = Residuals)) +
+  geom_point(color = "#6baed6") +
+  geom_hline(yintercept = 0, color = "black") +
+  labs(title = "SVM Residuals vs. Predicted", x = "Predicted Prices", y = "Residuals") +
+  theme_minimal()
+
 
 ```
 
@@ -1525,7 +1529,7 @@ Here, we construct the neural network model using the normalized data and visual
 house_NN <- neuralnet(price ~ ., data = train.dat.norm, hidden = c(2,2), linear.output = TRUE)
 ```
 
-**Analysis:** The neural network diagram represents a model with inputs corresponding to features of the houses such as 'bedrooms', 'bathrooms', 'sqft_living15', etc. The two hidden layers with two neurons each suggest an attempt to capture non-linear complexities in the data. The weights, denoted by numbers along the connections, indicate how each input is considered in predicting the house price. Significant weights suggest features that more strongly influence price predictions. Conversely, smaller weights might indicate less influence. The final output is the 'price', representing the model's prediction based on the learned weights through the network's training.
+**Analysis:** The neural network diagram represents a model with inputs corresponding to features of the houses such as 'bedrooms', 'bathrooms', 'sqft_living', etc. The two hidden layers with two neurons each suggest an attempt to capture non-linear complexities in the data. The weights, denoted by numbers along the connections, indicate how each input is considered in predicting the house price. Significant weights suggest features that more strongly influence price predictions. Conversely, smaller weights might indicate less influence. The final output is the 'price', representing the model's prediction based on the learned weights through the network's training.
 
 ### Performance Analysis of Neural Network
 
