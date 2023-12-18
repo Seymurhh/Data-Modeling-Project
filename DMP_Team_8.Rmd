@@ -861,17 +861,14 @@ print(results.df)
 
 *Use the test data set to assess the model performances. Here, build the best multiple linear models by using the stepwise both ways selection method. Compare the performance of the best two linear models. Make sure that model assumption(s) are checked for the final linear model. Apply remedy measures (transformation, etc.) that helps satisfy the assumptions. In particular you must deeply investigate unequal variances and multicollinearity. If necessary, apply remedial methods (WLS, Ridge, Elastic Net, Lasso, etc.). *
 
-**Analysis:**
 
-The stepwise method yields a similar model with the elimination of sqft_lot15 being the only difference. This variable was insignificant in the Boxcox transformed model. The r-squared value remains nearly the same at 0.77 with all the predictor variables being significant at 0.001. 
 
-Graph 1 (Residuals vs Fitted): (linearity assumption) A linear relationship seems appropriate. (The average mean error equal to zero assumption) The average mean seems to be equal to zero.
+## Stepwise Regression Analysis
 
-Graph 2 (Q-Q Residuals): (normality assumption) There is minor departure from a normal distribution at the tails.
 
-Graph 3 (Scale-Location): (constant variance assumption) The residuals do not seem to be equally distributed throughout. (homoscedasticity assumption) The variances do not appear constant and this indicated through the Breush-Pagan.
+### Fitting the Stepwise Regression Model
 
-Graph 4 (Residuals vs Leverage): There are no influential outliers.
+This subsection involves fitting a stepwise regression model to the training data. The stepwise method, using both forward and backward steps, identifies the most significant predictors for the house price. The 'step' function is used with a criterion based on the Akaike Information Criterion (AIC) to select the best model. This process iteratively adds or removes predictors based on their impact on the AIC, aiming to find an optimal balance between model complexity and explanatory power.
 
 ```{r Stepwise model fit}
 
@@ -883,18 +880,50 @@ sw_model <- lm(formula = stepwise_model$model, data = train.dat)
 summary(sw_model)
 
 ```
+
+**Analysis:** The stepwise regression analysis, with an AIC-driven selection process, led to a refined model that demonstrates strong predictive performance for house prices. By eliminating 'bedrooms' and retaining other significant variables, the model attained an Adjusted R-squared value of 0.8839, indicating that about 88.39% of the variability in house prices is explained by the model. This high degree of explanation, coupled with significant p-values for most predictors, affirms the model's robustness. Notably, 'zipcode' variables emerged as significant predictors, reflecting the importance of location in housing prices. The residual standard error of 0.06866 suggests a good fit of the model to the data. Overall, this stepwise model, balancing model complexity and explanatory power, provides a comprehensive understanding of the factors influencing house prices.
+
+
+### Diagnostic Plots for the Stepwise Model
+
+This part focuses on visually diagnosing the fitted stepwise regression model. Diagnostic plots, including Residuals vs Fitted, Normal Q-Q, Scale-Location, and Residuals vs Leverage plots, are generated to check critical assumptions of the regression model. These plots are instrumental in assessing linearity, normality of residuals, homoscedasticity (constant variance), and the presence of influential outliers. This helps in verifying whether the stepwise model is appropriately capturing the underlying patterns in the data without violating key regression assumptions.
+
 ```{r plotting stepwise model}
+
+# Plot the Stepwise Model
 par(mfrow=c(2,2))
 plot(sw_model)
+
 ```
+
+**Analysis:** Based on these plots, we see that the model has minor issues with the normality at extreme values and potential heteroscedasticity as indicated by the Scale-Location plot and the spread of residuals in the Residuals vs Leverage plot. These issues may warrant further investigation and potential remediation through transformations or the use of robust regression techniques.
+  - *Linearity Assumption:* The pattern of the residuals should not show curvature. If the linearity assumption holds, we should see a random scatter of residuals around the horizontal line at zero. The plot shows residuals evenly distributed across the range of fitted values without any systematic pattern, which suggests that the linearity assumption is not violated.
+  - *Normality Assumption:* In the Q-Q plot, the residuals mostly follow the reference line except for the tails, indicating some slight deviation from normality at the extremes.
+  - *Constant Variance Assumption:* In the Scale-Location plot, there is a slight trend in the spread of residuals as the fitted values increase, suggesting that the constant variance assumption may be violated, indicating potential heteroscedasticity.
+  - *Homoscedasticity Assumption:* In Residuals vs Leverage plot, the spread of residuals appears to be unequal across the range of fitted values, especially with some outliers present outside the Cook's distance threshold. This might indicate that the homoscedasticity assumption is not fully met.
+
+
+### Forward Stepwise with AIC Criterion
+
+This subsection explores an alternative stepwise regression approach using the AIC criterion. It involves a forward stepwise regression that starts with no variables in the model and adds them one by one, assessing each model's AIC. The aim is to find a model that minimizes the AIC, indicating a good fit with relatively fewer predictors. This method can provide a comparison or validation for the previously fitted stepwise model, ensuring that the final model chosen is robust and not overly complex.
 
 ```{r stepwise regression with AIC criterion}
-library(olsrr)
-library(datasets)
 
+# Forward Stepwise regression with AIC criterion
 k <- ols_step_forward_aic(house_lm1)
 k
+
 ```
+
+**Analysis:** In our stepwise regression with AIC criterion, we observed a meticulous variable selection process that enhanced the model by methodically minimizing the AIC value. Each step of inclusion saw the introduction of variables that significantly contributed to the predictive strength of the model. Starting with 'zipcode', which significantly reduced the AIC, we systematically included variables such as 'sqft_above', 'sqft_basement', and 'view', among others, resulting in a progressive decrease in AIC and a concomitant increase in adjusted R-squared. This indicated that each new variable provided substantial explanatory power. The process culminated with the inclusion of 'age', resulting in the lowest AIC reached in our selection process and an adjusted R-squared that indicated a strong explanatory ability, accounting for approximately 88.47% of the variance in the response variable. This rigorous selection process yielded a model that is not only succinct but also retains a high level of predictive accuracy, which is vital for both interpretation and practical application. The absence of certain variables, such as 'bedrooms', which were excluded due to their lack of significant contribution to the model, underscores the efficiency of the stepwise method in creating a parsimonious yet powerful model.
+
+
+
+
+
+
+
+
 
 **Analysis:**
 
@@ -1410,14 +1439,15 @@ metrics %>%
 
 ```
 
-```{r Best Subset Regression}
+## Best Subset Regression Attempts
 
-# This is not working - commenting out temporaryly to improve knit times
-#k1<-ols_step_best_subset(house_lm1)
-#k1
-#plot(k1, guide="none")
+After several tentatives, we were not able to run a Best Subset Regression due to a lack of Compute resources. It would never finish, and sometimes freeze the application or the computer itself.
 
-```
+
+## Summary of Sections IV
+
+Need a Summary to add here.
+
 
 \newpage
 # V. Challenger Models
