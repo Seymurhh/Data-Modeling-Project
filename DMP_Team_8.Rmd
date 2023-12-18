@@ -1210,9 +1210,16 @@ In this section, we explore alternative predictive models to challenge our prima
 
 This block is designed to determine the optimal depth for a regression tree model predicting house prices. It iterates over a predefined set of depth values, constructing a model at each depth, and calculating MSE and R-squared values for both the test and training datasets. The loop stores these metrics for each depth, and upon completion, it identifies the depth that yields the highest R-squared value on the test data, suggesting the best generalization performance.
 
-```{r}
+```{r Regression Tree Train/Test Data Split}
+set.seed(1023)
+n<-dim(df_house_original)[1]
+IND<-sample(c(1:n),round(n*0.7))
+train.dat.tree <-df_house_original[IND,]
+test.dat.tree <-df_house_original[-c(IND),]
+```
 
-depth_values <- c(2, 3, 4, 5, 6, 7, 8)
+```{r Decision Tree Cross-Validation}
+depth_values <- c(2:20)
 
 mse_values = numeric(length(depth_values))
 test_rsq_values = numeric(length(depth_values))
@@ -1252,7 +1259,7 @@ Now we use the rpart.plot function to create a detailed plot of the tree, incorp
 
 # Fitting decision tree with best depth
 dtm = rpart(price ~ ., 
-              data = train.dat, 
+              data = train.dat.tree, 
               method = "anova",
               control=rpart.control(maxdepth=best_depth))
 
@@ -1315,11 +1322,11 @@ This subsection investigates the variable importance derived from the regression
 ```{r Find the Variable Importance using the regression tree}
 
 imp = dtm$variable.importance
-dt_test_pred <- predict(dtm, newdata=test.dat)
-dt_train_pred <- predict(dtm, newdata=train.dat)
-dt_test_results = postResample(pred = dt_test_pred, obs = test.dat$price)
-dt_train_results = postResample(pred = dt_train_pred, obs = train.dat$price)
-dt_test_sse = sum((dt_test_pred - test.dat$price)^2)
+dt_test_pred <- predict(dtm, newdata=test.dat.tree)
+dt_train_pred <- predict(dtm, newdata=train.dat.tree)
+dt_test_results = postResample(pred = dt_test_pred, obs = test.dat.tree$price)
+dt_train_results = postResample(pred = dt_train_pred, obs = train.dat.tree$price)
+dt_test_sse = sum((dt_test_pred - test.dat.tree$price)^2)
 
 # Variable importance may be more reliable 
 # if considering other values from cross validation
@@ -1347,18 +1354,91 @@ results.df = rbind(results.df,data.frame(model = "Decision Tree Regression",
 
 The Random Forest model is a powerful ensemble learning method used for both classification and regression tasks. It operates by constructing a multitude of decision trees at training time and outputting the class that is the mode of the classes (classification) or mean prediction (regression) of the individual trees. Random Forests correct for decision trees' habit of overfitting to their training set by introducing randomness in the tree-building process. This randomness can come from building trees on different samples of the data (bootstrap aggregating or bagging) or considering a random subset of features for splitting at each node. The model is robust against overfitting, can handle large datasets with higher dimensionality, and can estimate the importance of variables used in the classification or regression.
 
-```{r Fitting Random Forest model}
+```{r Random Forest Hyperparameter Grid}
+hyperparameter_grid <- expand.grid(
+  ntree = c(200, 400, 550),  # Different values for ntree
+  minsplit = c(4, 6, 8)  # Different values for minsplit
+)
+```
 
-# Cross validate number of features!!...work in progress
+```{r Random Forest Tuning Grid Search and Cross Validation}
 
-# Fitting the Random Forest model
-rf = randomForest(price ~ ., 
-              data = train.dat,
+#Skip model tuning for computation time
+skip_grid = TRUE
+if (skip_grid==TRUE){
+best_rf = randomForest(price ~ .
+-year-renovated-floors-month-day-condition-bedrooms-sqft_basement-bathrooms-sqft_lot15-age-yr_renovated, 
+              data = train.dat.tree,
               ntree = 200,
+              mtry=7,
+              minsplit=4,
               importance=TRUE)
 
-summary(rf)
+summary(best_rf)
 
+} else{
+  
+# Initialize model and its RMSE
+best_rf <- NULL
+best_rmse <- Inf
+
+# initialize scores (RMSE, R-square) 
+rmse_values_rf = numeric(nrow(hyperparameter_grid))
+test_rsq_values_rf = numeric(nrow(hyperparameter_grid))
+train_rsq_values_rf = numeric(nrow(hyperparameter_grid))
+
+# Perform Grid Search to tune ntree (number of trees) and minsplit (minimum value in node to split)
+for (i in 1:nrow(hyperparameter_grid)) {
+  current_model <- randomForest(
+    formula = price ~. -year-renovated-floors-month-day-condition-bedrooms-sqft_basement-bathrooms-sqft_lot15-age-yr_renovated,
+    data = train.dat.tree,
+    ntree = hyperparameter_grid$ntree[i],
+    minsplit = hyperparameter_grid$minsplit[i]
+  )
+
+  # Make predictions
+  predictions_test <- predict(current_model, test.dat.tree)
+  predictions_train <- predict(current_model, train.dat.tree)
+  
+  # store results
+  train_results = postResample(pred = predictions_train, obs = train.dat.tree$price)
+  test_results = postResample(pred = predictions_test, obs = test.dat.tree$price)
+  
+  # RMSE
+  current_rmse <- sqrt(mean((predictions_test - test.dat.tree$price)^2))
+  
+  rmse_values_rf[i] <- current_rmse
+  
+  # Rsquared
+  test_rsq_values_rf[i] = unname(test_results[2])
+  train_rsq_values_rf[i] = unname(train_results[2])
+
+
+  # Check if current model is better than the best model so far
+  if (current_rmse < best_rmse) {
+    best_rmse <- current_rmse
+    best_rf <- current_model
+    best_minsplit = hyperparameter_grid$minsplit[i]
+  }
+}
+# Cross validate to tune mtry (number of possible random variables per split)
+ctrl = trainControl(method = "cv",  # Cross-validation method
+                     number = 5,    # Number of folds
+                     verboseIter = TRUE,  # Display iteration progress
+                     summaryFunction = defaultSummary)  # For regression
+
+param_grid = expand.grid(mtry=c(8,10,12))
+
+# Finding model
+best_rf = train(price ~ . -year-renovated-floors-yr_renovated-month-day-condition-bedrooms-sqft_basement-bathrooms-sqft_lot15-age, 
+                  data = train.dat.tree,
+                  method = "rf",
+                  trControl = ctrl,
+                  ntree=200,
+                  maxdepth=5,
+                  minsplit=4,
+                  tuneGrid = param_grid)
+}
 ```
 
 **Analysis:** This plot depicts the mean squared error (MSE) across the number of trees in the model. The MSE sharply decreases as more trees are added, especially evident in the initial phase with fewer trees. As the number of trees reaches around 50, the decrease in MSE begins to plateau, indicating that adding more trees has diminishing returns on model performance. The model, consisting of 200 trees, explains approximately 86.09% of the variance, showcasing a high level of model accuracy. This suggests that the Random Forest model has a strong predictive capability for the housing price data, with a substantial portion of the variability in the response variable accounted for by the predictors used in the model.
@@ -1370,7 +1450,7 @@ This subsection delves into the variable importance generated by the Random Fore
 ```{r RF variable importance}
 
 # Create a Dataframe with Random Forest variable importance
-rf_importance <- as.data.frame(importance(rf))
+rf_importance <- as.data.frame(importance(best_rf))
 
 # Create a tidy data frame for ggplot
 rf_importance$Variable <- rownames(rf_importance)
@@ -1385,8 +1465,6 @@ ggplot(rf_importance, aes(x = reorder(Variable, Value), y = Value)) +
   theme_minimal() +
   labs(x = NULL, y = NULL, title = "Variable Importance in Random Forest Model") +
   theme(legend.position = "none")
-
-
 ```
 
 **Analysis:** This plot provides a clear visualization of the features that have the most substantial impact on predicting house prices. The length of the bars represents the importance of each variable, with 'grade' and 'lat' being the most significant predictors according to both measures used: the percentage increase in Mean Squared Error (%IncMSE) and Increase in Node Purity (IncNodePurity). This visualization is essential to understand which variables contribute most to the model's predictive power and potentially guide feature selection.
@@ -1395,19 +1473,19 @@ ggplot(rf_importance, aes(x = reorder(Variable, Value), y = Value)) +
 ```{r Random Forest Results}
 
 # Random Forest Test Results
-rf_train_pred = predict(rf, newdata = train.dat)
-rf_test_pred = predict(rf, newdata = test.dat)
+rf_train_pred = predict(best_rf, newdata = train.dat.tree)
+rf_test_pred = predict(best_rf, newdata = test.dat.tree)
 
-rf_train_results = postResample(pred = rf_train_pred, obs = train.dat$price)
-rf_test_results = postResample(pred = rf_test_pred, obs = test.dat$price)
-rf_test_sse = sum((rf_test_pred - test.dat$price)^2)
+rf_train_results = postResample(pred = rf_train_pred, obs = train.dat.tree$price)
+rf_test_results = postResample(pred = rf_test_pred, obs = test.dat.tree$price)
+rf_test_sse = sum((rf_test_pred - test.dat.tree$price)^2)
 
 # Append to the Results Data Frame
-results.df = rbind(results.df,data.frame(model = "Random Forest Model",
-                            R.Squared.Train = unname(rf_train_results[2]),
-                            R.Squared.Test = unname(rf_test_results[2]),
-                            RMSE.test = unname(rf_test_results[1]),
-                            SSE.test = rf_test_sse))
+data.frame(model = "Random Forest Tuned Model",
+            R.Squared.Train = unname(rf_train_results[2]),
+            R.Squared.Test = unname(rf_test_results[2]),
+            RMSE.test = unname(rf_test_results[1]),
+            SSE.test = rf_test_sse)
 ```
 
 
