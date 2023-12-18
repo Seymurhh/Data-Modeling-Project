@@ -1948,12 +1948,20 @@ normalize <- function(x) {
   }
 }
 
+set.seed(994)
+
+
 # Identify numeric columns
-numeric_cols <- sapply(train.dat, is.numeric)
+numeric_cols <- sapply(df_house, is.numeric)
 
 # Apply normalization only to numeric columns
-train.dat.norm <- as.data.frame(lapply(train.dat[, numeric_cols], normalize))
-test.dat.norm <- as.data.frame(lapply(test.dat[, numeric_cols], normalize))
+df_house.norm <- as.data.frame(lapply(df_house[, numeric_cols], normalize))
+
+n1=nrow(df_house.norm)
+NN_sample <- sample(n1, 0.7*n1)
+
+train.dat.norm <- df_house.norm[NN_sample,]
+test.dat.norm<- df_house.norm[-NN_sample,]
 
 ```
 
@@ -1963,12 +1971,9 @@ Here, we construct the neural network model using the normalized data and visual
 
 ```{r Build and Plot the NN model}
 
-house_NN <- neuralnet(price ~ ., data = train.dat.norm, hidden = c(2,2), linear.output = TRUE)
+house_NN <- neuralnet(price ~ ., data = train.dat.norm, hidden = c(2,2), linear.output = T)
 
 ```
-
-**Analysis:** The neural network diagram represents a model with inputs corresponding to features of the houses such as 'bedrooms', 'bathrooms', 'sqft_living', etc. The two hidden layers with two neurons each suggest an attempt to capture non-linear complexities in the data. The weights, denoted by numbers along the connections, indicate how each input is considered in predicting the house price. Significant weights suggest features that more strongly influence price predictions. Conversely, smaller weights might indicate less influence. The final output is the 'price', representing the model's prediction based on the learned weights through the network's training.
-
 ### Performance Analysis of Neural Network
 
 This final section evaluates the neural network's predictive performance. It involves computing predictions, calculating key performance metrics like RMSE, R-squared, and SSE, and visualizing prediction accuracy and error distribution.
@@ -2066,7 +2071,7 @@ options(max.print = 20)
 results.df.asc = results.df[order(results.df$RMSE.test),]
 print(results.df.asc)
 
-options(max.print = 10)
+options(max.print = 20)
 ```
 
 \newpage
@@ -2109,6 +2114,8 @@ The Appendix provides additional detailed analyses and visual representations th
 ## Enhanced Model Visualizations
 
 ### Neural Network Architecture
+
+**Analysis:** The neural network diagram represents a model with inputs corresponding to features of the houses such as 'bedrooms', 'bathrooms', 'sqft_living', etc. The two hidden layers with two neurons each suggest an attempt to capture non-linear complexities in the data. The weights, denoted by numbers along the connections, indicate how each input is considered in predicting the house price. Significant weights suggest features that more strongly influence price predictions. Conversely, smaller weights might indicate less influence. The final output is the 'price', representing the model's prediction based on the learned weights through the network's training.
 
 ```{r Neural Network Architecture}
 
