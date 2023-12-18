@@ -935,9 +935,10 @@ Before performing Ridge, Lasso, and ElasticNet regression methods, we will asses
 There are no multicollinearity issues in the train data set since we have handled the highly correlated variables during the data preparation process.
 
 ```{r}
-# [Ibrahim]
+
 # Testing the main (boxcox) model for multicollinearity
 vif(house_lm1)
+
 ```
 
 **Analysis:**
@@ -964,7 +965,8 @@ x <- data.matrix(dplyr::select(train.dat.o, -price))
 y <- train.dat$price
 
 # Perform ridge regression
-house_lm_ridge <- glmnet::cv.glmnet(x, y, alpha = 0, nlambda = 100, lambda.min.ratio = 0.0001)
+house_lm_ridge <- glmnet::cv.glmnet(x, y, alpha = 0, nlambda = 100, 
+                                    lambda.min.ratio = 0.0001)
 best.lambda.ridge <- house_lm_ridge$lambda.min
 plot(house_lm_ridge)
 
@@ -975,7 +977,9 @@ price.predictors.train <- colnames(dplyr::select(train.dat.o, -price))
 
 ridge_results <- data.frame(
   price.train = train.dat.o$price,
-  price.ridge.train = predict(house_lm_ridge, s = best.lambda.ridge, newx = data.matrix(train.dat.o[price.predictors.train]))
+  price.ridge.train = predict(
+    house_lm_ridge, s = best.lambda.ridge, 
+    newx = data.matrix(train.dat.o[price.predictors.train]))
 )
 
 calc_metrics <- function(actual, predicted) {
@@ -990,7 +994,9 @@ calc_metrics <- function(actual, predicted) {
 # function to each set of predictions
 ridge_metrics <- data.frame(
   Model = c("Ridge"),
-  do.call(rbind, lapply(2:ncol(ridge_results), function(i) calc_metrics(ridge_results$price.train, ridge_results[,i])))
+  do.call(rbind, lapply(
+    2:ncol(ridge_results), 
+    function(i) calc_metrics(ridge_results$price.train, ridge_results[,i])))
 )
 
 # Display the metrics table with RMSE
@@ -1112,7 +1118,9 @@ plot(house_lm_huber)
 
 ```{r remove imfluential outliers based on huber weights criteria}
 # Taking a quick look at the Huber weights
-huber_weights <- data.frame(Observation = 1:nrow(train.dat), Residual = house_lm_huber$resid, Weight = house_lm_huber$w)
+huber_weights <- data.frame(Observation = 1:nrow(train.dat), 
+                            Residual = house_lm_huber$resid, 
+                            Weight = house_lm_huber$w)
 
 a <- huber_weights[order(house_lm_huber$w), ]
 
@@ -1185,9 +1193,12 @@ predictions <- data.frame(
   price.lm = predict(house_lm1, test.dat)^(1/lambda),
   price.sw.lm = predict(sw_model, test.dat)^(1/lambda),
   price.wls = predict(house_lm_wls, test.dat),
-  price.ridge = predict(house_lm_ridge, s = best.lambda.ridge, newx = data.matrix(test.dat.o[price.predictors])),
-  price.lasso = predict(house_lm_lasso, s = best.lambda.lasso, newx = data.matrix(test.dat.o[price.predictors])),
-  price.en = predict(house_lm_enet, s = best.lambda.enet, newx = data.matrix(test.dat.o[price.predictors])),
+  price.ridge = predict(house_lm_ridge, s = best.lambda.ridge, 
+                        newx = data.matrix(test.dat.o[price.predictors])),
+  price.lasso = predict(house_lm_lasso, s = best.lambda.lasso, 
+                        newx = data.matrix(test.dat.o[price.predictors])),
+  price.en = predict(house_lm_enet, s = best.lambda.enet, 
+                     newx = data.matrix(test.dat.o[price.predictors])),
   price.huber = predict(house_lm_huber, test.dat),
   price.bisquare = predict(house_lm_bisquare, test.dat)
 )
@@ -1204,8 +1215,11 @@ calc_metrics <- function(actual, predicted) {
 
 # function to each set of predictions
 metrics <- data.frame(
-  Model = c("Linear after BoxCox", "Stepwise", "Weighted Least Squares", "Ridge", "Lasso", "Elastic Net", "Huber", "Bisquare"),
-  do.call(rbind, lapply(2:ncol(predictions), function(i) calc_metrics(predictions$price, predictions[,i])))
+  Model = c("Linear after BoxCox", "Stepwise", "Weighted Least Squares", 
+            "Ridge", "Lasso", "Elastic Net", "Huber", "Bisquare"),
+  do.call(
+    rbind, lapply(2:ncol(predictions), 
+                  function(i) calc_metrics(predictions$price, predictions[,i])))
 )
 
 # Display the metrics table with RMSE
