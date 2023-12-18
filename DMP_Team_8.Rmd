@@ -191,7 +191,7 @@ pheatmap(cor_matrix,
 
 ### Unraveling High Correlation in Data Variables
 
-This section focuses on identifying highly correlated variables within the King County house sales dataset. Through an R script, we systematically extract numeric variables and construct a correlation matrix, applying a threshold to spotlight significant correlations. We aim to reveal pairs of variables with a correlation coefficient exceeding 0.8, signifying strong linear relationships. This analysis is crucial in understanding interdependencies among variables, guiding us in avoiding multicollinearity in our predictive models and ensuring their statistical integrity and interpretability.
+This section focuses on identifying highly correlated variables within the King County house sales dataset. Through an R script, we systematically extract numeric variables and construct a correlation matrix, applying a threshold to spotlight significant correlations. We aim to reveal pairs of variables with a correlation coefficient exceeding 0.8, signifying strong linear relationships. This analysis is crucial in understanding interdependencies among variables, guiding us in avoiding multicollinearity in our predictive models and ensuring their statistical integrity and interpretability. [@alsm2005]
 
 ```{r Identifying highly correlated variables}
 
@@ -405,7 +405,7 @@ dim(test.dat)
 
 ## Model Fitting and Initial Evaluation
 
-In this step, we meticulously construct a linear regression model, leveraging the training dataset to ascertain how well our predictors explain the variability in house prices. The initial model fitting is a critical juncture where we assess the significance of each predictor and the overall strength of the model.
+In this step, we meticulously construct a linear regression model, leveraging the training dataset to ascertain how well our predictors explain the variability in house prices. The initial model fitting is a critical juncture where we assess the significance of each predictor and the overall strength of the model. [@faraway2014linear]
 
 ```{r Regression model fitting}
 
@@ -578,9 +578,9 @@ house_lm_test_sse <- sum((test.dat$price - house_lm_test_pred)^2)
 results.df = rbind(results.df, data.frame(
   model = "Linear Regression Test without Insignificant Predictors",
   R.Squared.Train = summary(house_lm)$r.square,
-  R.Squared.Test = house_lm1_test_rsq,
-  RMSE.test = house_lm1_test_rmse,
-  SSE.test = house_lm1_test_sse))
+  R.Squared.Test = house_lm_test_rsq,
+  RMSE.test = house_lm_test_rmse,
+  SSE.test = house_lm_test_sse))
 
 print(results.df)
 
@@ -931,6 +931,25 @@ par(mfrow=c(2,2))
 plot(house_lm_wls)
 
 ```
+```{r Append WLS Results}
+# Append to results.df
+
+# Random Forest Test Results
+wls_train_pred = predict(house_lm_wls, newdata = train.dat)
+wls_test_pred = predict(house_lm_wls, newdata = test.dat)
+
+wls_train_results = postResample(pred = wls_train_pred, obs = train.dat$price)
+wls_test_results = postResample(pred = wls_test_pred, obs = test.dat$price)
+wls_test_sse = sum((wls_test_pred - test.dat$price)^2)
+
+# Append to the Results Data Frame
+results.df = rbind(results.df,data.frame(model = "Weighted Least Squared Regression",
+            R.Squared.Train = unname(wls_train_results[2]),
+            R.Squared.Test = unname(wls_test_results[2]),
+            RMSE.test = unname(wls_test_results[1]),
+            SSE.test = wls_test_sse)
+)
+```
 
 **Analysis:** 
 Before performing Ridge, Lasso, and ElasticNet regression methods, we will assess the multicollinearity in the model.
@@ -1010,10 +1029,32 @@ ridge_metrics %>%
   knitr::kable(caption = "SST, SSE, MSE, RMSE, and R2 of the Model")
 
 ```
+```{r Append Ridge Regression Results}
+# Append to results.df
+ridge_train_pred = predict(house_lm_ridge, 
+                           s = best.lambda.ridge, 
+                           newx = data.matrix(train.dat.o[price.predictors.train]))
+ridge_test_pred = predict(house_lm_ridge,
+                          s = best.lambda.ridge,
+                          newx = data.matrix(test.dat.o[price.predictors.train]))
+
+ridge_train_results = postResample(pred = ridge_train_pred, obs = train.dat.o$price)
+ridge_test_results = postResample(pred = ridge_test_pred, obs = test.dat.o$price)
+ridge_test_sse = sum((ridge_test_pred - test.dat$price)^2)
+
+# Append to the Results Data Frame
+results.df = rbind(results.df,data.frame(model = "Ridge Regression",
+            R.Squared.Train = unname(ridge_train_results[2]),
+            R.Squared.Test = unname(ridge_test_results[2]),
+            RMSE.test = unname(ridge_test_results[1]),
+            SSE.test = ridge_test_sse)
+)
+```
+
 **Analysis:**
 The Lasso regression generates a lambda value of 393.183. The r-squared value of 0.69 is indicative of the model's considerable strength. Out of the three models used for dealing with multicollinearity, this one had the lowest RMSE value at 199,084.7.
 
-```{r}
+```{r Lasso Regression}
 
 # Lasso Regression
 house_lm_lasso <- glmnet::cv.glmnet(x, y, alpha = 1, nlambda = 100, 
@@ -1056,10 +1097,33 @@ lasso_metrics %>%
 
 ```
 
+```{r Append Lasso Regression to results}
+# Append to results.df
+
+lasso_train_pred = predict(house_lm_lasso, 
+                           s = best.lambda.lasso, 
+                           newx = data.matrix(train.dat.o[price.predictors.train]))
+lasso_test_pred = predict(house_lm_lasso, 
+                          s = best.lambda.lasso, 
+                          newx = data.matrix(test.dat.o[price.predictors.train]))
+
+lasso_train_results = postResample(pred = lasso_train_pred, obs = train.dat.o$price)
+lasso_test_results = postResample(pred = lasso_test_pred, obs = test.dat.o$price)
+lasso_test_sse = sum((lasso_test_pred - test.dat$price)^2)
+
+# Append to the Results Data Frame
+results.df = rbind(results.df,data.frame(model = "Lasso Regression",
+            R.Squared.Train = unname(lasso_train_results[2]),
+            R.Squared.Test = unname(lasso_test_results[2]),
+            RMSE.test = unname(lasso_test_results[1]),
+            SSE.test = lasso_test_sse)
+)
+```
+
 **Analysis:**
 The ElasticNet regression generates a lambda value of 786.366. Similar to the Ridge and Lasso Regression models, the r-squared value of this model is 0.69. Again, the MSE and RMSE are quite high. This remedial measure may help generalize the model for higher applicability.
 
-```{r}
+```{r Elastic Net Regression}
 
 # Elastic Net Regression
 house_lm_enet <- glmnet::cv.glmnet(x, y, alpha = 0.5, nlambda = 100, 
@@ -1102,6 +1166,29 @@ enet_metrics %>%
 
 ```
 
+```{r Append Elastic Net Regression to results}
+# Append to results.df
+
+enet_train_pred = predict(house_lm_enet,
+                          s = best.lambda.enet,
+                          newx = data.matrix(train.dat.o[price.predictors.train]))
+enet_test_pred = predict(house_lm_enet,
+                         s = best.lambda.enet,
+                         newx = data.matrix(test.dat.o[price.predictors.train]))
+
+enet_train_results = postResample(pred = enet_train_pred, obs = train.dat.o$price)
+enet_test_results = postResample(pred = enet_test_pred, obs = test.dat.o$price)
+enet_test_sse = sum((enet_test_pred - test.dat$price)^2)
+
+# Append to the Results Data Frame
+results.df = rbind(results.df,data.frame(model = "Elastic Net Regression",
+            R.Squared.Train = unname(enet_train_results[2]),
+            R.Squared.Test = unname(enet_test_results[2]),
+            RMSE.test = unname(enet_test_results[1]),
+            SSE.test = enet_test_sse)
+)
+```
+
 **Analysis:**
 Before the Robust regression method using Huber and Bisquare weights, we will assess the severity of the outliers.
 
@@ -1137,6 +1224,22 @@ par(mfrow=c(2,2))
 plot(house_lm_huber)
 
 ```
+```{r Append Robust Regression results}
+hub1_train_pred = predict(house_lm_huber, newdata = train.dat)
+hub1_test_pred = predict(house_lm_huber, newdata = test.dat)
+
+hub1_train_results = postResample(pred = hub1_train_pred, obs = train.dat$price)
+hub1_test_results = postResample(pred = hub1_test_pred, obs = test.dat$price)
+hub1_test_sse = sum((hub1_test_pred - test.dat$price)^2)
+
+# Append to the Results Data Frame
+results.df = rbind(results.df,data.frame(model = "Robust Regression",
+            R.Squared.Train = unname(hub1_train_results[2]),
+            R.Squared.Test = unname(hub1_test_results[2]),
+            RMSE.test = unname(hub1_test_results[1]),
+            SSE.test = hub1_test_sse)
+)
+```
 
 ```{r remove influential outliers based on huber weights criteria}
 # Taking a quick look at the Huber weights
@@ -1167,6 +1270,24 @@ cat("The optimal lambda is:", lambda, "\n")
 
 
 ```
+```{r Append Robust Regression without low weights}
+
+hub2_train_pred = predict(house_lm_c, newdata = train.dat.cleaned)
+hub2_test_pred = predict(house_lm_c, newdata = test.dat)
+
+hub2_train_results = postResample(pred = hub2_train_pred, obs = train.dat.cleaned$price)
+hub2_test_results = postResample(pred = hub2_test_pred, obs = test.dat$price)
+hub2_test_sse = sum((hub2_test_pred - test.dat$price)^2)
+
+# Append to the Results Data Frame
+results.df = rbind(results.df,data.frame(model = "Robust Regression (clean)",
+            R.Squared.Train = unname(hub2_train_results[2]),
+            R.Squared.Test = unname(hub2_test_results[2]),
+            RMSE.test = unname(hub2_test_results[1]),
+            SSE.test = hub2_test_sse)
+)
+```
+
 ```{r transforming the cleaned data model house_lm_c}
 house_lm_c1 <- lm(log(price) ~ ., data = train.dat.cleaned)
 summary(house_lm_c1)
@@ -1188,6 +1309,24 @@ ols_plot_resid_stud_fit(house_lm_c1)
 
 ```
  
+```{r Append Robust Regression Transformed and Clean}
+
+hub3_train_pred = exp(predict(house_lm_c1, newdata = train.dat.cleaned))
+hub3_test_pred = exp(predict(house_lm_c1, newdata = test.dat))
+
+hub3_train_results = postResample(pred = hub3_train_pred, obs = train.dat.cleaned$price)
+hub3_test_results = postResample(pred = hub3_test_pred, obs = test.dat$price)
+hub3_test_sse = sum((hub3_test_pred - test.dat$price)^2)
+
+# Append to the Results Data Frame
+results.df = rbind(results.df,data.frame(model = "Robust Regression (transformed + clean)",
+            R.Squared.Train = unname(hub3_train_results[2]),
+            R.Squared.Test = unname(hub3_test_results[2]),
+            RMSE.test = unname(hub3_test_results[1]),
+            SSE.test = hub3_test_sse)
+)
+```
+ 
 ```{r}
 cbind(house_lm1$coefficients,house_lm_huber$coefficients)
 ```
@@ -1203,6 +1342,23 @@ house_lm_bisquare <- MASS::rlm(price ~ ., psi = psi.bisquare, data = train.dat)
 summary(house_lm_bisquare)
 
 ```
+```{r Append Robust Regression using Bisquare}
+hub4_train_pred = predict(house_lm_c1, newdata = train.dat)
+hub4_test_pred = predict(house_lm_c1, newdata = test.dat)
+
+hub4_train_results = postResample(pred = hub4_train_pred, obs = train.dat$price)
+hub4_test_results = postResample(pred = hub4_test_pred, obs = test.dat$price)
+hub4_test_sse = sum((hub4_test_pred - test.dat$price)^2)
+
+# Append to the Results Data Frame
+results.df = rbind(results.df,data.frame(model = "Robust Regression (transformed + clean)",
+            R.Squared.Train = unname(hub4_train_results[2]),
+            R.Squared.Test = unname(hub4_test_results[2]),
+            RMSE.test = unname(hub4_test_results[1]),
+            SSE.test = hub4_test_sse)
+)
+```
+
 
 **Analysis:**
 Both the linear and stepwise model are most the effective at predicting the price when using the test data. Both have r-squared values of 0.77. The Lasso regression model performs the best out of the remedial models. It produces an r-squared value of 0.69. ElasticNet and Ridge regression perform just as well. Robust regression with the Huber weights has an r-squared value of 0.65, not far off from the top three models. Robust regression with the Bisquare weights is where we see a dip in performance with an r-squared value of 0.59. The Weighted Least Squares regression performs the worst with a r-squared value of 0.41.
