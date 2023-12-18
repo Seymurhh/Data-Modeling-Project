@@ -860,10 +860,8 @@ print(results.df)
 *Use the test data set to assess the model performances. Here, build the best multiple linear models by using the stepwise both ways selection method. Compare the performance of the best two linear models. Make sure that model assumption(s) are checked for the final linear model. Apply remedy measures (transformation, etc.) that helps satisfy the assumptions. In particular you must deeply investigate unequal variances and multicollinearity. If necessary, apply remedial methods (WLS, Ridge, Elastic Net, Lasso, etc.). *
 
 
-<<<<<<< HEAD
 The stepwise method yields a similar model with the elimination of sqft_lot15 being the only difference. This variable was insignificant in the Boxcox transformed model. The r-squared value remains nearly the same at 0.77 with all the predictor variables being significant at 0.001.[ @guyon2003introduction ]
-=======
->>>>>>> 1346ddd266369fa15663e595cc8af9f999a74806
+
 
 ## Stepwise Regression Analysis
 
