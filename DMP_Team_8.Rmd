@@ -1809,6 +1809,22 @@ print(paste("SVM RMSE:", svm_rmse))
 
 **Analysis:** The reported RMSE value for the SVM model is $195,393.38, which suggests that on average, the model's price predictions deviate from the actual sale prices by this amount. Given the high value, this may indicate that the model is not predicting the prices with a high degree of accuracy. In the context of house prices, such a large RMSE could be considered substantial, and it suggests that model parameters may need tuning or the model itself may require a more in-depth evaluation to identify areas of improvement.
 
+```{r Append SVM model to results}
+svm_train_pred = predict(svm_model,train.dat)
+svm_test_pred =  predict(svm_model,test.dat)
+
+svm_train_results = postResample(pred = svm_train_pred, obs = train.dat$price)
+svm_test_results = postResample(pred = svm_test_pred, obs = test.dat$price)
+svm_test_sse = sum((svm_test_pred - test.dat$price)^2)
+
+# Append to the Results Data Frame
+results.df = rbind(results.df,data.frame(model = "SVM Regression",
+            R.Squared.Train = unname(svm_train_results[2]),
+            R.Squared.Test = unname(svm_test_results[2]),
+            RMSE.test = unname(svm_test_results[1]),
+            SSE.test = svm_test_sse)
+)
+```
 
 ### SVM Model Visualization
 
@@ -1995,12 +2011,14 @@ abline(0, 1, col = "red")
 ```{r Printing all important results}
 
 # Results dataframe
-
+options(max.print = 20)
 # We're supposed to use Pseudo R-squared, SSE, RMSE, as seen above. 
 # We'll have to look into 'Pseudo R-squared' most likely
 
-results.df
+results.df.asc = results.df[order(results.df$RMSE.test),]
+print(results.df.asc)
 
+options(max.print = 10)
 ```
 
 \newpage
