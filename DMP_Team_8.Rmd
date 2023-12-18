@@ -2067,14 +2067,12 @@ abline(0, 1, col = "red")
 ```{r Printing all important results}
 
 # Results dataframe
-options(max.print = 20)
-# We're supposed to use Pseudo R-squared, SSE, RMSE, as seen above. 
-# We'll have to look into 'Pseudo R-squared' most likely
 
 results.df.asc = results.df[order(results.df$RMSE.test),]
-print(results.df.asc)
 
-options(max.print = 20)
+library(knitr)
+kable(results.df.asc)
+
 ```
 
 \newpage
