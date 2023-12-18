@@ -7,7 +7,6 @@ author:
 tags: [House Price Prediction, Linear Regression, Neural Networks, Decision Trees, Support Vector Machines (SVM), Data Analysis, Model Selection, Statistical Testing, King County Real Estate, Predictive Analytics]
 abstract: 
   This project, undertaken by a team of students at Harvard Extension School, focuses on developing a comprehensive predictive model for house prices in King County, USA, using the 'KC_House_Sales' dataset. The dataset provides a rich variety of house attributes, allowing for an in-depth analysis of factors influencing property values. The initial phase of the project involves data cleaning and transformation, including the removal of irrelevant variables and conversion of data types. The primary analytical approach combines traditional linear regression models with more complex methods such as neural networks, decision trees, and support vector machines (SVM). The models are trained on a 70% split of the dataset and validated on the remaining 30%, ensuring robustness and accuracy in predictions. 
-
   In the subsequent stages, the project delves into graphical analysis, revealing key correlations and trends in the data. Techniques such as box plots, scatter plots, and heatmaps provide insights into the relationships between house prices and attributes like square footage, number of bedrooms, and location. The project also explores the impact of categorical variables and property age on pricing. Model performance is thoroughly tested using various metrics, including MSE and R-squared values. The final selection of the primary model, referred to as the "champion" model, is based on its performance on both the training and testing datasets. The project concludes with a discussion on model limitations, assumptions, and an ongoing monitoring plan, ensuring the model's relevance and accuracy over time.
 date: "`r format(Sys.time(), '%d %B %Y')`"
 geometry: margin=2.54cm
@@ -19,8 +18,7 @@ output:
 editor_options: 
   markdown: 
     wrap: 72
-
-Bibliography: Bibliography.bib
+bibliography: Bibliography.bib
 ---
 \newpage
 ```{r setup, include=FALSE}
@@ -191,7 +189,7 @@ pheatmap(cor_matrix,
 
 ### Unraveling High Correlation in Data Variables
 
-This section focuses on identifying highly correlated variables within the King County house sales dataset. Through an R script, we systematically extract numeric variables and construct a correlation matrix, applying a threshold to spotlight significant correlations. We aim to reveal pairs of variables with a correlation coefficient exceeding 0.8, signifying strong linear relationships. This analysis is crucial in understanding interdependencies among variables, guiding us in avoiding multicollinearity in our predictive models and ensuring their statistical integrity and interpretability. [@alsm2005]
+This section focuses on identifying highly correlated variables within the King County house sales dataset. Through an R script, we systematically extract numeric variables and construct a correlation matrix, applying a threshold to spotlight significant correlations. We aim to reveal pairs of variables with a correlation coefficient exceeding 0.8, signifying strong linear relationships. This analysis is crucial in understanding interdependencies among variables, guiding us in avoiding multicollinearity in our predictive models and ensuring their statistical integrity and interpretability. [ @alsm2005 ]
 
 ```{r Identifying highly correlated variables}
 
@@ -405,7 +403,7 @@ dim(test.dat)
 
 ## Model Fitting and Initial Evaluation
 
-In this step, we meticulously construct a linear regression model, leveraging the training dataset to ascertain how well our predictors explain the variability in house prices. The initial model fitting is a critical juncture where we assess the significance of each predictor and the overall strength of the model. [@faraway2014linear]
+In this step, we meticulously construct a linear regression model, leveraging the training dataset to ascertain how well our predictors explain the variability in house prices. The initial model fitting is a critical juncture where we assess the significance of each predictor and the overall strength of the model. [ @faraway2014linear ]
 
 ```{r Regression model fitting}
 
@@ -724,7 +722,7 @@ bptest(house_lm, studentize = FALSE)
 
 ## Box-Cox Transformation
 
-The Box-Cox transformation[@libretexts_boxcox] is a statistical technique used to stabilize variance and make the data more closely adhere to the assumption of normality, which is a key consideration in linear regression modeling. This section of the analysis focuses on determining the optimal lambda parameter for the Box-Cox transformation of the response variable, which in this context is the house price. By conducting an initial wide search followed by a refined search for lambda, we aim to identify the value that maximizes the log-likelihood of our model, thereby indicating the most appropriate transformation for our dataset.
+The Box-Cox transformation[ @libretexts_boxcox ] is a statistical technique used to stabilize variance and make the data more closely adhere to the assumption of normality, which is a key consideration in linear regression modeling. This section of the analysis focuses on determining the optimal lambda parameter for the Box-Cox transformation of the response variable, which in this context is the house price. By conducting an initial wide search followed by a refined search for lambda, we aim to identify the value that maximizes the log-likelihood of our model, thereby indicating the most appropriate transformation for our dataset.
 
 
 ```{r Box-Cox Initial wide search}
@@ -1901,6 +1899,9 @@ PredictedTest<-pred_new_test
 NN_test_performance<-data.frame(obs = test.dat.norm$price, pred=PredictedTest)
 round(defaultSummary(NN_test_performance),3)
 
+test_nn <- round(defaultSummary(NN_test_performance),3)
+
+train_nn <- round(defaultSummary(NN_train_performance),3)
 ```
 
 ```{r Evaluate Performance}
@@ -1914,6 +1915,18 @@ cat("R-squared:", r_squared_value, "\n")
 cat("SSE:", sse_value, "\n")
 
 ```
+
+```{r Append Neural Network results to dataframe}
+
+# Append to the Results Data Frame
+results.df = rbind(results.df,data.frame(model = "Neural Network",
+            R.Squared.Train = unname(train_nn[2]),
+            R.Squared.Test = unname(test_nn[2]),
+            RMSE.test = unname(test_nn[1]),
+            SSE.test = sse_value)
+)
+```
+
 
 **Analysis:** Given the RMSE of 0.04553926, the model’s predictions are relatively close to the actual prices, but there's room for improvement, especially considering the R-squared value of 0.3436959, which suggests that only about 34% of the variance in the house prices is being explained by the model. The SSE of 13.44667 further indicates a substantial sum of errors squared, calling for model refinement to better capture complex patterns in the data.
 
@@ -1978,6 +1991,7 @@ The model must comply with various assumptions for regression model to hold such
 
 *Please include all references, articles and papers in this section.*
 
+<div id="refs"></div>
 
 # Appendix
 
