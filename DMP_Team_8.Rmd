@@ -509,7 +509,7 @@ vif(house_lm)
 
 This subsection assesses the linear regression model's performance on the test data. By applying the model to unseen data, we measure its predictive accuracy and generalizability beyond the training dataset.
 
-```{r}
+```{r Test Linear Regression model}
 
 # Test data Predictions
 house_lm_test_pred <- predict(house_lm, newdata = test.dat)
@@ -540,7 +540,7 @@ This segment of the analysis concentrates on refining the model by discarding pr
 
 The columns 'sqft_lot15' and 'year' are being dropped for having a p-value > 0.05, subsequently 'year' and 'month' are also being dropped because of their similarity to the calculated column 'age' that takes year built or renovated to determine how modern the construction might be.
 
-```{r}
+```{r Drop Insignificant Predictors}
 
 predictors_to_drop <- c("sqft_lot15", "year", "month", "day")
 
@@ -573,9 +573,11 @@ The boxplot provides a visual summary of the residuals' distribution, offering i
 
 ```{r Boxplot of Residuals}
 
+# Create a Data Frame with the residuals
 ei <- house_lm$residuals
 ei_df <- data.frame(residuals = ei)
 
+# Create a Boxplot of Residuals
 ggplot(ei_df, aes(y = residuals)) +
   geom_boxplot(fill = "#6baed6", color = "black") +
   coord_flip() +  # To make the boxplot horizontal
@@ -597,13 +599,14 @@ This plot examines the relationship between residuals and predicted values, cruc
 
 ```{r Fitted vs residuals}
 
-
-plot(house_lm$fitted.values, ei, 
-     xlab="Fitted Values House Linear Model", 
-     ylab="Residuals House Linear Model")
+# Create Fitted vs Residuals Plot
+ggplot(data = data.frame(fitted = house_lm$fitted.values, residuals = ei), aes(x = fitted, y = residuals)) +
+  geom_point(color = "#6baed6") +
+  geom_hline(yintercept = 0, color = "black", linetype = "dashed") +
+  labs(x = "Fitted Values", y = "Residuals", title = "Fitted vs. Residuals Plot") +
+  theme_minimal()
 
 ```
-
 
 **Analysis:** This plot suggests that while the model may be suitable for a range of predictions, there are certain areas, especially at the higher end of the price spectrum, where the model's assumptions do not hold, and its predictive accuracy is compromised. Further investigation and possible model refinement are warranted.
 
@@ -881,7 +884,7 @@ Graph 4 (Residuals vs Leverage): There now appears to be several influential out
 
 
 ```{r WLS regression}
-# [Ibrahim]
+
 # Weighted Least Squares Regression
 # We notice from the scale-location graph of the main model that the error variances are unequal.
 
@@ -929,7 +932,7 @@ dim(test.dat.o)
 
 
 ```{r - Ridge Regression}
-# [Ibrahim]
+
 # Ridge Regression
 
 # Extract 'x' and 'y'
@@ -976,7 +979,7 @@ ridge_metrics %>%
 The Lasso regression generates a lambda value of 393.183. The r-squared value of 0.69 is indicative of the model's considerable strength. Out of the three models used for dealing with multicollinearity, this one had the lowest RMSE value at 199,084.7.
 
 ```{r}
-# [Ibrahim]
+
 # Lasso Regression
 house_lm_lasso <- glmnet::cv.glmnet(x, y, alpha = 1, nlambda = 100, lambda.min.ratio = 0.0001)
 best.lambda.lasso <- house_lm_lasso$lambda.min
@@ -1015,7 +1018,7 @@ lasso_metrics %>%
 The ElasticNet regression generates a lambda value of 786.366. Similar to the Ridge and Lasso Regression models, the r-squared value of this model is 0.69. Again, the MSE and RMSE are quite high. This remedial measure may help generalize the model for higher applicability.
 
 ```{r}
-# [Ibrahim]
+
 # Elastic Net Regression
 house_lm_enet <- glmnet::cv.glmnet(x, y, alpha = 0.5, nlambda = 100, lambda.min.ratio = 0.0001)
 plot(house_lm_enet)
@@ -1593,7 +1596,7 @@ ggplot(nn_errors_df, aes(x=Errors)) +
 **Analysis:** The histogram of prediction errors displays a concentration around zero, indicating most predictions are close to the actual values, but the spread towards the right suggests a skew in overestimating house prices.
 
 
-```{r Prediction Accuracy Plot}
+```{r Prediction Accuracy Plot for NN}
 
 plot(test.dat.norm$price, predicted_price, 
      main = "Actual vs. Predicted Prices", 
@@ -1697,7 +1700,7 @@ for (i in seq_along(depth_values)) {
 
 **Analysis:** The scatter plot of actual vs. predicted prices shows a cluster below the ideal 45-degree line, reinforcing that the model tends to underpredict the higher-valued houses.
 
-```{r Prediction Accuracy Plot}
+```{r Extra Prediction Accuracy Plot for NN}
 
 plot(test.dat.norm$price, predicted_price, 
      main = "Actual vs. Predicted Prices", 
