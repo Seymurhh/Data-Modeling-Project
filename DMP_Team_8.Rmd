@@ -1481,11 +1481,12 @@ rf_test_results = postResample(pred = rf_test_pred, obs = test.dat.tree$price)
 rf_test_sse = sum((rf_test_pred - test.dat.tree$price)^2)
 
 # Append to the Results Data Frame
-data.frame(model = "Random Forest Tuned Model",
+results.df = rbind(results.df,data.frame(model = "Random Forest Tuned Model",
             R.Squared.Train = unname(rf_train_results[2]),
             R.Squared.Test = unname(rf_test_results[2]),
             RMSE.test = unname(rf_test_results[1]),
             SSE.test = rf_test_sse)
+)
 ```
 
 
