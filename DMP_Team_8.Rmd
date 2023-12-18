@@ -1389,7 +1389,10 @@ results.df = rbind(results.df,data.frame(model = "Robust Regression (transformed
             SSE.test = hub3_test_sse)
 )
 ```
- 
+
+**Analysis:** 
+The comparison of regression and robust model with huber weights coefficients values have slight deviations, but it is not severe.
+
 ```{r}
 cbind(house_lm1$coefficients,house_lm_huber$coefficients)
 ```
