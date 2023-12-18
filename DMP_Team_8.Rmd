@@ -1869,6 +1869,9 @@ PredictedTest<-pred_new_test
 NN_test_performance<-data.frame(obs = test.dat.norm$price, pred=PredictedTest)
 round(defaultSummary(NN_test_performance),3)
 
+test_nn <- round(defaultSummary(NN_test_performance),3)
+
+train_nn <- round(defaultSummary(NN_train_performance),3)
 ```
 
 ```{r Evaluate Performance}
@@ -1885,19 +1888,12 @@ cat("SSE:", sse_value, "\n")
 
 ```{r Append Neural Network results to dataframe}
 
-nn_train_pred = predict(house_lm_wls, newdata = train.dat.norm)
-nn_test_pred = predict(house_lm_wls, newdata = test.dat.norm)
-
-nn_train_results = postResample(pred = nn_train_pred, obs = train.dat.norm$price)
-nn_test_results = postResample(pred = nn_test_pred, obs = test.dat.norm$price)
-nn_test_sse = sum((nn_test_pred - test.dat.norm$price)^2)
-
 # Append to the Results Data Frame
 results.df = rbind(results.df,data.frame(model = "Neural Network",
-            R.Squared.Train = unname(nn_train_results[2]),
-            R.Squared.Test = unname(nn_test_results[2]),
-            RMSE.test = unname(nn_test_results[1]),
-            SSE.test = nn_test_sse)
+            R.Squared.Train = unname(train_nn[2]),
+            R.Squared.Test = unname(test_nn[2]),
+            RMSE.test = unname(test_nn[1]),
+            SSE.test = sse_value)
 )
 ```
 
@@ -1965,6 +1961,7 @@ The model must comply with various assumptions for regression model to hold such
 
 *Please include all references, articles and papers in this section.*
 
+<div id="refs"></div>
 
 # Appendix
 
