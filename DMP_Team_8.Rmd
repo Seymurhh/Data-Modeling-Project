@@ -542,25 +542,50 @@ The columns 'sqft_lot15' and 'year' are being dropped for having a p-value > 0.0
 
 ```{r Drop Insignificant Predictors}
 
-predictors_to_drop <- c("sqft_lot15", "year", "month", "day")
+# Remove predictors from datasets
+train.dat <- subset(train.dat, select = -c(sqft_lot15, day))
+test.dat <- subset(test.dat, select = -c(sqft_lot15, day))
 
-# Update the model by excluding the specified predictors
-updated <- as.formula(
-  paste("price ~ .", 
-        paste0("- `", predictors_to_drop, "`", collapse = "")))
-
-house_lm <- update(house_lm, updated)
+# Refit the model with updated datasets
+house_lm <- lm(price ~ ., data = train.dat)
 summary(house_lm)
 
 # Display the Regression function of Price
+# Assuming you have a function dispRegFunc to display the regression equation
 output <- capture.output(dispRegFunc(house_lm))
 
-# Print the output of dispRegFunc wrapped in max 80 char width
+# Print the output
 cat(paste(strwrap(output, width=80), collapse="\n"))
 
 ```
 
 **Analysis:** Post removal of predictors deemed insignificant (p-value > 0.05), the model's R-squared decreased insignificantly, indicating a negligible loss in explanatory power. This reduction is counterbalanced by the benefits of a more parsimonious model, which can lead to better generalization on unseen data. The remaining predictors continue to display strong significance levels (p < 0.05), assuring their relevance in price prediction. The residual standard error remains relatively stable, further affirming the refined model's validity.
+
+### Prediction Power of the new Model
+
+```{r Test Linear Regression model}
+
+# Test data Predictions
+house_lm_test_pred <- predict(house_lm, newdata = test.dat)
+
+house_lm_test_mse <- mean((house_lm_test_pred - test.dat$price)^2)
+house_lm_test_rmse <- sqrt(house_lm_test_mse)
+house_lm_test_residuals <- test.dat$price - house_lm_test_pred
+house_lm_test_rsq <- 1 - var(house_lm_test_residuals) / var(test.dat$price)
+house_lm_test_sse <- sum((test.dat$price - house_lm_test_pred)^2)
+
+# Append the predictions after predictors removal to the results
+results.df = rbind(results.df, data.frame(
+  model = "Linear Regression without Insignificant Predictors",
+  R.Squared.Train = summary(house_lm)$r.square,
+  R.Squared.Test = house_lm1_test_rsq,
+  RMSE.test = house_lm1_test_rmse,
+  SSE.test = house_lm1_test_sse))
+
+print(results.df)
+
+```
+
 
 
 ## Diagnostic Plotting for Residual Analysis
@@ -748,7 +773,7 @@ summary(house_lm1)
 
 ```
 
-**Analysis:** The transformed model exhibits a significant reduction in the residuals' magnitude, with the majority now lying closer to zero, which suggests an improved fit of the model. The coefficients for bathrooms, sqft_lot, waterfront, view, condition, grade, sqft_above, and sqft_basement remain significant, indicating a consistent impact on the transformed house prices. The substantial F-statistic and near-zero p-value confirm the model's overall statistical significance. However, the bedrooms variable has become insignificant, implying that its effect on the transformed price is minimal. The multiple R-squared of 0.8845 is quite high, signifying that the transformed model explains a large portion of the variance in the data. Overall, the Box-Cox transformation appears to have enhanced the model's explanatory power.
+**Analysis:** The transformed model exhibits a significant reduction in the residuals' magnitude, with the majority now lying closer to zero, which suggests an improved fit of the model. The coefficients for bathrooms, sqft_lot, waterfront, view, condition, grade, sqft_above, and sqft_basement remain significant, indicating a consistent impact on the transformed house prices. The substantial F-statistic and near-zero p-value confirm the model's overall statistical significance. However, the bedrooms variable has become insignificant, implying that its effect on the transformed price is minimal. The multiple R-squared of 0.8838 is quite high, signifying that the transformed model explains a large portion of the variance in the data. Overall, the Box-Cox transformation appears to have enhanced the model's explanatory power.
 
 
 ### Diagnostic Plots of Transformed Model
@@ -814,7 +839,7 @@ house_lm1_test_residuals <- act - pred
 house_lm1_test_rsq <- 1 - var(house_lm1_test_residuals) / var(act)
 house_lm1_test_sse <- sum((act - pred)^2)
 
-# Append results 
+# Append results after BoxCox Transformation
 results.df = rbind(results.df, 
                    data.frame(model = "Linear Regression Test after Boxcox",
                               R.Squared.Train = summary(house_lm1)$r.square,
@@ -826,7 +851,7 @@ print(results.df)
 
 ```
 
-**Analysis:** The output indicates an improvement in the model's performance on the test data after applying the Box-Cox transformation. The R-squared value for the test data increased from 0.8124474 to 0.8401063, indicating a better fit to the test data. Similarly, the RMSE decreased from 164370.3 to 151941.1, suggesting more accurate predictions from the transformed model. The SSE also decreased, further confirming the enhanced predictive performance post-transformation. Overall, the Box-Cox transformation has led to a model that explains a greater proportion of variance in house prices and predicts them with higher accuracy, as evidenced by the improved R-squared and lower RMSE and SSE values. This demonstrates the effectiveness of the transformation in stabilizing variance and improving model fit for the data at hand.
+**Analysis:** The output indicates an improvement in the model's performance on the test data after applying the Box-Cox transformation. The R-squared value for the test data increased minimally from 0.8275312 to 0.8282285, indicating the same fit to the test data. Similarly, the RMSE decreased minimally as well, suggesting more accurate predictions from the transformed model. The SSE also decreased, further confirming the enhanced predictive performance post-transformation. Overall, the Box-Cox transformation has led to a model that explains a greater proportion of variance in house prices and predicts them with higher accuracy, as evidenced by the improved R-squared and lower RMSE and SSE values. This demonstrates the effectiveness of the transformation in stabilizing variance and improving model fit for the data at hand.
 
 
 \newpage
@@ -1078,7 +1103,6 @@ ols_plot_resid_stud_fit(house_lm1)
 The Robust Regression model with the Huber weights results in a residual standard error of 112700. This is because Huber weights have difficulties with severe outliers which we can notice from the plots above. After performing the Robust regression however, we can notice that there are no influential outliers based on the Residuals vs Leverage plot. This ensures that the interpretation of the model's results will be reliable.
 
 ```{r}
-# [Ibrahim]
 # Robust Regression using Huber weights 
 # There are influential points (see plots above)
 house_lm_huber <- MASS::rlm(price ~ ., psi = psi.huber, data = train.dat)
@@ -1099,7 +1123,7 @@ head10
 dim(train.dat)
 
 # weight threshold for outliers
-weight_threshold <- 0.25
+weight_threshold <- 0.1
 outlier_indices <- which(house_lm_huber$w < weight_threshold)
 train.dat.cleaned <- train.dat[-outlier_indices, ]
 
@@ -1108,7 +1132,9 @@ summary(house_lm_c)
 
 bcc <- boxcox(house_lm_c, lambda=seq(-4, 4, by=0.1))
 lambda_c <- bcc$x[which.max(bcc$y)]
-#cat("The optimal lambda is:", lambda, "\n")
+cat("The optimal lambda is:", lambda, "\n")
+
+
 ```
 ```{r transforming the cleaned data model house_lm_c}
 house_lm_c1 <- lm(log(price) ~ ., data = train.dat.cleaned)
@@ -1139,9 +1165,8 @@ cbind(house_lm_c$coefficients,house_lm_huber$coefficients)
 The Robust regression with the bisquare weights has a lower residual standard error compared to the Huber weights. 
 
 ```{r}
-# [Ibrahim]
-# Robust Regression using bisquare weights 
 
+# Robust Regression using bisquare weights 
 house_lm_bisquare <- MASS::rlm(price ~ ., psi = psi.bisquare, data = train.dat)
 summary(house_lm_bisquare)
 
@@ -1161,9 +1186,9 @@ predictions <- data.frame(
   price.lm = predict(house_lm1, test.dat)^(1/lambda),
   price.sw.lm = predict(sw_model, test.dat)^(1/lambda),
   price.wls = predict(house_lm_wls, test.dat),
-  #price.ridge = predict(house_lm_ridge, s = best.lambda.ridge, newx = data.matrix(test.dat[price.predictors])),
-  #price.lasso = predict(house_lm_lasso, s = best.lambda.lasso, newx = data.matrix(test.dat[price.predictors])),
-  #price.en = predict(house_lm_enet, s = best.lambda.enet, newx = data.matrix(test.dat[price.predictors])),
+  price.ridge = predict(house_lm_ridge, s = best.lambda.ridge, newx = data.matrix(test.dat[price.predictors])),
+  price.lasso = predict(house_lm_lasso, s = best.lambda.lasso, newx = data.matrix(test.dat[price.predictors])),
+  price.en = predict(house_lm_enet, s = best.lambda.enet, newx = data.matrix(test.dat[price.predictors])),
   price.huber = predict(house_lm_huber, test.dat),
   price.bisquare = predict(house_lm_bisquare, test.dat)
 )
@@ -1180,8 +1205,8 @@ calc_metrics <- function(actual, predicted) {
 
 # function to each set of predictions
 metrics <- data.frame(
-  #Model = c("Linear", "Stepwise", "Weighted Least Squares", "Ridge", "Lasso", "Elastic Net", "Huber", "Bisquare"),
-  Model = c("Linear", "Stepwise", "Weighted Least Squares", "Huber", "Bisquare"),
+  Model = c("Linear", "Stepwise", "Weighted Least Squares", "Ridge", "Lasso", "Elastic Net", "Huber", "Bisquare"),
+  #Model = c("Linear", "Stepwise", "Weighted Least Squares", "Huber", "Bisquare"),
   do.call(rbind, lapply(2:ncol(predictions), function(i) calc_metrics(predictions$price, predictions[,i])))
 )
 
@@ -1526,7 +1551,10 @@ test.dat.norm <- as.data.frame(lapply(test.dat.o[, numeric_cols], normalize))
 Here, we construct the neural network model using the normalized data and visualize its structure. The neuralnet package is utilized to build the model with a specified architecture and then plot it to understand its configuration.
 
 ```{r Build and Plot the NN model}
+
 house_NN <- neuralnet(price ~ ., data = train.dat.norm, hidden = c(2,2), linear.output = TRUE)
+
+
 ```
 
 **Analysis:** The neural network diagram represents a model with inputs corresponding to features of the houses such as 'bedrooms', 'bathrooms', 'sqft_living', etc. The two hidden layers with two neurons each suggest an attempt to capture non-linear complexities in the data. The weights, denoted by numbers along the connections, indicate how each input is considered in predicting the house price. Significant weights suggest features that more strongly influence price predictions. Conversely, smaller weights might indicate less influence. The final output is the 'price', representing the model's prediction based on the learned weights through the network's training.
@@ -1535,9 +1563,12 @@ house_NN <- neuralnet(price ~ ., data = train.dat.norm, hidden = c(2,2), linear.
 
 This final section evaluates the neural network's predictive performance. It involves computing predictions, calculating key performance metrics like RMSE, R-squared, and SSE, and visualizing prediction accuracy and error distribution.
 
-```{r}
+```{r Performance Analysis of Neural Network}
 
-model_results <- compute(house_NN, train.dat.norm[-1])
+# Now run the compute function
+model_results <- compute(house_NN, train.dat.norm)
+
+#model_results <- compute(house_NN, train.dat.norm[-1])
 predicted_y <- model_results$net.result
 unnormalize <- function(x) {return((x * (max(df_house$price)) -min(df_house$price)) + min(df_house$price))}
 
@@ -1556,8 +1587,6 @@ pred_new_test <- unnormalize(predicted_y)
 PredictedTest<-pred_new_test
 NN_test_performance<-data.frame(obs = test.dat.norm$price, pred=PredictedTest)
 round(defaultSummary(NN_test_performance),3)
-
-
 
 ```
 
