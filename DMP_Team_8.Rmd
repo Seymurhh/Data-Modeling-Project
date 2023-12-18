@@ -1450,14 +1450,13 @@ hub4_test_results = postResample(pred = hub4_test_pred, obs = test.dat$price)
 hub4_test_sse = sum((hub4_test_pred - test.dat$price)^2)
 
 # Append to the Results Data Frame
-results.df = rbind(results.df,data.frame(model = "Robust Regression (transformed + clean)",
+results.df = rbind(results.df,data.frame(model = "Robust Regression Bisquare",
             R.Squared.Train = unname(hub4_train_results[2]),
             R.Squared.Test = unname(hub4_test_results[2]),
             RMSE.test = unname(hub4_test_results[1]),
             SSE.test = hub4_test_sse)
 )
 
-results.df
 ```
 
 **Analysis:** The Robust regression with the bisquare weights has a lower residual standard error compared to the Huber weights. 
