@@ -845,8 +845,7 @@ Graph 3 (Scale-Location): (constant variance assumption) The residuals do not se
 
 Graph 4 (Residuals vs Leverage): There are no influential outliers.
 
-```{r}
-# [Ibrahim]
+```{r Stepwise model fit}
 
 stepwise_model <- ols_step_both_p(house_lm1, penter = 0.05, premove = 0.05)
 
@@ -870,7 +869,7 @@ k
 #plot(k1)
 ```
 
-**Analysis:*
+**Analysis:**
 
 The WLS regression model makes the error variances more equally distributed throughout. The adjusted r-squared value increased to 0.79 with almost all of the independent variables being significant.
 
@@ -1158,12 +1157,12 @@ price.predictors <- colnames(dplyr::select(test.dat, -price))
 # Predictions for each model using the test dataset
 predictions <- data.frame(
   price = test.dat$price,
-  price.lm = predict(house_lm1, test.dat),
-  price.sw.lm = predict(sw_model, test.dat),
+  price.lm = predict(house_lm1, test.dat)^(1/lambda),
+  price.sw.lm = predict(sw_model, test.dat)^(1/lambda),
   price.wls = predict(house_lm_wls, test.dat),
-  price.ridge = predict(house_lm_ridge, s = best.lambda.ridge, newx = data.matrix(test.dat[price.predictors])),
-  price.lasso = predict(house_lm_lasso, s = best.lambda.lasso, newx = data.matrix(test.dat[price.predictors])),
-  price.en = predict(house_lm_enet, s = best.lambda.enet, newx = data.matrix(test.dat[price.predictors])),
+  #price.ridge = predict(house_lm_ridge, s = best.lambda.ridge, newx = data.matrix(test.dat[price.predictors])),
+  #price.lasso = predict(house_lm_lasso, s = best.lambda.lasso, newx = data.matrix(test.dat[price.predictors])),
+  #price.en = predict(house_lm_enet, s = best.lambda.enet, newx = data.matrix(test.dat[price.predictors])),
   price.huber = predict(house_lm_huber, test.dat),
   price.bisquare = predict(house_lm_bisquare, test.dat)
 )
@@ -1180,7 +1179,8 @@ calc_metrics <- function(actual, predicted) {
 
 # function to each set of predictions
 metrics <- data.frame(
-  Model = c("Linear", "Stepwise", "Weighted Least Squares", "Ridge", "Lasso", "Elastic Net", "Huber", "Bisquare"),
+  #Model = c("Linear", "Stepwise", "Weighted Least Squares", "Ridge", "Lasso", "Elastic Net", "Huber", "Bisquare"),
+  Model = c("Linear", "Stepwise", "Weighted Least Squares", "Huber", "Bisquare"),
   do.call(rbind, lapply(2:ncol(predictions), function(i) calc_metrics(predictions$price, predictions[,i])))
 )
 
@@ -1275,11 +1275,11 @@ plot_data <- data.frame(Depth=depth_values, RMSE=mse_values)
 
 # Plot RMSE results vs Depth of the Tree
 ggplot(plot_data, aes(x=Depth, y=RMSE)) +
-  geom_point(color = "#6baed6") +  # Add points
-  geom_line(color = "#6baed6") +   # Connect points with a line
+  geom_point(color = "#6baed6") +
+  geom_line(color = "#6baed6") +
   labs(x = "Depth Value", y = "Root Mean Squared Error", 
        title = "Regression Tree Cross Validation (RMSE vs depth)") +
-  theme_minimal()  # Use a minimal theme for a clean look
+  theme_minimal()
 
 ```
 
@@ -1296,12 +1296,12 @@ plot_data <- data.frame(Depth=depth_values, TestR2=test_rsq_values)
 
 # Plot R-squared vs Depth of the Tree
 ggplot(plot_data, aes(x=Depth, y=TestR2)) +
-  geom_point(color="#6baed6") +  # Add points with color
-  geom_line(color="#6baed6") +   # Connect points with a line of the same color
-  geom_text(aes(label=round(TestR2, 4)), vjust=-0.5, color="black") + # Add text labels
+  geom_point(color="#6baed6") +
+  geom_line(color="#6baed6") +
+  geom_text(aes(label=round(TestR2, 4)), vjust=-0.5, color="black") +
   labs(x = "Depth Value", y = "Test R-squared", 
        title = "Regression Tree Cross Validation (R2 vs depth)") +
-  theme_minimal()  # Use a minimal theme for a clean look
+  theme_minimal() 
 
 ```
 
