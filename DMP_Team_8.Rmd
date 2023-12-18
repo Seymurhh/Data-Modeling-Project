@@ -2062,12 +2062,25 @@ abline(0, 1, col = "red")
 \newpage
 # VI. Model Limitation and Assumptions
 
-*Based on the performances on both train and test data sets, determine your primary (champion) model and the other model which would be your benchmark model. Validate your models using the test sample. Do the residuals look normal? Does it matter given your technique? How is the prediction performance using Pseudo R^2, SSE, RMSE?  Benchmark the model against alternatives. How good is the relative fit? Are there any serious violations of the model assumptions? Has the model had issues or limitations that the user must know? (Which assumptions are needed to support the Champion model?)* 
+Our comprehensive analysis of various predictive models has illuminated a few consistent limitations and assumptions that merit attention. The homoscedasticity assumption, a bedrock for linear regression models, is observed to be violated across the board. This signals uneven variance levels in the residuals, potentially distorting standard errors and undermining the reliability of coefficient estimates.
+
+The normality assumption is another cornerstone for optimal model performance, particularly for inferential statistics. Our diagnostic checks, specifically Q-Q plots, expose deviations from normality in residuals for all models. Such deviations can affect hypothesis testing, leading to incorrect conclusions about the significance of predictor variables.
+
+A substantial limitation encountered is the model's performance when predicting housing prices in the upper echelons, specifically in the multi-million dollar range. The models struggle with the nuances and rarity of such high-value transactions, reflecting a need for more specialized modeling approaches for luxury real estate.
+
+After applying the BoxCox transformation, we’ve observed an improved linearity assumption, which is also well achieved by the Random Forest model. This transformation, alongside the inherent non-linearity handling of Random Forest, aligns our predictions more closely with the underlying relationships in the data.
+
+Our champion model, the Random Forest, stands out with an impressive R-squared of 0.9795 in the training dataset and 0.8813 in the test predictions, alongside the lowest RMSE of 131,586.4. It serves as a testament to the model’s robustness, capturing complex non-linear relationships without overfitting. On the other hand, the BoxCox transformed Linear Model, our benchmark model, also exhibits strong performance with an R-squared of 0.8833 in training and 0.8172 in testing, with an RMSE of 162,409.8, proving its efficacy in capturing a significant proportion of the variance in the housing prices.
+
+
+## Final Model Performance Results
+
+The accompanying performance table accentuates the stark contrast between the champion and other models, underscoring the necessity of choosing a model that not only fits well to the training data but also generalizes effectively to unseen data.
+
 
 ```{r Printing all important results}
 
-# Results dataframe
-
+# Final Results dataframe
 results.df.asc = results.df[order(results.df$RMSE.test),]
 
 library(knitr)
@@ -2078,20 +2091,18 @@ kable(results.df.asc)
 \newpage
 # VII. Ongoing Model Monitoring Plan
 
-For model monitoring, we need to:
-1. regularly check for changes in the distribution of input or target variables, track the importance of variables, monitor model stability, and check for the presence of outliers in new data that might affect model performance.
-2. define the key performance metrics for regression models e.g Mean Squared Error (MSE), Root Mean Squared Error (RMSE), Mean Absolute Error (MAE), R-squared, SSE, Confusion Matrix, F1 score, etc; and set thresholds for these metrics based on the acceptable level of model performance. 
-3. periodically validate the model on new data to ensure it generalizes well. Cross-validation can be implement to assess model performance on unseen data.
-4. be mindful of changes in the business environment, processes, customer behavior, or external/internal factors may affect the model's performance. We can setup alerts to notify stakeholders when model performance drops below acceptable levels
-5. maintain detailed documentation of the model, including its assumptions, methodologies, and any updates made.
-6. regularly assess the model for bias that may affect certain demographic groups unfairly, and also ensure that the model complies with any regulatory requirements. 
+To ensure the continued efficacy of our champion model, we must:
 
+  1. Monitor input and target variable distributions, variable importance, model stability, and outlier presence.
+  2. Establish key regression model performance metrics, such as MSE, RMSE, MAE, and R-squared, and set thresholds for these metrics to maintain acceptable performance levels.
+  3. Perform regular validation on new data, employing cross-validation techniques to evaluate performance on unseen data.
+  4. Stay vigilant to changes in the business environment, customer behavior, and other factors that could impact model performance, setting up alerts for stakeholders when performance drops below thresholds.
+  5. Maintain comprehensive documentation of the model, detailing assumptions, methodologies, and updates.
+  6. Assess the model for bias and ensure compliance with regulatory requirements, mitigating any unfair impact on specific demographic groups.
 The model must comply with various assumptions for regression model to hold such as linearity, independence, homoscedasticity, normality of residuals, etc.
 
 \newpage
 # VIII. Conclusion
-
-*Summarize your results here. What is the best model for the data and why?*
 
 As we reference the final results table, We find that among the lowest performing models includes the regularized linear models: namely, Lasso, Ridge, and Elastic Net. Their Test R-squared scores are all a bit under 0.7, and their Test RMSE ranges from 208 thousand to 210 thousand. Another low-performing model is the single regression tree, with similar scores.
 
@@ -2100,6 +2111,12 @@ Certain models, such the Stepwise Regression, Weighted Least Squares, and Neural
 On the hand, our best linear models perform exceptionally well, with Linear Regression after BoxCox and the various Robust Regression models, with Test R-squared scores ranging from 0.81 to 0.83, and test RMSE ranging from 176,678.5 to 157,271.9. These values indicate powerful performance with high accuracies; these models are able to capture the complex relationships within this dataset. Another powerful model is the SVM Regression, with similar numbers. 
 
 However, among all models, the best one is the Random Forest. It has both the highest Test R-squared (0.88), and the lowest Test RMSE (131,189.4), indicating the highest accuracy; and that's not all it's good for. As previously mentioned, one of the limitations of all the models we build here is that the data is specific to the King County region. Furthermore, the only years represented in the dataset are 2014 and 2015. These issues mean that the model may not perform as well on data outside of this scope. However, the Random Forest model provides variable importance metrics to help readers and stakeholders learn what factors strongly influence house prices. As we observe these graphs, we can infer this includes the square footage of the interior living space, the building design, and the location, among other variables. The patterns and insights from this subset of data are able to enhance understanding and modeling of other real estate data.
+
+In summary, the Random Forest model emerges as the paragon of predictive accuracy, managing to outshine its counterparts in both high fidelity to the training data and generalizability to the test data. The insights gleaned from the variable importance metrics of this model illuminate the salient features that significantly influence housing prices, such as living space, grade, and location.
+
+While the Random Forest model is the clear front-runner, the robust regression models and the BoxCox transformed linear model also display commendable performance. However, the lower-performing models, particularly the regularized linear models and the single regression tree, underscore the challenges in capturing the complex dynamics of housing prices.
+
+The models' limitations, particularly when extrapolating beyond the King County region and outside the 2014-2015 timeframe, remind us of the specificity of the dataset. Nonetheless, the insights offered by these models provide valuable perspectives that can guide the modeling of broader real estate data, ensuring stakeholders are equipped with the necessary knowledge to make informed decisions in the housing market.
 
 
 \newpage
