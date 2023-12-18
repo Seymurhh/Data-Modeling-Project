@@ -1963,8 +1963,7 @@ Here, we construct the neural network model using the normalized data and visual
 
 ```{r Build and Plot the NN model}
 
-house_NN <- neuralnet(price ~ ., data = train.dat.norm, hidden = c(2,2), 
-                      linear.output = TRUE)
+house_NN <- neuralnet(price ~ ., data = train.dat.norm, hidden = c(2,2), linear.output = TRUE)
 
 ```
 
