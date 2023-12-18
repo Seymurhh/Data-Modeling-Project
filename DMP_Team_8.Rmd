@@ -1799,7 +1799,7 @@ The Appendix provides additional detailed analyses and visual representations th
 
 ## Enhanced Model Visualizations
 
-## Neurla Network
+### Neural Network Architecture
 
 ```{r}
 plot(house_NN, main="Neural Network Architecture Visualization")
@@ -1832,11 +1832,9 @@ for (i in seq_along(depth_values)) {
 
 ```
 
-### Additional Predictive Accuracy Charts
+## Additional Predictive Accuracy Charts
 
-#### Neural Network
-
-**Analysis:** The scatter plot of actual vs. predicted prices shows a cluster below the ideal 45-degree line, reinforcing that the model tends to underpredict the higher-valued houses.
+### Extra Neural Network Prediction Accuracy Plot
 
 ```{r Extra Prediction Accuracy Plot for NN}
 
@@ -1847,10 +1845,12 @@ abline(0, 1, col = "red")
 
 ```
 
+**Analysis:** The scatter plot of actual vs. predicted prices shows a cluster below the ideal 45-degree line, reinforcing that the model tends to underpredict the higher-valued houses.
+
+
 ### Neural Network Predictive Performance and Error Distribution
 
 A dual-faceted visual evaluation of the neural network model. The first plot highlights the spread and central tendency of predictive errors, revealing the model's precision range. The second plot maps predicted values against actual prices, offering a direct visual assessment of accuracy, with the proximity to the diagonal indicating the model's effectiveness in capturing the underlying price determinants. Together, these plots form a comprehensive view of the model's prediction capabilities and areas for improvement.
-
 
 ```{r Error Distribution Plot}
 
