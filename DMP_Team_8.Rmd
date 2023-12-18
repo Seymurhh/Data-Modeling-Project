@@ -1495,6 +1495,16 @@ Preparing the dataset for neural network analysis by normalizing the data. The n
 
 ```{r Prepare the NN data}
 
+# Remove redundant, unnecessary columns from dataset. 
+#df_house_nn <- df_house_original
+#df_house_nn[c("date","zipcode", "day")] <- list(NULL)
+
+#set.seed(1023)
+#n<-dim(df_house_nn)[1]
+#IND<-sample(c(1:n),round(n*0.7))
+#train.dat.nn<-df_house_nn[IND,]
+#test.dat.nn<-df_house_nn[-c(IND),]
+
 # Data must be normalized for the Neural Network
 normalize <- function(x) {
   # Only normalize if x is numeric
@@ -1506,11 +1516,11 @@ normalize <- function(x) {
 }
 
 # Identify numeric columns
-numeric_cols <- sapply(train.dat.o, is.numeric)
+numeric_cols <- sapply(train.dat, is.numeric)
 
 # Apply normalization only to numeric columns
-train.dat.norm <- as.data.frame(lapply(train.dat.o[, numeric_cols], normalize))
-test.dat.norm <- as.data.frame(lapply(test.dat.o[, numeric_cols], normalize))
+train.dat.norm <- as.data.frame(lapply(train.dat[, numeric_cols], normalize))
+test.dat.norm <- as.data.frame(lapply(test.dat[, numeric_cols], normalize))
 
 ```
 
@@ -1519,7 +1529,9 @@ test.dat.norm <- as.data.frame(lapply(test.dat.o[, numeric_cols], normalize))
 Here, we construct the neural network model using the normalized data and visualize its structure. The neuralnet package is utilized to build the model with a specified architecture and then plot it to understand its configuration.
 
 ```{r Build and Plot the NN model}
-house_NN <- neuralnet(price ~ ., data = train.dat.norm, hidden = c(2,2), linear.output = TRUE)
+
+house_NN <- neuralnet(price ~ ., data = train.dat.norm, hidden = 5, linear.output = T)
+
 ```
 
 **Analysis:** The neural network diagram represents a model with inputs corresponding to features of the houses such as 'bedrooms', 'bathrooms', 'sqft_living15', etc. The two hidden layers with two neurons each suggest an attempt to capture non-linear complexities in the data. The weights, denoted by numbers along the connections, indicate how each input is considered in predicting the house price. Significant weights suggest features that more strongly influence price predictions. Conversely, smaller weights might indicate less influence. The final output is the 'price', representing the model's prediction based on the learned weights through the network's training.
@@ -1550,8 +1562,6 @@ PredictedTest<-pred_new_test
 NN_test_performance<-data.frame(obs = test.dat.norm$price, pred=PredictedTest)
 round(defaultSummary(NN_test_performance),3)
 
-
-
 ```
 
 ```{r Evaluate Performance}
@@ -1568,42 +1578,11 @@ cat("SSE:", sse_value, "\n")
 
 **Analysis:** Given the RMSE of 0.04553926, the model’s predictions are relatively close to the actual prices, but there's room for improvement, especially considering the R-squared value of 0.3436959, which suggests that only about 34% of the variance in the house prices is being explained by the model. The SSE of 13.44667 further indicates a substantial sum of errors squared, calling for model refinement to better capture complex patterns in the data.
 
-
-### Neural Network Predictive Performance and Error Distribution
-
-A dual-faceted visual evaluation of the neural network model. The first plot highlights the spread and central tendency of predictive errors, revealing the model's precision range. The second plot maps predicted values against actual prices, offering a direct visual assessment of accuracy, with the proximity to the diagonal indicating the model's effectiveness in capturing the underlying price determinants. Together, these plots form a comprehensive view of the model's prediction capabilities and areas for improvement.
-
-
-```{r Error Distribution Plot}
-
-# Create a data frame for the Neural Network errors
-nn_errors <- test.dat.norm$price - predicted_price
-nn_errors_df <- data.frame(Errors = nn_errors)
-
-# Plot Histogram of Prediction Errors
-ggplot(nn_errors_df, aes(x=Errors)) +
-  geom_histogram(bins = 15, fill="#6baed6", color="black") +
-  labs(title="NN Prediction Error Distribution", 
-       x="Prediction Error", y="Count") +
-  theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5))
-
+```{r checking the correlation between predicted price and test price.}
+model_results <- compute(house_NN, test.dat.norm[-1])
+predicted_price <- model_results$net.result
+cor(predicted_price, test.dat.nn$price)
 ```
-
-**Analysis:** The histogram of prediction errors displays a concentration around zero, indicating most predictions are close to the actual values, but the spread towards the right suggests a skew in overestimating house prices.
-
-
-```{r Prediction Accuracy Plot}
-
-plot(test.dat.norm$price, predicted_price, 
-     main = "Actual vs. Predicted Prices", 
-     xlab = "Actual Prices", ylab = "Predicted Prices")
-abline(0, 1, col = "red")
-
-```
-
-**Analysis:** The scatter plot of actual vs. predicted prices shows a cluster below the ideal 45-degree line, reinforcing that the model tends to underpredict the higher-valued houses.
-
 
 \newpage
 # VI. Model Limitation and Assumptions
@@ -1644,7 +1623,6 @@ The model must comply with various assumptions for regression model to hold such
 # Bibliography
 
 *Please include all references, articles and papers in this section.*
-
 
 
 # Appendix
@@ -1705,6 +1683,29 @@ plot(test.dat.norm$price, predicted_price,
 abline(0, 1, col = "red")
 
 ```
+
+### Neural Network Predictive Performance and Error Distribution
+
+A dual-faceted visual evaluation of the neural network model. The first plot highlights the spread and central tendency of predictive errors, revealing the model's precision range. The second plot maps predicted values against actual prices, offering a direct visual assessment of accuracy, with the proximity to the diagonal indicating the model's effectiveness in capturing the underlying price determinants. Together, these plots form a comprehensive view of the model's prediction capabilities and areas for improvement.
+
+
+```{r Error Distribution Plot}
+
+# Create a data frame for the Neural Network errors
+nn_errors <- test.dat.norm$price - predicted_price
+nn_errors_df <- data.frame(Errors = nn_errors)
+
+# Plot Histogram of Prediction Errors
+ggplot(nn_errors_df, aes(x=Errors)) +
+  geom_histogram(bins = 15, fill="#6baed6", color="black") +
+  labs(title="NN Prediction Error Distribution", 
+       x="Prediction Error", y="Count") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+**Analysis:** The histogram of prediction errors displays a concentration around zero, indicating most predictions are close to the actual values, but the spread towards the right suggests a skew in overestimating house prices.
 
 ## Extended Data Analysis Support
 
