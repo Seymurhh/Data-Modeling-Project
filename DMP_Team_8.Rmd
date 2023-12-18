@@ -867,6 +867,8 @@ kable(results.df.asc)
 \newpage
 # IV. Model Performance Testing
 
+This Section is dedicated to rigorously assessing the predictive capabilities of our various regression models. This section utilizes the test dataset as a proving ground to evaluate how well each model generalizes beyond the data on which it was trained. We employ a methodical approach, beginning with the stepwise selection process to fine-tune the models, followed by the application of BoxCox transformations to meet the linearity assumption where necessary. The section scrutinizes the assumption adherence of the final models, like linearity, homoscedasticity, normality of residuals, and independence, employing diagnostic plots and statistical tests. We also address any need for remedial measures, such as weighted least squares (WLS), ridge regression, lasso, or elastic net, to correct for issues like heteroscedasticity and multicollinearity. Each model is then compared against the others based on key performance metrics, such as R-squared values, residual standard error, and p-values from the F-statistic, to determine the champion model and its benchmark counterpart. The insights gleaned from this comprehensive testing phase are crucial for confirming the robustness of the models and ensuring their reliability in practical applications.
+
 ## Stepwise Regression Analysis
 
 ### Fitting the Stepwise Regression Model
