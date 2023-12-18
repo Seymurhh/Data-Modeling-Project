@@ -1529,7 +1529,7 @@ Our exploration expanded to regularization techniques such as Ridge, Lasso, and 
 
 Robust regression methods, employing Huber and Bisquare weights, were introduced to mitigate outlier influences. Despite a reduction in outlier effects, as discerned from the diagnostic plots, these methods did not ascend to any predictive superiority based on R-squared values.
 
-To encapsulate, the Linear Regression after BoxCox transformation and the Stepwise Regression surfaced as the superior models in this analytical journey. The stepwise model excelled in variable selection efficiency, whereas the BoxCox transformed model epitomized an optimal equilibrium between complexity and predictive performance, ensuring commendable generalizability. Robust regression techniques, while instrumental in addressing outliers, did not manifest as the most reliable predictors in this context. Advancing from these findings, future endeavors should concentrate on refining the existing models, potentially working with other Challenger Models that we'll explore in the Section V.
+To encapsulate, the Linear Regression after BoxCox transformation surfaced as the superior model up to this point in this analytical journey. The stepwise model excelled in variable selection efficiency, whereas the BoxCox transformed model epitomized an optimal equilibrium between complexity and predictive performance, ensuring commendable generalizability. Robust regression techniques, while instrumental in addressing outliers, did not manifest as the most reliable predictors in this context. Advancing from these findings, future endeavors should concentrate on refining the existing models, potentially working with other Challenger Models that we'll explore in the Section V.
 
 
 \newpage
@@ -1550,7 +1550,7 @@ test.dat.tree <-df_house_original[-c(IND),]
 ```
 
 ```{r Decision Tree Cross-Validation}
-depth_values <- c(2:20)
+depth_values <- c(2:7)
 
 mse_values = numeric(length(depth_values))
 test_rsq_values = numeric(length(depth_values))
@@ -1594,9 +1594,12 @@ dtm = rpart(price ~ .,
               method = "anova",
               control=rpart.control(maxdepth=best_depth))
 
+# Print the tree
+print(dtm)
+
 # Plot the tree
-rpart.plot(dtm, main=paste("Regression Tree - Depth: ", best_depth), 
-           type = 4, extra = 1, tweak=1.6)
+rpart.plot(dtm, cex = .25, main=paste("Regression Tree - Depth: ", best_depth), 
+           type = 4, extra = 0, tweak=2)
 
 ```
 
@@ -2133,7 +2136,7 @@ Supplementary plots showcasing regression trees of various depths that were not 
 ```{r Plot extra Regression Trees }
 
 # Plot the least significant trees from the regresssion tree model
-depth_values <- c(2, 3, 4, 5)
+depth_values <- c(1, 2, 3, 4, 6)
 
 for (i in seq_along(depth_values)) {
   depth = depth_values[i]
