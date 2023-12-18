@@ -873,10 +873,13 @@ Graph 4 (Residuals vs Leverage): There are no influential outliers.
 
 ```{r Stepwise model fit}
 
-stepwise_model <- ols_step_both_p(house_lm1, penter = 0.05, premove = 0.05, progress = T, details = T)
-
+# Fit Stepwise model
+stepwise_model <- step(house_lm1, direction = "both", k = log(nrow(train.dat)))
 sw_model <- lm(formula = stepwise_model$model, data = train.dat)
+
+# Summarize the Stepwise model
 summary(sw_model)
+
 ```
 ```{r plotting stepwise model}
 par(mfrow=c(2,2))
