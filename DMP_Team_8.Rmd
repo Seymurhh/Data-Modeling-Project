@@ -19,6 +19,7 @@ editor_options:
   markdown: 
     wrap: 72
 bibliography: Bibliography.bib
+csl: ieee.csl
 ---
 \newpage
 ```{r setup, include=FALSE}
@@ -860,6 +861,8 @@ print(results.df)
 *Use the test data set to assess the model performances. Here, build the best multiple linear models by using the stepwise both ways selection method. Compare the performance of the best two linear models. Make sure that model assumption(s) are checked for the final linear model. Apply remedy measures (transformation, etc.) that helps satisfy the assumptions. In particular you must deeply investigate unequal variances and multicollinearity. If necessary, apply remedial methods (WLS, Ridge, Elastic Net, Lasso, etc.). *
 
 
+The stepwise method yields a similar model with the elimination of sqft_lot15 being the only difference. This variable was insignificant in the Boxcox transformed model. The r-squared value remains nearly the same at 0.77 with all the predictor variables being significant at 0.001.[ @guyon2003introduction ]
+
 
 ## Stepwise Regression Analysis
 
@@ -1487,7 +1490,7 @@ In this section, we explore alternative predictive models to challenge our prima
 
 ## Regression Tree Models
 
-This block is designed to determine the optimal depth for a regression tree model predicting house prices. It iterates over a predefined set of depth values, constructing a model at each depth, and calculating MSE and R-squared values for both the test and training datasets. The loop stores these metrics for each depth, and upon completion, it identifies the depth that yields the highest R-squared value on the test data, suggesting the best generalization performance.
+This block is designed to determine the optimal depth for a regression tree model predicting house prices. It iterates over a predefined set of depth values, constructing a model at each depth, and calculating MSE and R-squared values for both the test and training datasets. The loop stores these metrics for each depth, and upon completion, it identifies the depth that yields the highest R-squared value on the test data, suggesting the best generalization performance. [@ shifrin2014comparative ]
 
 ```{r Regression Tree Train/Test Data Split}
 set.seed(1023)
@@ -1530,7 +1533,7 @@ cat("Best depth:", best_depth, "with R-squared:", max_rsq)
 
 ### Optimized Regression Tree Visualization
 
-This subsection presents the visual depiction of the regression tree model at its calculated optimal complexity. By tuning the tree to the 'best_depth', we ensure the model is neither overfitting nor underfitting. The rpart.plot is customized to enhance interpretability, detailing split labels and the count of observations at each node, thereby providing a clear, scaled-up graphical representation of the decision-making process within the model.
+This subsection presents the visual depiction of the regression tree model at its calculated optimal complexity. By tuning the tree to the 'best_depth', we ensure the model is neither overfitting nor underfitting. The rpart.plot is customized to enhance interpretability, detailing split labels and the count of observations at each node, thereby providing a clear, scaled-up graphical representation of the decision-making process within the model. [ @zhang2018prediction ]
 
 Now we use the rpart.plot function to create a detailed plot of the tree, incorporating the optimal tree depth previously determined (best_depth). The plot is configured to show a type 4 tree, which includes split labels, and extra = 1 to display the number of observations in each node. The main title of the plot reflects the chosen depth for easy reference.
 
@@ -1778,7 +1781,7 @@ results.df = rbind(results.df,data.frame(model = "Random Forest Tuned Model",
 
 ### SVM Model Construction
 
-This subsection discusses the creation of the Support Vector Machine model. It entails the training phase on the dataset, where the SVM algorithm learns to find the best hyperplane that categorizes the data points.
+This subsection discusses the creation of the Support Vector Machine model [@deng2016svm]. It entails the training phase on the dataset, where the SVM algorithm learns to find the best hyperplane that categorizes the data points.
 
 ```{r Build the SVM model}
 
@@ -1793,7 +1796,7 @@ print(summary(svm_model))
 
 ### SVM Model Evaluation
 
-In this part, we assess the performance of the SVM model using the test dataset. The Root Mean Square Error (RMSE) metric provides insight into the average deviation of the predicted house prices from the actual values.
+In this part, we assess the performance of the SVM model using the test dataset [@e1071package]. The Root Mean Square Error (RMSE) metric provides insight into the average deviation of the predicted house prices from the actual values.
 
 ```{r SVM Prediction and Performance}
 
@@ -2020,9 +2023,8 @@ The model must comply with various assumptions for regression model to hold such
 
 *Summarize your results here. What is the best model for the data and why?*
 
+\newpage
 # Bibliography
-
-*Please include all references, articles and papers in this section.*
 
 <div id="refs"></div>
 
