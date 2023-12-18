@@ -191,7 +191,7 @@ pheatmap(cor_matrix,
 
 ### Unraveling High Correlation in Data Variables
 
-This section focuses on identifying highly correlated variables within the King County house sales dataset. Through an R script, we systematically extract numeric variables and construct a correlation matrix, applying a threshold to spotlight significant correlations. We aim to reveal pairs of variables with a correlation coefficient exceeding 0.8, signifying strong linear relationships. This analysis is crucial in understanding interdependencies among variables, guiding us in avoiding multicollinearity in our predictive models and ensuring their statistical integrity and interpretability.
+This section focuses on identifying highly correlated variables within the King County house sales dataset. Through an R script, we systematically extract numeric variables and construct a correlation matrix, applying a threshold to spotlight significant correlations. We aim to reveal pairs of variables with a correlation coefficient exceeding 0.8, signifying strong linear relationships. This analysis is crucial in understanding interdependencies among variables, guiding us in avoiding multicollinearity in our predictive models and ensuring their statistical integrity and interpretability. [@alsm2005]
 
 ```{r Identifying highly correlated variables}
 
@@ -405,7 +405,7 @@ dim(test.dat)
 
 ## Model Fitting and Initial Evaluation
 
-In this step, we meticulously construct a linear regression model, leveraging the training dataset to ascertain how well our predictors explain the variability in house prices. The initial model fitting is a critical juncture where we assess the significance of each predictor and the overall strength of the model.
+In this step, we meticulously construct a linear regression model, leveraging the training dataset to ascertain how well our predictors explain the variability in house prices. The initial model fitting is a critical juncture where we assess the significance of each predictor and the overall strength of the model. [@faraway2014linear]
 
 ```{r Regression model fitting}
 
@@ -578,9 +578,9 @@ house_lm_test_sse <- sum((test.dat$price - house_lm_test_pred)^2)
 results.df = rbind(results.df, data.frame(
   model = "Linear Regression Test without Insignificant Predictors",
   R.Squared.Train = summary(house_lm)$r.square,
-  R.Squared.Test = house_lm1_test_rsq,
-  RMSE.test = house_lm1_test_rmse,
-  SSE.test = house_lm1_test_sse))
+  R.Squared.Test = house_lm_test_rsq,
+  RMSE.test = house_lm_test_rmse,
+  SSE.test = house_lm_test_sse))
 
 print(results.df)
 
