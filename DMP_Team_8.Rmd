@@ -1520,7 +1520,7 @@ metrics %>%
 After several tentatives, we were not able to run a Best Subset Regression due to a lack of Compute resources. It would never finish, and sometimes freeze the application or the computer itself. One a very powerful gaming PC, it took more than 3h to finish. Since we exhausted our tentatives with this model, we decided to drop it from out analysis.
 
 
-## Summary of Model Performance Testing
+## Summary: Comparative Evaluation of Regression Models
 
 The comprehensive assessment of regression models in Section IV has provided valuable insights into their predictive performances. Our investigation commenced with a stepwise regression that subtly refined the initial linear model, retaining robust R-squared values and identifying 'sqft_lot15' as a non-contributory predictor. Diagnostic evaluations corroborated the adherence to the linearity assumption, detected slight normality deviations, and pinpointed potential heteroscedasticity issues.
 
@@ -2074,17 +2074,15 @@ options(max.print = 10)
 \newpage
 # VII. Ongoing Model Monitoring Plan
 
-*How would you picture the model needing to be monitored, which quantitative thresholds and triggers would you set to decide when the model needs to be replaced? What are the assumptions that the model must comply with for its continuous use?*
-
 For model monitoring, we need to:
 1. regularly check for changes in the distribution of input or target variables, track the importance of variables, monitor model stability, and check for the presence of outliers in new data that might affect model performance.
 2. define the key performance metrics for regression models e.g Mean Squared Error (MSE), Root Mean Squared Error (RMSE), Mean Absolute Error (MAE), R-squared, SSE, Confusion Matrix, F1 score, etc; and set thresholds for these metrics based on the acceptable level of model performance. 
 3. periodically validate the model on new data to ensure it generalizes well. Cross-validation can be implement to assess model performance on unseen data.
 4. be mindful of changes in the business environment, processes, customer behavior, or external/internal factors may affect the model's performance. We can setup alerts to notify stakeholders when model performance drops below acceptable levels
 5. maintain detailed documentation of the model, including its assumptions, methodologies, and any updates made.
-5. regularly assess the model for bias that may affect certain demographic groups unfairly, and also ensure that the model complies with any regulatory requirements. 
+6. regularly assess the model for bias that may affect certain demographic groups unfairly, and also ensure that the model complies with any regulatory requirements. 
 
-The model must comply with various assumptions for regression model to hold such as linearity, independence, homoscedasticity, normality of residuals, etc
+The model must comply with various assumptions for regression model to hold such as linearity, independence, homoscedasticity, normality of residuals, etc.
 
 \newpage
 # VIII. Conclusion
@@ -2114,7 +2112,9 @@ The Appendix provides additional detailed analyses and visual representations th
 
 ### Neural Network Architecture
 
-```{r}
+```{r Neural Network Architecture}
+
+# Neural Network Architecture
 plot(house_NN, main="Neural Network Architecture Visualization")
 
 library(NeuralNetTools)
@@ -2140,7 +2140,7 @@ for (i in seq_along(depth_values)) {
   
   # Less significant trees that were not plotted in the model analysis
   rpart.plot(tree_model, main=paste("Regression Tree - Depth: ", depth), 
-             type = 4, extra = 1, tweak=1.6)
+             type = 4, extra = 0, tweak=1.6)
 }
 
 ```
@@ -2182,12 +2182,5 @@ ggplot(nn_errors_df, aes(x=Errors)) +
 ```
 
 **Analysis:** The histogram of prediction errors displays a concentration around zero, indicating most predictions are close to the actual values, but the spread towards the right suggests a skew in overestimating house prices.
-
-## Extended Data Analysis Support
-
-### Comprehensive Error Distribution Review
-
-### Full Model Performance Metrics
-
 
 
