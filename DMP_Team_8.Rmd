@@ -882,6 +882,20 @@ summary(sw_model)
 
 ```
 
+```{r Append Stepwise model to results}
+step_test_pred = predict(sw_model, newdata = test.dat)
+
+step_test_results = postResample(pred = step_test_pred, obs = test.dat$price)
+step_test_sse = sum((step_test_pred - test.dat$price)^2)
+
+# Append to the Results Data Frame
+results.df = rbind(results.df,data.frame(model = "Stepwise Regression",
+            R.Squared.Train = summary(sw_model)$r.squared,
+            R.Squared.Test = unname(step_test_results[2]),
+            RMSE.test = unname(step_test_results[1]),
+            SSE.test = step_test_sse))
+```
+
 **Analysis:** The stepwise regression analysis, with an AIC-driven selection process, led to a refined model that demonstrates strong predictive performance for house prices. By eliminating 'bedrooms' and retaining other significant variables, the model attained an Adjusted R-squared value of 0.8839, indicating that about 88.39% of the variability in house prices is explained by the model. This high degree of explanation, coupled with significant p-values for most predictors, affirms the model's robustness. Notably, 'zipcode' variables emerged as significant predictors, reflecting the importance of location in housing prices. The residual standard error of 0.06866 suggests a good fit of the model to the data. Overall, this stepwise model, balancing model complexity and explanatory power, provides a comprehensive understanding of the factors influencing house prices.
 
 
@@ -1407,7 +1421,10 @@ results.df = rbind(results.df,data.frame(model = "Robust Regression (transformed
 results.df
 
 ```
- 
+
+**Analysis:** 
+The comparison of regression and robust model with huber weights coefficients values have slight deviations, but it is not severe.
+
 ```{r}
 cbind(house_lm1$coefficients,house_lm_huber$coefficients)
 ```
@@ -2071,6 +2088,10 @@ The model must comply with various assumptions for regression model to hold such
 # VIII. Conclusion
 
 *Summarize your results here. What is the best model for the data and why?*
+
+As we reference the final results table, We find that among the lowest performing models includes the regularized linear models: namely, Lasso, Ridge, and Elastic Net. Their Test R-squared scores are all a bit under 0.7, and their Test RMSE ranges from 208 thousand to 210 thousand. Another low-performing model is the single regression tree, with similar scores. These are decent numbers, especially since they're predicting price which ranges in the millions, but they cannot compete with the other models.
+
+On the hand, our best linear models perform exceptionally well, such as Linear Regression after BoxCox and the various Robust Regression models, , with Test R-squared scores ranging from 0.81 to 0.83, and test RMSE ranging from 176,678.5 to 157,271.9. These values indicate powerful models with high accuracies, able to capture the complex relationship within this data. 
 
 \newpage
 # Bibliography
