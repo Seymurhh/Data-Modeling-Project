@@ -19,6 +19,7 @@ editor_options:
   markdown: 
     wrap: 72
 bibliography: Bibliography.bib
+csl: ieee.csl
 ---
 \newpage
 ```{r setup, include=FALSE}
@@ -1747,7 +1748,7 @@ results.df = rbind(results.df,data.frame(model = "Random Forest Tuned Model",
 
 ### SVM Model Construction
 
-This subsection discusses the creation of the Support Vector Machine model. It entails the training phase on the dataset, where the SVM algorithm learns to find the best hyperplane that categorizes the data points.
+This subsection discusses the creation of the Support Vector Machine model [@deng2016svm]. It entails the training phase on the dataset, where the SVM algorithm learns to find the best hyperplane that categorizes the data points.
 
 ```{r Build the SVM model}
 
@@ -1762,7 +1763,7 @@ print(summary(svm_model))
 
 ### SVM Model Evaluation
 
-In this part, we assess the performance of the SVM model using the test dataset. The Root Mean Square Error (RMSE) metric provides insight into the average deviation of the predicted house prices from the actual values.
+In this part, we assess the performance of the SVM model using the test dataset [@e1071package]. The Root Mean Square Error (RMSE) metric provides insight into the average deviation of the predicted house prices from the actual values.
 
 ```{r SVM Prediction and Performance}
 
@@ -1989,9 +1990,8 @@ The model must comply with various assumptions for regression model to hold such
 
 *Summarize your results here. What is the best model for the data and why?*
 
+\newpage
 # Bibliography
-
-*Please include all references, articles and papers in this section.*
 
 <div id="refs"></div>
 
