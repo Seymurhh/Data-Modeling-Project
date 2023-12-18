@@ -843,7 +843,7 @@ house_lm1_test_sse <- sum((act - pred)^2)
 
 # Append results after BoxCox Transformation
 results.df = rbind(results.df, 
-                   data.frame(model = "Linear Regression Test after Boxcox",
+                   data.frame(model = "Linear Regression Test after BoxCox",
                               R.Squared.Train = summary(house_lm1)$r.square,
                               R.Squared.Test = house_lm1_test_rsq,
                               RMSE.test = house_lm1_test_rmse,
