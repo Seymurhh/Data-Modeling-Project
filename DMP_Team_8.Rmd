@@ -2046,6 +2046,7 @@ The model must comply with various assumptions for regression model to hold such
 
 <div id="refs"></div>
 
+\newpage
 # Appendix
 
 The Appendix provides additional detailed analyses and visual representations that complement the main body of the report. This section includes further explorations of model variations, extended error assessments, and a complete overview of performance metrics, enriching the reader's comprehension of the research findings.
