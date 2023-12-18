@@ -692,8 +692,6 @@ bptest(house_lm, studentize = FALSE)
 
 **Analysis:** The results of the Breusch-Pagan test show a BP statistic of 65708 with 82 degrees of freedom, and the p-value is less than 2.2e-16. This extremely low p-value indicates strong evidence against the null hypothesis of homoskedasticity (constant error variance). Thus, we reject the null hypothesis in favor of the alternative, which is that heteroskedasticity is present in the model. The presence of heteroskedasticity suggests that the error variance changes with the level of the independent variables, which may imply that the model could be improved. For instance, this could be addressed by transforming variables, adding variables to the model that capture the effect on variance, or using heteroskedasticity-consistent standard error estimators. In practical terms, this test suggests that the model's predictive performance may vary across different values of the predictors, and care should be taken when interpreting the results, especially concerning the significance of the predictors and the prediction intervals for the house prices. Further investigation and potential model adjustments are warranted to address this issue.
 
-
-
 ## Box-Cox Transformation
 
 The Box-Cox transformation[@libretexts_boxcox] is a statistical technique used to stabilize variance and make the data more closely adhere to the assumption of normality, which is a key consideration in linear regression modeling. This section of the analysis focuses on determining the optimal lambda parameter for the Box-Cox transformation of the response variable, which in this context is the house price. By conducting an initial wide search followed by a refined search for lambda, we aim to identify the value that maximizes the log-likelihood of our model, thereby indicating the most appropriate transformation for our dataset.
@@ -1508,11 +1506,11 @@ normalize <- function(x) {
 }
 
 # Identify numeric columns
-numeric_cols <- sapply(train.dat, is.numeric)
+numeric_cols <- sapply(train.dat.o, is.numeric)
 
 # Apply normalization only to numeric columns
-train.dat.norm <- as.data.frame(lapply(train.dat[, numeric_cols], normalize))
-test.dat.norm <- as.data.frame(lapply(test.dat[, numeric_cols], normalize))
+train.dat.norm <- as.data.frame(lapply(train.dat.o[, numeric_cols], normalize))
+test.dat.norm <- as.data.frame(lapply(test.dat.o[, numeric_cols], normalize))
 
 ```
 
@@ -1521,11 +1519,7 @@ test.dat.norm <- as.data.frame(lapply(test.dat[, numeric_cols], normalize))
 Here, we construct the neural network model using the normalized data and visualize its structure. The neuralnet package is utilized to build the model with a specified architecture and then plot it to understand its configuration.
 
 ```{r Build and Plot the NN model}
-house_NN <- neuralnet(price ~ ., data = train.dat.norm, hidden = c(5,4), linear.output = TRUE)
-```
-
-```{r}
-plot(house_NN, main="Neural Network Architecture Visualization")
+house_NN <- neuralnet(price ~ ., data = train.dat.norm, hidden = c(2,2), linear.output = TRUE)
 ```
 
 **Analysis:** The neural network diagram represents a model with inputs corresponding to features of the houses such as 'bedrooms', 'bathrooms', 'sqft_living15', etc. The two hidden layers with two neurons each suggest an attempt to capture non-linear complexities in the data. The weights, denoted by numbers along the connections, indicate how each input is considered in predicting the house price. Significant weights suggest features that more strongly influence price predictions. Conversely, smaller weights might indicate less influence. The final output is the 'price', representing the model's prediction based on the learned weights through the network's training.
@@ -1659,6 +1653,20 @@ The Appendix provides additional detailed analyses and visual representations th
 
 ## Enhanced Model Visualizations
 
+## Neurla Network
+
+```{r}
+#plot(house_NN, main="Neural Network Architecture Visualization")
+
+library(NeuralNetTools)
+#plotnet(house_NN)
+
+#neuronplot(house_NN)
+#garson(house_NN)
+olden(house_NN)
+
+```
+
 ### Regression Tree Depth Variations
 
 Supplementary plots showcasing regression trees of various depths that were not included in the main analysis. These visualizations represent alternative models with simplified complexities, providing a broader understanding of the model's behavior with less granular splitting. They serve as a reference for how the model's structure changes with depth, offering additional context to the primary findings presented in the report.
@@ -1684,6 +1692,19 @@ for (i in seq_along(depth_values)) {
 ```
 
 ### Additional Predictive Accuracy Charts
+
+#### Neural Network
+
+**Analysis:** The scatter plot of actual vs. predicted prices shows a cluster below the ideal 45-degree line, reinforcing that the model tends to underpredict the higher-valued houses.
+
+```{r Prediction Accuracy Plot}
+
+plot(test.dat.norm$price, predicted_price, 
+     main = "Actual vs. Predicted Prices", 
+     xlab = "Actual Prices", ylab = "Predicted Prices")
+abline(0, 1, col = "red")
+
+```
 
 ## Extended Data Analysis Support
 
